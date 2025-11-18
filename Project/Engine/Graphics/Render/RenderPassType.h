@@ -7,4 +7,5 @@ enum class RenderPassType {
     SkinnedModel,        // スキニングモデル
     SkyBox,              // SkyBox
     Sprite,              // スプライト
+    Particle,            // パーティクル
 };

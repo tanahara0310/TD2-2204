@@ -144,6 +144,69 @@ void TestScene::Initialize(EngineSystem* engine)
 	sprite3->GetSprite()->SetScale({ 0.8f, 0.8f, 1.0f });
 	spriteObjects_.push_back(std::move(sprite3));
 
+	// ===== パーティクルシステムの初期化 =====
+	particleSystem_ = std::make_unique<ParticleSystem>();
+	particleSystem_->Initialize(dxCommon, engine_->GetComponent<ResourceFactory>());
+	
+	// パーティクルシステムの設定
+	particleSystem_->SetTexture("Resources/SampleResources/circle.png");
+	particleSystem_->SetEmitterPosition({ 0.0f, 2.0f, 0.0f });
+	particleSystem_->SetBlendMode(BlendMode::kBlendModeAdd);  // 加算合成
+	particleSystem_->SetBillboardType(BillboardType::ViewFacing);
+	
+	// エミッションモジュールの設定
+	{
+		auto& emissionModule = particleSystem_->GetEmissionModule();
+		auto emissionData = emissionModule.GetEmissionData();
+		emissionData.rateOverTime = 20;  // 1秒に20個のパーティクルを放出
+		emissionData.shapeType = EmissionModule::ShapeType::Sphere;
+		emissionData.radius = 0.5f;
+		emissionData.emitFromSurface = false;
+		emissionModule.SetEmissionData(emissionData);
+	}
+	
+	// 速度モジュールの設定
+	{
+		auto& velocityModule = particleSystem_->GetVelocityModule();
+		auto velocityData = velocityModule.GetVelocityData();
+		velocityData.startSpeed = { 0.0f, 1.0f, 0.0f };
+		velocityData.randomSpeedRange = { 1.0f, 1.0f, 1.0f };
+		velocityData.useRandomDirection = true;
+		velocityModule.SetVelocityData(velocityData);
+	}
+	
+	// 色モジュールの設定
+	{
+		auto& colorModule = particleSystem_->GetColorModule();
+		auto colorData = colorModule.GetColorData();
+		colorData.useGradient = true;
+		colorData.startColor = { 1.0f, 0.8f, 0.2f, 1.0f };  // 黄色
+		colorData.endColor = { 1.0f, 0.2f, 0.0f, 0.0f };    // 赤でフェードアウト
+		colorModule.SetColorData(colorData);
+	}
+	
+	// ライフタイムモジュールの設定
+	{
+		auto& lifetimeModule = particleSystem_->GetLifetimeModule();
+		auto lifetimeData = lifetimeModule.GetLifetimeData();
+		lifetimeData.startLifetime = 2.0f;
+		lifetimeData.lifetimeRandomness = 0.25f;
+		lifetimeModule.SetLifetimeData(lifetimeData);
+	}
+	
+	// サイズモジュールの設定
+	{
+		auto& sizeModule = particleSystem_->GetSizeModule();
+		auto sizeData = sizeModule.GetSizeData();
+		sizeData.startSize = 0.3f;
+		sizeData.endSize = 0.05f;
+		sizeData.sizeOverLifetime = true;
+		sizeModule.SetSizeData(sizeData);
+	}
+	
+	// パーティクルシステムを再生開始
+	particleSystem_->Play();
+
 #ifdef _DEBUG
 	if (console) {
 		console->LogInfo("TestScene: 全てのゲームオブジェクトを初期化しました");
@@ -221,6 +284,8 @@ void TestScene::Update()
 
 	// カメラマネージャーの更新
 	cameraManager_->Update();
+	
+	ICamera* activeCamera = cameraManager_->GetActiveCamera();
 
 #ifdef _DEBUG
 	// F1キーでデバッグカメラに切り替え
@@ -244,7 +309,7 @@ void TestScene::Update()
 	//if (ImGui::Begin("クォータニオンデバッグ表示")) {
 
 	//	// クォータニオンの回転を行列に変換して表示
-	//	Vector3 axis = Normalize({ 1.0f,1.0f,1.0f });
+	//	Vector3 axis = MathCore::Vector::Normalize({ 1.0f,1.0f,1.0f });
 	//	float angle = 0.44f;
 	//	Matrix4x4 rotateMatrix = Matrix::MakeRotateAxisAngle(axis, angle);
 	//	ImGui::Text("rotateMatrix");
@@ -280,7 +345,7 @@ void TestScene::Update()
 	//	ImGui::Text("%.3f %.3f %.3f %.3f", rotateMatrix2.m[1][0], rotateMatrix2.m[1][1], rotateMatrix2.m[1][2], rotateMatrix2.m[1][3]);
 	//	ImGui::Text("%.3f %.3f %.3f %.3f", rotateMatrix2.m[2][0], rotateMatrix2.m[2][1], rotateMatrix2.m[2][2], rotateMatrix2.m[2][3]);
 	//	ImGui::Text("%.3f %.3f %.3f %.3f", rotateMatrix2.m[3][0], rotateMatrix2.m[3][1], rotateMatrix2.m[3][2], rotateMatrix2.m[3][3]);
-
+	//
 	//	//クォータニオンの計算
 	//	Quaternion q1 = { 2.0f, 3.0f, 4.0f, 1.0f };
 	//	Quaternion q2 = { 1.0f, 3.0f, 5.0f, 2.0f };
@@ -398,12 +463,8 @@ void TestScene::Update()
 	}
 
 	// パーティクルシステムの更新
-	auto particleSystem = engine_->GetComponent<ParticleSystem>();
-	if (particleSystem) {
-		particleSystem->Update(
-			cameraManager_->GetViewMatrix(),
-			cameraManager_->GetProjectionMatrix()
-		);
+	if (particleSystem_ && activeCamera) {
+		particleSystem_->Update(activeCamera);
 	}
 
 
@@ -414,7 +475,6 @@ void TestScene::Draw()
 	// コンポーネント取得
 	auto renderManager = engine_->GetComponent<RenderManager>();
 	auto dxCommon = engine_->GetComponent<DirectXCommon>();
-	auto particleSystem = engine_->GetComponent<ParticleSystem>();
 	auto lineRenderer = engine_->GetComponent<LineRenderer>();
 	ICamera* activeCamera = cameraManager_->GetActiveCamera();
 
@@ -425,37 +485,35 @@ void TestScene::Draw()
 
 	ID3D12GraphicsCommandList* cmdList = dxCommon->GetCommandList();
 
-	// パーティクルシステムの描画
-	if (particleSystem) {
-		particleSystem->Draw(cmdList, textureCircle_.gpuHandle);
-	}
-
 	// ===== RenderManagerによる統一描画システム =====
-	if (renderManager) {
-		// フレーム開始時に描画コンテキストを設定（1回のみ）
-		renderManager->SetCamera(activeCamera);
-		renderManager->SetCommandList(cmdList);
-		
-		// 全てのゲームオブジェクトを描画キューに追加
-		for (const auto& obj : gameObjects_) {
-			if (obj && obj->IsActive()) {
-				renderManager->AddDrawable(obj.get());
-			}
+	// フレーム開始時に描画コンテキストを設定（1回のみ）
+	renderManager->SetCamera(activeCamera);
+	renderManager->SetCommandList(cmdList);
+	
+	// 全てのゲームオブジェクトを描画キューに追加
+	for (const auto& obj : gameObjects_) {
+		if (obj && obj->IsActive()) {
+			renderManager->AddDrawable(obj.get());
 		}
-		
-		//// 全てのスプライトオブジェクトを描画キューに追加
-		//for (const auto& spriteObj : spriteObjects_) {
-		//	if (spriteObj && spriteObj->IsActive()) {
-		//		renderManager->AddDrawable(spriteObj.get());
-		//	}
-		//}
-		
-		// 一括描画（自動的にパスごとにソート・グループ化）
-		renderManager->DrawAll();
-		
-		// フレーム終了時にキューをクリア
-		renderManager->ClearQueue();
 	}
+	
+	// パーティクルシステムを描画キューに追加（統一された方法）
+	if (particleSystem_ && particleSystem_->IsActive()) {
+		renderManager->AddDrawable(particleSystem_.get());
+	}
+	
+	// 全てのスプライトオブジェクトを描画キューに追加
+	for (const auto& spriteObj : spriteObjects_) {
+		if (spriteObj && spriteObj->IsActive()) {
+			renderManager->AddDrawable(spriteObj.get());
+		}
+	}
+	
+	// 一括描画（自動的にパスごとにソート・グループ化）
+	renderManager->DrawAll();
+	
+	// フレーム終了時にキューをクリア
+	renderManager->ClearQueue();
 
 	// ===== デバッグ描画（スケルトンなど）=====
 	if (lineRenderer) {
@@ -477,6 +535,7 @@ void TestScene::Draw()
 		}
 	}
 }
+
 
 void TestScene::Finalize()
 {

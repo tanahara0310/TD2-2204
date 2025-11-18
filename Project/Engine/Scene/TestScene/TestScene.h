@@ -36,6 +36,9 @@
 #include "TestGameObject/SkyBoxObject.h"
 #include "TestGameObject/SpriteObject.h"
 
+// パーティクルシステム
+#include "Engine/Particle/ParticleSystem.h"
+
 using namespace Microsoft::WRL;
 
 
@@ -66,6 +69,9 @@ private: // メンバ変数
 	// ===== ゲームオブジェクト =====
 	std::vector<std::unique_ptr<Object3d>> gameObjects_;  // 全3Dオブジェクト
 	std::vector<std::unique_ptr<SpriteObject>> spriteObjects_;  // 全2Dオブジェクト
+
+	// ===== パーティクルシステム =====
+	std::unique_ptr<ParticleSystem> particleSystem_;  // パーティクルシステム
 
 	// ===== テクスチャ =====
 	TextureManager::LoadedTexture textureChecker_;
