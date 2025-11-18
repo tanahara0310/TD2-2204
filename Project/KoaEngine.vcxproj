@@ -177,6 +177,9 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="Engine\Graphics\Render\SkyBox\SkyBoxRenderer.cpp" />
     <ClCompile Include="Engine\Graphics\Render\Sprite\SpriteRenderer.cpp" />
     <ClCompile Include="Engine\Particle\ParticlePresetManager.cpp" />
+    <ClCompile Include="Engine\Scene\Game\GameScene.cpp" />
+    <ClCompile Include="Engine\Scene\Game\ResultScene.cpp" />
+    <ClCompile Include="Engine\Scene\Game\TitleScene.cpp" />
     <ClCompile Include="Engine\TestGameObject\AnimatedCubeObject.cpp" />
     <ClCompile Include="Engine\TestGameObject\FenceObject.cpp" />
     <ClCompile Include="Engine\TestGameObject\Object3d.cpp" />
@@ -338,6 +341,9 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="Engine\Math\EulerTransform.h" />
     <ClInclude Include="Engine\Math\QuaternionTransform.h" />
     <ClInclude Include="Engine\Particle\ParticlePresetManager.h" />
+    <ClInclude Include="Engine\Scene\Game\GameScene.h" />
+    <ClInclude Include="Engine\Scene\Game\ResultScene.h" />
+    <ClInclude Include="Engine\Scene\Game\TitleScene.h" />
     <ClInclude Include="Engine\TestGameObject\AnimatedCubeObject.h" />
     <ClInclude Include="Engine\TestGameObject\FenceObject.h" />
     <ClInclude Include="Engine\TestGameObject\IDrawable.h" />
