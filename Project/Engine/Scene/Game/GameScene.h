@@ -1,8 +1,11 @@
 #pragma once
 
+#include <memory>
 #include "Scene/IScene.h"
 
 class EngineSystem;
+class CameraManager;
+struct DirectionalLightData;
 
 /// @brief ゲームシーンクラス
 class GameScene : public IScene {
@@ -21,4 +24,10 @@ public:
 
 private:
 	EngineSystem* engine_ = nullptr;
+	
+	// カメラマネージャー
+	std::unique_ptr<CameraManager> cameraManager_ = std::make_unique<CameraManager>();
+	
+	// このシーン専用のディレクショナルライト
+	DirectionalLightData* directionalLight_ = nullptr;
 };
