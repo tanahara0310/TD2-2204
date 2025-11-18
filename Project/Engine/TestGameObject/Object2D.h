@@ -1,0 +1,34 @@
+#pragma once
+
+#include "IDrawable.h"
+#include "Engine/Math/MathCore.h"
+#include <memory>
+
+// 前方宣言
+class EngineSystem;
+
+/// @brief 2Dオブジェクトの基底クラス
+class Object2d : public IDrawable {
+public:
+    virtual ~Object2d() = default;
+    
+    /// @brief 初期化
+    /// @param engine エンジンシステム
+    virtual void Initialize(EngineSystem* engine) = 0;
+    
+    /// @brief 更新
+    virtual void Update() {}
+    
+    /// @brief 描画（2D専用 - カメラとライト不要）
+    virtual void Draw() = 0;
+    
+    /// @brief 2Dオブジェクトであることを示す
+    bool Is2D() const override { return true; }
+    
+    /// @brief トランスフォームを取得
+    EulerTransform& GetTransform() { return transform_; }
+    const EulerTransform& GetTransform() const { return transform_; }
+    
+protected:
+    EulerTransform transform_;
+};

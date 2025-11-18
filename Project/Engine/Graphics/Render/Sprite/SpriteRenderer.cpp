@@ -1,0 +1,136 @@
+#include "SpriteRenderer.h"
+#include "Engine/Camera/ICamera.h"
+#include "Engine/Graphics/Structs/SpriteMaterial.h"
+#include "WinApp/WinApp.h"
+#include <cassert>
+
+void SpriteRenderer::Initialize(ID3D12Device* device) {
+    // 基本的な初期化のみ（定数バッファプールは作らない）
+    shaderCompiler_->Initialize();
+    
+    // ===== RootSignatureの初期化 =====
+    
+    // Root Parameter 0: マテリアル用CBV (b0, Pixel Shader)
+    RootSignatureManager::RootDescriptorConfig materialCBV;
+    materialCBV.shaderRegister = 0;
+    materialCBV.visibility = D3D12_SHADER_VISIBILITY_PIXEL;
+    rootSignatureMg_->AddRootCBV(materialCBV);
+    
+    // Root Parameter 1: トランスフォーム用CBV (b1, Vertex Shader)
+    RootSignatureManager::RootDescriptorConfig transformCBV;
+    transformCBV.shaderRegister = 1;
+    transformCBV.visibility = D3D12_SHADER_VISIBILITY_VERTEX;
+    rootSignatureMg_->AddRootCBV(transformCBV);
+    
+    // Root Parameter 2: テクスチャ用ディスクリプタテーブル (t0, Pixel Shader)
+    RootSignatureManager::DescriptorRangeConfig textureRange;
+    textureRange.type = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+    textureRange.numDescriptors = 1;
+    textureRange.baseShaderRegister = 0;  // t0
+    rootSignatureMg_->AddDescriptorTable({ textureRange }, D3D12_SHADER_VISIBILITY_PIXEL);
+    
+    // Static Sampler (s0, Pixel Shader)
+    rootSignatureMg_->AddDefaultLinearSampler(0, D3D12_SHADER_VISIBILITY_PIXEL);
+    
+    rootSignatureMg_->Create(device);
+    
+    // ===== シェーダーのコンパイルとPSO作成 =====
+    auto vertexShaderBlob = shaderCompiler_->CompileShader(L"Resources/Shader/Sprite/Sprite.VS.hlsl", L"vs_6_0");
+    assert(vertexShaderBlob != nullptr);
+    
+    auto pixelShaderBlob = shaderCompiler_->CompileShader(L"Resources/Shader/Sprite/Sprite.PS.hlsl", L"ps_6_0");
+    assert(pixelShaderBlob != nullptr);
+    
+    // ビルダーパターンでPSOを構築
+    bool result = psoMg_->CreateBuilder()
+        .AddInputElement("POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, D3D12_APPEND_ALIGNED_ELEMENT)
+        .AddInputElement("TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, D3D12_APPEND_ALIGNED_ELEMENT)
+        .AddInputElement("NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, D3D12_APPEND_ALIGNED_ELEMENT)
+        .SetRasterizer(D3D12_CULL_MODE_NONE, D3D12_FILL_MODE_SOLID)
+        .SetDepthStencil(false, false) // スプライトは深度テスト無効
+        .SetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE)
+        .BuildAllBlendModes(device, vertexShaderBlob, pixelShaderBlob, rootSignatureMg_->GetRootSignature());
+    
+    if (!result) {
+        throw std::runtime_error("Failed to create Sprite Pipeline State Object");
+    }
+    
+    pipelineState_ = psoMg_->GetPipelineState(BlendMode::kBlendModeNormal); // スプライトはデフォルトでアルファブレンド
+    currentBlendMode_ = BlendMode::kBlendModeNormal;
+}
+
+void SpriteRenderer::Initialize(DirectXCommon* dxCommon, ResourceFactory* resourceFactory) {
+    dxCommon_ = dxCommon;
+    resourceFactory_ = resourceFactory;
+    
+    // デバイスを使って基本初期化
+    Initialize(dxCommon->GetDevice());
+    
+    // 定数バッファプールを作成
+    materialResources_.resize(kMaxSpriteCount);
+    transformResources_.resize(kMaxSpriteCount);
+    materialDataPool_.resize(kMaxSpriteCount);
+    transformDataPool_.resize(kMaxSpriteCount);
+    
+    for (size_t i = 0; i < kMaxSpriteCount; ++i) {
+        // マテリアル用定数バッファ
+        materialResources_[i] = resourceFactory_->CreateBufferResource(
+            dxCommon_->GetDevice(), sizeof(SpriteMaterial));
+        materialResources_[i]->Map(0, nullptr, reinterpret_cast<void**>(&materialDataPool_[i]));
+        
+        // トランスフォーム用定数バッファ
+        transformResources_[i] = resourceFactory_->CreateBufferResource(
+            dxCommon_->GetDevice(), sizeof(TransformationMatrix));
+        transformResources_[i]->Map(0, nullptr, reinterpret_cast<void**>(&transformDataPool_[i]));
+    }
+}
+
+void SpriteRenderer::BeginPass(ID3D12GraphicsCommandList* cmdList, BlendMode blendMode) {
+    // フレームの開始時にバッファインデックスをリセット
+    currentBufferIndex_ = 0;
+    
+    // ブレンドモードが変更された場合のみPSOを更新
+    if (blendMode != currentBlendMode_) {
+        currentBlendMode_ = blendMode;
+        pipelineState_ = psoMg_->GetPipelineState(blendMode);
+    }
+    
+    // ルートシグネチャとPSOを設定
+    cmdList->SetGraphicsRootSignature(rootSignatureMg_->GetRootSignature());
+    cmdList->SetPipelineState(pipelineState_);
+    cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+}
+
+void SpriteRenderer::EndPass() {
+    // 今は空
+}
+
+void SpriteRenderer::SetCamera(const ICamera* camera) {
+    // スプライトはカメラ不要（2D描画）
+    (void)camera;
+}
+
+size_t SpriteRenderer::GetAvailableConstantBuffer() {
+    // 循環バッファ方式でインデックスを管理
+    size_t bufferIndex = currentBufferIndex_;
+    currentBufferIndex_ = (currentBufferIndex_ + 1) % kMaxSpriteCount;
+    return bufferIndex;
+}
+
+Matrix4x4 SpriteRenderer::CalculateWVPMatrix(const Vector3& position, const Vector3& scale, const Vector3& rotation) const {
+    // ワールド変換
+    Matrix4x4 worldMatrix = MathCore::Matrix::MakeAffine(scale, rotation, position);
+    
+    // ビュー変換（2Dなので単位行列）
+    Matrix4x4 viewMatrix = MathCore::Matrix::Identity();
+    
+    // 射影変換（正射影）- スプライト用座標系
+    // 左上原点(0,0)から右下(width,height)の座標系
+    Matrix4x4 projectionMatrix = MathCore::Rendering::Orthographic(
+        0.0f, 0.0f, 
+        static_cast<float>(WinApp::kClientWidth), 
+        static_cast<float>(WinApp::kClientHeight), 
+        0.0f, 100.0f);
+    
+    return MathCore::Matrix::Multiply(worldMatrix, MathCore::Matrix::Multiply(viewMatrix, projectionMatrix));
+}
