@@ -247,6 +247,7 @@
     <ClCompile Include="Engine\Scene\Game\TitleScene.cpp" />
     <ClCompile Include="Engine\Scene\Game\GameScene.cpp" />
     <ClCompile Include="Engine\Scene\Game\ResultScene.cpp" />
+    <ClCompile Include="Engine\Graphics\Render\Particle\ParticleRenderer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Engine\WinApp\WinApp.h">
@@ -656,6 +657,7 @@
     <ClInclude Include="Engine\Scene\Game\TitleScene.h" />
     <ClInclude Include="Engine\Scene\Game\GameScene.h" />
     <ClInclude Include="Engine\Scene\Game\ResultScene.h" />
+    <ClInclude Include="Engine\Graphics\Render\Particle\ParticleRenderer.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Engine\Particle\README.md">

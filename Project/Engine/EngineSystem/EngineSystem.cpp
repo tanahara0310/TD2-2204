@@ -15,6 +15,7 @@
 #include "Engine/Graphics/Render/Model/SkinnedModelRenderer.h"
 #include "Engine/Graphics/Render/SkyBox/SkyBoxRenderer.h"
 #include "Engine/Graphics/Render/Sprite/SpriteRenderer.h"
+#include "Engine/Graphics/Render/Particle/ParticleRenderer.h"
 
 // 入力管理
 #include "Engine/Input/InputManager.h"
@@ -51,9 +52,6 @@ void EngineSystem::Initialize(WinApp* winApp)
 
 	// ライト関連（GraphicsComponents 後に初期化）
 	CreateLightComponents();
-
-	// パーティクル関連（GraphicsComponents 後に初期化）
-	CreateParticleComponents();
 
 	// 統一乱数生成器の初期化
 	RandomGenerator::GetInstance().Initialize();
@@ -265,6 +263,12 @@ void EngineSystem::CreateGraphicsComponents()
 	spriteRenderer->Initialize(dxPtr, resourcePtr);
 	renderManager->RegisterRenderer(RenderPassType::Sprite, std::move(spriteRenderer));
 	
+	// ParticleRendererの作成と登録
+	auto particleRenderer = std::make_unique<ParticleRenderer>();
+	particleRenderer->SetResourceFactory(resourcePtr);
+	particleRenderer->Initialize(dxPtr->GetDevice());
+	renderManager->RegisterRenderer(RenderPassType::Particle, std::move(particleRenderer));
+	
 	// RenderManagerを登録
 	RegisterComponent(std::move(renderManager));
 
@@ -352,14 +356,6 @@ void EngineSystem::CreateLightComponents()
 			skinnedRenderer->SetLightManager(lightManagerPtr);
 		}
 	}
-}
-
-void EngineSystem::CreateParticleComponents()
-{
-	// ParticleSystemの作成と初期化（DirectXCommon と ResourceFactory が必要）
-	auto particleSystem = std::make_unique<ParticleSystem>();
-	particleSystem->Initialize(GetComponent<DirectXCommon>(), GetComponent<ResourceFactory>());
-	RegisterComponent(std::move(particleSystem));
 }
 
 #pragma endregion

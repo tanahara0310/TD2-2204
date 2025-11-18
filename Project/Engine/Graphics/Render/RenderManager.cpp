@@ -2,6 +2,8 @@
 #include "Engine/TestGameObject/IDrawable.h"
 #include "Engine/TestGameObject/Object2d.h"
 #include "Engine/TestGameObject/Object3d.h"
+#include "Engine/Particle/ParticleSystem.h"
+#include "Engine/Graphics/Render/Particle/ParticleRenderer.h"
 #include <algorithm>
 
 void RenderManager::Initialize(ID3D12Device* device) {
@@ -68,12 +70,24 @@ void RenderManager::DrawAll() {
 			currentPass = cmd.passType;
 			auto it = renderers_.find(currentPass);
 			if (it != renderers_.end()) {
-				it->second->BeginPass(cmdList_, BlendMode::kBlendModeNone);
+				// パーティクルの場合はブレンドモードを取得して渡す
+				BlendMode blendMode = BlendMode::kBlendModeNone;
+				if (currentPass == RenderPassType::Particle) {
+					auto* particle = static_cast<ParticleSystem*>(cmd.object);
+					blendMode = particle->GetBlendMode();
+				}
+				it->second->BeginPass(cmdList_, blendMode);
 			}
 		}
 
 		// オブジェクトを描画
-		if (cmd.object->Is2D()) {
+		if (cmd.passType == RenderPassType::Particle) {
+			// パーティクルシステム（ParticleRendererが描画）
+			auto* particleRenderer = dynamic_cast<ParticleRenderer*>(renderers_[currentPass].get());
+			if (particleRenderer && camera_) {
+				particleRenderer->Draw(static_cast<ParticleSystem*>(cmd.object));
+			}
+		} else if (cmd.object->Is2D()) {
 			// 2Dオブジェクト（カメラ不要）
 			static_cast<Object2d*>(cmd.object)->Draw();
 		} else {

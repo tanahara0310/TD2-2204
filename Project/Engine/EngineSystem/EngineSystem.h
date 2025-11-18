@@ -134,7 +134,6 @@ void CreateGraphicsComponents();
 void CreateInputComponents();
 void CreateAudioComponents();
 void CreateLightComponents();
-void CreateParticleComponents();
 void CreateFrameRateController();
     
 // ──────────────────────────────────────────────────────────

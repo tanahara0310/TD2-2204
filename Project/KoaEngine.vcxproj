@@ -173,6 +173,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="Engine\Graphics\PostEffect\PostEffectPresetManager.cpp" />
     <ClCompile Include="Engine\Graphics\Render\Model\ModelRenderer.cpp" />
     <ClCompile Include="Engine\Graphics\Render\Model\SkinnedModelRenderer.cpp" />
+    <ClCompile Include="Engine\Graphics\Render\Particle\ParticleRenderer.cpp" />
     <ClCompile Include="Engine\Graphics\Render\RenderManager.cpp" />
     <ClCompile Include="Engine\Graphics\Render\SkyBox\SkyBoxRenderer.cpp" />
     <ClCompile Include="Engine\Graphics\Render\Sprite\SpriteRenderer.cpp" />
@@ -332,6 +333,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="Engine\Graphics\Render\IRenderer.h" />
     <ClInclude Include="Engine\Graphics\Render\Model\ModelRenderer.h" />
     <ClInclude Include="Engine\Graphics\Render\Model\SkinnedModelRenderer.h" />
+    <ClInclude Include="Engine\Graphics\Render\Particle\ParticleRenderer.h" />
     <ClInclude Include="Engine\Graphics\Render\RenderManager.h" />
     <ClInclude Include="Engine\Graphics\Render\RenderPassType.h" />
     <ClInclude Include="Engine\Graphics\Render\SkyBox\SkyBoxRenderer.h" />

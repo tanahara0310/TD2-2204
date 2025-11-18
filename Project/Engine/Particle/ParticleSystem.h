@@ -19,10 +19,11 @@
 #include "Engine/Graphics/Common/DirectXCommon.h"
 #include "Engine/Graphics/Resource/ResourceFactory.h"
 #include "Engine/Graphics/Material/MaterialManager.h"
+#include "Engine/Graphics/TextureManager.h"
 #include "Engine/Graphics/PipelineStateManager.h"
-#include "Engine/Graphics/RootSignatureManager.h"
-#include "Engine/Graphics/Shader/ShaderCompiler.h"
-#include "Engine/Graphics/Structs/VertexData.h"
+
+// IDrawableインターフェース
+#include "Engine/TestGameObject/IDrawable.h"
 
 // モジュール関連
 #include "Modules/EmissionModule.h"
@@ -37,6 +38,9 @@
 #include "ParticlePresetManager.h"
 
 using namespace MathCore;
+
+// 前方宣言
+class ICamera;
 
 // ビルボードタイプ
 enum class BillboardType {
@@ -64,27 +68,41 @@ struct ParticleForGPU {
 };
 
 /// @brief パーティクルシステムクラス
-class ParticleSystem {
+class ParticleSystem : public IDrawable {
 public:
     static constexpr uint32_t kNumMaxInstance = 4096; // パーティクルの最大数
 
     ParticleSystem() = default;
-    ~ParticleSystem() = default;
+    ~ParticleSystem() override = default;
 
     /// @brief 初期化
     /// @param dxCommon DirectXCommon
     /// @param resourceFactory リソースファクトリ
     void Initialize(DirectXCommon* dxCommon, ResourceFactory* resourceFactory);
 
-    /// @brief 更新処理
-    /// @param viewMatrix ビュー行列
-    /// @param projectionMatrix プロジェクション行列
-    void Update(const Matrix4x4& viewMatrix, const Matrix4x4& projectionMatrix);
+    /// @brief 更新処理（カメラから自動的にビュー・プロジェクション行列を取得）
+    /// @param camera カメラオブジェクト
+    void Update(ICamera* camera);
 
-    /// @brief 描画
-    /// @param commandList コマンドリスト
-    /// @param textureHandle テクスチャハンドル
-    void Draw(ID3D12GraphicsCommandList* commandList, D3D12_GPU_DESCRIPTOR_HANDLE textureHandle);
+    /// @brief 描画（統一描画システム用）
+    /// @param camera カメラオブジェクト
+    void Draw(ICamera* camera);
+
+    // ──────────────────────────────────────────────────────────
+    // IDrawableインターフェース実装
+    // ──────────────────────────────────────────────────────────
+
+    /// @brief 描画パスタイプを取得
+    RenderPassType GetRenderPassType() const override { return RenderPassType::Particle; }
+
+    /// @brief オブジェクト名を取得
+    const char* GetObjectName() const override { return "ParticleSystem"; }
+
+    /// @brief ImGuiデバッグUI描画
+    bool DrawImGui() override;
+
+    /// @brief 2Dオブジェクトかどうかを判定
+    bool Is2D() const override { return false; }
 
     // ──────────────────────────────────────────────────────────
     // パーティクルシステム制御
@@ -102,6 +120,18 @@ public:
 
     /// @brief 全パーティクルクリア
     void Clear();
+
+    // ──────────────────────────────────────────────────────────
+    // テクスチャ管理
+    // ──────────────────────────────────────────────────────────
+
+    /// @brief テクスチャを設定
+    /// @param texturePath テクスチャパス
+    void SetTexture(const std::string& texturePath);
+
+    /// @brief テクスチャハンドルを取得
+    /// @return テクスチャのGPUハンドル
+    D3D12_GPU_DESCRIPTOR_HANDLE GetTextureHandle() const { return texture_.gpuHandle; }
 
     // ──────────────────────────────────────────────────────────
     // 設定アクセッサ
@@ -130,6 +160,19 @@ public:
     /// @brief ブレンドモードを取得
     /// @return ブレンドモード
     BlendMode GetBlendMode() const { return blendMode_; }
+
+    // ──────────────────────────────────────────────────────────
+    // レンダラーがアクセスするためのゲッター
+    // ──────────────────────────────────────────────────────────
+
+    /// @brief インスタンス数を取得
+    uint32_t GetInstanceCount() const { return instanceCount_; }
+
+    /// @brief インスタンシングSRVのGPUハンドルを取得
+    D3D12_GPU_DESCRIPTOR_HANDLE GetInstancingSrvHandleGPU() const { return instancingSrvHandleGPU_; }
+
+    /// @brief マテリアルのGPU仮想アドレスを取得
+    D3D12_GPU_VIRTUAL_ADDRESS GetMaterialGPUAddress() const { return materialManager_->GetGPUVirtualAddress(); }
 
     // ──────────────────────────────────────────────────────────
     // モジュールアクセッサ
@@ -176,15 +219,14 @@ public:
     uint32_t GetMaxParticleCount() const { return kNumMaxInstance; }
 
     struct Statistics {
-        uint32_t totalParticlesCreated = 0;      // 作成された総パーティクル数
-        uint32_t totalParticlesDestroyed = 0;    // 破棄された総パーティクル数
-        uint32_t peakParticleCount = 0;          // 最大同時パーティクル数
-        float averageLifetime = 0.0f;            // 平均ライフタイム
-        float systemRuntime = 0.0f;              // システム稼働時間
+        uint32_t totalParticlesCreated = 0;
+        uint32_t totalParticlesDestroyed = 0;
+        uint32_t peakParticleCount = 0;
+        float averageLifetime = 0.0f;
+        float systemRuntime = 0.0f;
     };
     
     /// @brief 統計情報を取得
-    /// @return 統計情報の参照
     const Statistics& GetStatistics() const { return statistics_; }
 
     /// @brief 統計情報をリセット
@@ -193,15 +235,11 @@ public:
         statistics_.systemRuntime = 0.0f;
     }
 
-    /// @brief ImGuiデバッグ表示
-    void ShowImGui();
-
 private:
     // ──────────────────────────────────────────────────────────
     // パーティクルシステムのコア
     // ──────────────────────────────────────────────────────────
 
-    // DirectXCommonへのポインタ
     DirectXCommon* dxCommon_ = nullptr;
     ResourceFactory* resourceFactory_ = nullptr;
 
@@ -214,9 +252,12 @@ private:
     BillboardType billboardType_ = BillboardType::ViewFacing;
     BlendMode blendMode_ = BlendMode::kBlendModeAdd;
 
+    // テクスチャ
+    TextureManager::LoadedTexture texture_;
+
     // 統計情報
     Statistics statistics_;
-    float deltaTimeAccumulator_ = 0.0f; // 時間の累積用
+    float deltaTimeAccumulator_ = 0.0f;
 
     // ──────────────────────────────────────────────────────────
     // モジュール
@@ -230,7 +271,6 @@ private:
     std::unique_ptr<SizeModule> sizeModule_;
     std::unique_ptr<RotationModule> rotationModule_;
 
-    // プリセット管理
     std::unique_ptr<ParticlePresetManager> presetManager_ = std::make_unique<ParticlePresetManager>();
 
     // ──────────────────────────────────────────────────────────
@@ -243,50 +283,18 @@ private:
     D3D12_GPU_DESCRIPTOR_HANDLE instancingSrvHandleGPU_ = {};
     ParticleForGPU* instancingData_ = nullptr;
 
-    // 頂点データ
-    Microsoft::WRL::ComPtr<ID3D12Resource> vertexBuffer_;
-    D3D12_VERTEX_BUFFER_VIEW vertexBufferView_ = {};
-
     // マテリアル
     std::unique_ptr<MaterialManager> materialManager_ = std::make_unique<MaterialManager>();
-
-    // パイプライン
-    std::unique_ptr<PipelineStateManager> pipelineMg_ = std::make_unique<PipelineStateManager>();
-    std::unique_ptr<RootSignatureManager> rootSignatureMg_ = std::make_unique<RootSignatureManager>();
-    std::unique_ptr<ShaderCompiler> shaderCompiler_ = std::make_unique<ShaderCompiler>();
 
     // ──────────────────────────────────────────────────────────
     // 内部処理
     // ──────────────────────────────────────────────────────────
 
-    /// @brief パーティクルの放出
-    /// @param count 放出数
     void EmitParticles(uint32_t count);
-
-    /// @brief 新しいパーティクルを作成
-    /// @return 作成されたパーティクル
     Particle CreateNewParticle();
-
-    /// @brief パーティクルの更新
-    /// @param deltaTime フレーム時間
-    /// @param viewProjectionMatrix ビュープロジェクション行列
-    /// @param billboardMatrix ビルボード行列
     void UpdateParticles(float deltaTime, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& billboardMatrix);
-
-    /// @brief ビルボード行列の作成
-    /// @param viewMatrix ビュー行列
-    /// @return ビルボード行列
     Matrix4x4 CreateBillboardMatrix(const Matrix4x4& viewMatrix);
-
-    /// @brief リソースの作成
     void ResourceCreate();
-
-    /// @brief SRVの作成
     void CreateSRV();
-
-    /// @brief ルートシグネチャの作成
-    void CreateRootSignature();
-
-    /// @brief パイプラインステートオブジェクトの作成
-    void CreatePSO();
+    void ShowImGui();
 };
