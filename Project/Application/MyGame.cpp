@@ -4,6 +4,7 @@
 #include "Scene/TestScene/TestScene.h"
 #include "Scene/Game/TitleScene.h"
 #include "Scene/Game/GameScene.h"
+#include "Scene/Game/ResultScene.h"
 
 MyGame::~MyGame() = default;
 
@@ -20,11 +21,12 @@ void MyGame::Initialize()
 	sceneManager_->RegisterScene<TestScene>("TestScene");
 	sceneManager_->RegisterScene<TitleScene>("TitleScene");
 	sceneManager_->RegisterScene<GameScene>("GameScene");
+	sceneManager_->RegisterScene<ResultScene>("ResultScene");
 	
 	
 
 	// 初期シーンを設定
-	sceneManager_->ChangeScene("GameScene");
+	sceneManager_->ChangeScene("TitleScene");
 
 	// ===== コンソールログ出力とシーンマネージャーの設定 =====
 #ifdef _DEBUG

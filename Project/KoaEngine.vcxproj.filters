@@ -244,6 +244,9 @@
     <ClCompile Include="externals\imgui\imgui_tables.cpp" />
     <ClCompile Include="externals\imgui\imgui_widgets.cpp" />
     <ClCompile Include="externals\imgui\ImGuizmo.cpp" />
+    <ClCompile Include="Engine\Scene\Game\TitleScene.cpp" />
+    <ClCompile Include="Engine\Scene\Game\GameScene.cpp" />
+    <ClCompile Include="Engine\Scene\Game\ResultScene.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Engine\WinApp\WinApp.h">
@@ -650,6 +653,9 @@
     <ClInclude Include="externals\imgui\imstb_rectpack.h" />
     <ClInclude Include="externals\imgui\imstb_textedit.h" />
     <ClInclude Include="externals\imgui\imstb_truetype.h" />
+    <ClInclude Include="Engine\Scene\Game\TitleScene.h" />
+    <ClInclude Include="Engine\Scene\Game\GameScene.h" />
+    <ClInclude Include="Engine\Scene\Game\ResultScene.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Engine\Particle\README.md">
