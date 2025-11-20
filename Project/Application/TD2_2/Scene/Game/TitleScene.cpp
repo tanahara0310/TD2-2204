@@ -12,118 +12,71 @@
 #include "MathCore.h"
 
 void TitleScene::Initialize(EngineSystem* engine) {
-	engine_ = engine;
+   BaseScene::Initialize(engine);
 
-	// コンポーネントを直接取得
-	auto dxCommon = engine_->GetComponent<DirectXCommon>();
-	if (!dxCommon) {
-		return; // 必須コンポーネントがない場合は終了
-	}
+   // ゲームオブジェクトの初期化
+   {
+	  // 球体オブジェクトの生成と初期化
+	  auto sphere = std::make_unique<Sphere>();
+	  sphere->Initialize(engine_);
+	  gameObjects_.push_back(std::move(sphere));
 
-	// カメラマネージャーの初期化とカメラの登録
-	{
-		// リリースカメラを作成して登録
-		auto releaseCamera = std::make_unique<Camera>();
-		releaseCamera->Initialize(dxCommon->GetDevice());
-		cameraManager_->RegisterCamera("Release", std::move(releaseCamera));
-
-		// デバッグカメラを作成して登録（デバイスを渡す）
-		auto debugCamera = std::make_unique<DebugCamera>();
-		debugCamera->Initialize(engine_, dxCommon->GetDevice());
-		cameraManager_->RegisterCamera("Debug", std::move(debugCamera));
-
-		// デフォルトでデバッグカメラをアクティブに設定
-		cameraManager_->SetActiveCamera("Debug");
-
-	}
-
-	{
-
-		// このシーン専用のディレクショナルライトを作成
-		auto lightManager = engine_->GetComponent<LightManager>();
-		if (lightManager) {
-			directionalLight_ = lightManager->AddDirectionalLight();
-			if (directionalLight_) {
-				directionalLight_->color = { 1.0f, 1.0f, 1.0f, 1.0f };
-				directionalLight_->direction = MathCore::Vector::Normalize({ 0.0f, -1.0f, 0.5f });
-				directionalLight_->intensity = 1.0f;
-				directionalLight_->enabled = true;
-			}
-		}
-	}
-
-	// ゲームオブジェクトの初期化
-	{
-		// 球体オブジェクトの生成と初期化
-		auto sphere = std::make_unique<Sphere>();
-		sphere->Initialize(engine_);
-		gameObjects_.push_back(std::move(sphere));
-
-	}
+   }
 }
 
 void TitleScene::Update() {
-	// カメラマネージャーの更新
-	if (cameraManager_) {
-		cameraManager_->Update();
-	}
+   BaseScene::Update();
 
-	// ライトマネージャーの更新
-	auto lightManager = engine_->GetComponent<LightManager>();
-	if (lightManager) {
-		lightManager->UpdateAll();
-	}
-
-	// ゲームオブジェクトの更新
-	for (auto& obj : gameObjects_) {
-		if (obj->IsActive()) {
-			obj->Update();
-		}
-	}
+   // ゲームオブジェクトの更新
+   for (auto& obj : gameObjects_) {
+	  if (obj->IsActive()) {
+		 obj->Update();
+	  }
+   }
 
 
 #ifdef _DEBUG
-	// カメラマネージャーのImGui
-	cameraManager_->DrawImGui();
+   // カメラマネージャーのImGui
+   cameraManager_->DrawImGui();
 #endif
 }
 
 void TitleScene::Draw() {
-	// コンポーネント取得
-	auto renderManager = engine_->GetComponent<RenderManager>();
-	auto dxCommon = engine_->GetComponent<DirectXCommon>();
-	ICamera* activeCamera = cameraManager_->GetActiveCamera();
+   // コンポーネント取得
+   auto renderManager = engine_->GetComponent<RenderManager>();
+   auto dxCommon = engine_->GetComponent<DirectXCommon>();
+   ICamera* activeCamera = cameraManager_->GetActiveCamera();
 
-	// 必須コンポーネントのチェック
-	if (!renderManager || !dxCommon || !activeCamera) {
-		return;
-	}
+   // 必須コンポーネントのチェック
+   if (!renderManager || !dxCommon || !activeCamera) {
+	  return;
+   }
 
-	// ===== RenderManagerによる統一描画システム =====
-	if (renderManager) {
-		// フレーム開始時に描画コンテキストを設定（1回のみ）
-		renderManager->SetCamera(activeCamera);
-		renderManager->SetCommandList(dxCommon->GetCommandList());
+   // ===== RenderManagerによる統一描画システム =====
+   if (renderManager) {
+	  // フレーム開始時に描画コンテキストを設定（1回のみ）
+	  renderManager->SetCamera(activeCamera);
+	  renderManager->SetCommandList(dxCommon->GetCommandList());
 
-		// 描画対象オブジェクトをキューに追加
-		for (auto& obj : gameObjects_) {
-			if (obj->IsActive()) {
-				renderManager->AddDrawable(obj.get());
-			}
-		}
+	  // 描画対象オブジェクトをキューに追加
+	  for (auto& obj : gameObjects_) {
+		 if (obj->IsActive()) {
+			renderManager->AddDrawable(obj.get());
+		 }
+	  }
 
-		// 一括描画（自動的にパスごとにソート・グループ化）
-		renderManager->DrawAll();
+	  // 一括描画（自動的にパスごとにソート・グループ化）
+	  renderManager->DrawAll();
 
-		// フレーム終了時にキューをクリア
-		renderManager->ClearQueue();
-	}
+	  // フレーム終了時にキューをクリア
+	  renderManager->ClearQueue();
+   }
 }
 
 void TitleScene::Finalize() {
 
-	// このシーン専用のライトを削除
-	directionalLight_ = nullptr;
+   // このシーン専用のライトを削除
+   directionalLight_ = nullptr;
 
-	engine_ = nullptr;
+   engine_ = nullptr;
 }
