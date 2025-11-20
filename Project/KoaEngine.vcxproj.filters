@@ -243,16 +243,13 @@
     <ClCompile Include="externals\imgui\imgui_tables.cpp" />
     <ClCompile Include="externals\imgui\imgui_widgets.cpp" />
     <ClCompile Include="externals\imgui\ImGuizmo.cpp" />
-    <ClCompile Include="Application\Scene\Game\TitleScene.cpp" />
-    <ClCompile Include="Application\Scene\Game\GameScene.cpp" />
-    <ClCompile Include="Application\Scene\Game\ResultScene.cpp" />
     <ClCompile Include="Engine\Graphics\Render\Particle\ParticleRenderer.cpp" />
-    <ClCompile Include="Application\GameObject\Title\Sphere.cpp" />
     <ClCompile Include="Application\TD2_2\Scene\TestScene\TestScene.cpp" />
     <ClCompile Include="Application\TD2_2\Scene\Game\GameScene.cpp" />
     <ClCompile Include="Application\TD2_2\Scene\Game\ResultScene.cpp" />
     <ClCompile Include="Application\TD2_2\Scene\Game\TitleScene.cpp" />
     <ClCompile Include="Application\TD2_2\GameObject\Title\Sphere.cpp" />
+    <ClCompile Include="Engine\Scene\BaseScene.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Engine\WinApp\WinApp.h">
@@ -656,17 +653,14 @@
     <ClInclude Include="externals\imgui\imstb_rectpack.h" />
     <ClInclude Include="externals\imgui\imstb_textedit.h" />
     <ClInclude Include="externals\imgui\imstb_truetype.h" />
-    <ClInclude Include="Application\Scene\Game\TitleScene.h" />
-    <ClInclude Include="Application\Scene\Game\GameScene.h" />
-    <ClInclude Include="Application\Scene\Game\ResultScene.h" />
     <ClInclude Include="Engine\Graphics\Render\Particle\ParticleRenderer.h" />
-    <ClInclude Include="Application\GameObject\Title\Sphere.h" />
     <ClInclude Include="Application\GameObject\GameObject.h" />
     <ClInclude Include="Application\TD2_2\Scene\TestScene\TestScene.h" />
     <ClInclude Include="Application\TD2_2\Scene\Game\GameScene.h" />
     <ClInclude Include="Application\TD2_2\Scene\Game\ResultScene.h" />
     <ClInclude Include="Application\TD2_2\Scene\Game\TitleScene.h" />
     <ClInclude Include="Application\TD2_2\GameObject\Title\Sphere.h" />
+    <ClInclude Include="Engine\Scene\BaseScene.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Engine\Particle\README.md">
