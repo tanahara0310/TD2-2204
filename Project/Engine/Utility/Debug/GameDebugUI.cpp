@@ -79,7 +79,7 @@ void GameDebugUI::ShowMainMenuBar()
 void GameDebugUI::UpdateDebugPanels()
 {
 	// ライティング用のUIを表示する
-	if (ImGui::Begin(LIGHTING_WINDOW)) {
+	if (ImGui::Begin(LightWindow)) {
 		auto lightManager = engine_->GetComponent<LightManager>();
 		if (lightManager) {
 			lightManager->DrawAllImGui();
@@ -88,7 +88,7 @@ void GameDebugUI::UpdateDebugPanels()
 	ImGui::End();
 
 	// エンジン情報のデバッグUI
-	if (ImGui::Begin(ENGINE_DEBUG_WINDOW)) {
+	if (ImGui::Begin(engineDebugWindow)) {
 		if (showEngineInfo_) {
 			ShowEngineInfoUI();
 		}
@@ -114,7 +114,7 @@ void GameDebugUI::ShowConsoleUI()
 
 void GameDebugUI::ShowSceneManagerUI()
 {
-	if (ImGui::Begin(SCENE_MANAGER_WINDOW, &showSceneManager_)) {
+	if (ImGui::Begin(sceneManagerWindow, &showSceneManager_)) {
 		sceneManagerTab_->DrawImGui();
 	}
 	ImGui::End();
@@ -123,7 +123,7 @@ void GameDebugUI::ShowSceneManagerUI()
 void GameDebugUI::ShowLightingDebugUI()
 {
 	// ライトマネージャーを取得
-	if (ImGui::Begin(LIGHTING_WINDOW)) {
+	if (ImGui::Begin(LightWindow)) {
 		auto lightManager = engine_->GetComponent<LightManager>();
 		if (lightManager) {
 			lightManager->DrawAllImGui();
@@ -227,77 +227,31 @@ void GameDebugUI::ShowFPSInfoTab(FrameRateController* frameRate)
 	ImGui::Separator();
 	ImGui::Spacing();
 	
-	// フレーム時間
-	ImGui::TextColored(ImVec4(0.5f, 0.8f, 1.0f, 1.0f), "[フレーム時間]");
-	
-	float targetFrameTimeMs = (1.0f / targetFPS) * 1000.0f;
-	float actualFrameTimeMs = frameRate->GetActualFrameTimeMs();
-	float processTimeMs = frameRate->GetProcessTimeMs();
-	
-	ImGui::Text("目標: %.2f ms", targetFrameTimeMs);
-	ImGui::Text("実測: %.2f ms", actualFrameTimeMs);
-	ImGui::Text("処理: %.2f ms", processTimeMs);
-	
-	// プログレスバーで処理時間の割合を表示
-	float processFraction = processTimeMs / targetFrameTimeMs;
-	ImVec4 barColor = processFraction < 0.90f ? ImVec4(0.0f, 0.8f, 0.0f, 1.0f) : ImVec4(1.0f, 0.5f, 0.0f, 1.0f);
-	ImGui::PushStyleColor(ImGuiCol_PlotHistogram, barColor);
-	ImGui::ProgressBar(processFraction, ImVec2(-1, 20), "");
-	ImGui::PopStyleColor();
-	
-	ImGui::Text("CPU使用率: %.1f%%", processFraction * 100.0f);
-	
-	ImGui::Spacing();
-	ImGui::Separator();
-	ImGui::Spacing();
-	
-	// FPS統計（過去2秒）
-	ImGui::TextColored(ImVec4(0.5f, 0.8f, 1.0f, 1.0f), "[FPS統計 (過去2秒)]");
-	
-	float minFPS = frameRate->GetMinFPS();
-	float maxFPS = frameRate->GetMaxFPS();
-	
-	ImGui::Text("最小: %.1f FPS", minFPS);
-	ImGui::Text("最大: %.1f FPS", maxFPS);
-	ImGui::Text("変動: %.1f FPS", maxFPS - minFPS);
-	
-	// 安定性インジケーター
-	float stability = 100.0f * (1.0f - ((maxFPS - minFPS) / targetFPS));
-	if (stability < 0.0f) stability = 0.0f;
-	if (stability > 100.0f) stability = 100.0f;
-	
-	ImVec4 stabilityColor;
-	if (stability >= 95.0f) {
-		stabilityColor = ImVec4(0.0f, 1.0f, 0.0f, 1.0f);
-	} else if (stability >= 85.0f) {
-		stabilityColor = ImVec4(1.0f, 0.8f, 0.0f, 1.0f);
-	} else {
-		stabilityColor = ImVec4(1.0f, 0.2f, 0.0f, 1.0f);
-	}
-	
-	ImGui::Text("安定性: ");
-	ImGui::SameLine();
-	ImGui::PushStyleColor(ImGuiCol_Text, stabilityColor);
-	ImGui::Text("%.1f%%", stability);
-	ImGui::PopStyleColor();
-	
-	ImGui::Spacing();
-	ImGui::Separator();
-	ImGui::Spacing();
-	
 	// デルタタイム
 	ImGui::TextColored(ImVec4(0.5f, 0.8f, 1.0f, 1.0f), "[デルタタイム]");
 	float deltaTime = frameRate->GetDeltaTime();
+	float deltaTimeMs = deltaTime * 1000.0f;
 	ImGui::Text("%.6f 秒", deltaTime);
-	ImGui::Text("%.3f ms", deltaTime * 1000.0f);
+	ImGui::Text("%.3f ms", deltaTimeMs);
+	
+	// プログレスバーでフレーム時間の割合を表示
+	float targetFrameTimeMs = (1.0f / targetFPS) * 1000.0f;
+	float timeFraction = deltaTimeMs / targetFrameTimeMs;
+	ImVec4 barColor = timeFraction < 1.05f ? ImVec4(0.0f, 0.8f, 0.0f, 1.0f) : ImVec4(1.0f, 0.5f, 0.0f, 1.0f);
+	ImGui::PushStyleColor(ImGuiCol_PlotHistogram, barColor);
+	ImGui::ProgressBar(timeFraction, ImVec2(-1, 20), "");
+	ImGui::PopStyleColor();
+	
+	ImGui::Spacing();
+	ImGui::Separator();
+	ImGui::Spacing();
 }
 
 void GameDebugUI::ShowDetailedPerformanceTab(FrameRateController* frameRate)
 {
+	float currentFPS = frameRate->GetCurrentFPS();
 	float targetFPS = frameRate->GetTargetFPS();
-	float targetFrameTimeMs = (1.0f / targetFPS) * 1000.0f;
-	float actualFrameTimeMs = frameRate->GetActualFrameTimeMs();
-	float processTimeMs = frameRate->GetProcessTimeMs();
+	float deltaTime = frameRate->GetDeltaTime();
 	
 	// フレーム時間の詳細
 	ImGui::TextColored(ImVec4(0.2f, 1.0f, 0.8f, 1.0f), "[フレーム時間の詳細]");
@@ -307,12 +261,14 @@ void GameDebugUI::ShowDetailedPerformanceTab(FrameRateController* frameRate)
 	ImGui::SetColumnWidth(0, 150);
 	
 	// 目標フレーム時間
+	float targetFrameTimeMs = (1.0f / targetFPS) * 1000.0f;
 	ImGui::Text("目標フレーム時間");
 	ImGui::NextColumn();
 	ImGui::Text("%.2f ms", targetFrameTimeMs);
 	ImGui::NextColumn();
 	
 	// 実測フレーム時間
+	float actualFrameTimeMs = deltaTime * 1000.0f;
 	ImGui::Text("実測フレーム時間");
 	ImGui::NextColumn();
 	ImVec4 frameTimeColor;
@@ -328,78 +284,31 @@ void GameDebugUI::ShowDetailedPerformanceTab(FrameRateController* frameRate)
 	ImGui::PopStyleColor();
 	ImGui::NextColumn();
 	
-	// 処理時間
-	ImGui::Text("処理時間");
-	ImGui::NextColumn();
-	ImGui::Text("%.2f ms", processTimeMs);
-	ImGui::NextColumn();
-	
-	// 待機時間
-	float waitTimeMs = actualFrameTimeMs - processTimeMs;
-	ImGui::Text("待機時間");
-	ImGui::NextColumn();
-	ImGui::Text("%.2f ms", waitTimeMs);
-	ImGui::NextColumn();
-	
 	ImGui::Columns(1);
 	
 	ImGui::Spacing();
 	ImGui::Separator();
 	ImGui::Spacing();
 	
-	// 処理時間の割合
-	ImGui::TextColored(ImVec4(0.2f, 1.0f, 0.8f, 1.0f), "[処理時間の内訳]");
+	
+	// FPS情報
+	ImGui::TextColored(ImVec4(0.2f, 1.0f, 0.8f, 1.0f), "[FPS情報]");
 	ImGui::Spacing();
 	
-	float processFraction = processTimeMs / targetFrameTimeMs;
-	float waitFraction = waitTimeMs / targetFrameTimeMs;
+	ImGui::Columns(2, "FPSColumns", true);
+	ImGui::SetColumnWidth(0, 150);
 	
-	ImGui::Text("処理: %.1f%%", processFraction * 100.0f);
-	ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(0.2f, 0.6f, 1.0f, 1.0f));
-	ImGui::ProgressBar(processFraction, ImVec2(-1, 20), "");
-	ImGui::PopStyleColor();
+	ImGui::Text("現在のFPS");
+	ImGui::NextColumn();
+	ImGui::Text("%.1f", currentFPS);
+	ImGui::NextColumn();
 	
-	ImGui::Text("待機: %.1f%%", waitFraction * 100.0f);
-	ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(0.4f, 0.4f, 0.4f, 1.0f));
-	ImGui::ProgressBar(waitFraction, ImVec2(-1, 20), "");
-	ImGui::PopStyleColor();
+	ImGui::Text("目標FPS");
+	ImGui::NextColumn();
+	ImGui::Text("%.0f", targetFPS);
+	ImGui::NextColumn();
 	
-	ImGui::Spacing();
-	ImGui::Separator();
-	ImGui::Spacing();
-	
-	// レンダリング設定
-	ImGui::TextColored(ImVec4(0.2f, 1.0f, 0.8f, 1.0f), "[レンダリング設定]");
-	ImGui::Spacing();
-	
-	ImGui::Text("- VSync: 有効 (60Hz)");
-	ImGui::Text("- ダブルバッファリング: 有効");
-	ImGui::Text("- GPU並列処理: 有効");
-	
-	ImGui::Spacing();
-	ImGui::Separator();
-	ImGui::Spacing();
-	
-	// FPSドロップ情報
-	ImGui::TextColored(ImVec4(0.2f, 1.0f, 0.8f, 1.0f), "[パフォーマンス警告]");
-	ImGui::Spacing();
-	
-	int droppedFrames = frameRate->GetDroppedFrameCount();
-	if (droppedFrames > 0) {
-		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.5f, 0.0f, 1.0f));
-		ImGui::Text("- FPSドロップ回数: %d", droppedFrames);
-		ImGui::PopStyleColor();
-		
-		// 警告メッセージ
-		if (droppedFrames > 1000) {
-			ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), 
-				"警告: 頻繁なFPSドロップが検出されています");
-		}
-	} else {
-		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 1.0f, 0.0f, 1.0f));
-		ImGui::Text("- FPSドロップ: なし");
-		ImGui::PopStyleColor();
-	}
+	ImGui::Columns(1);
 	
 	ImGui::Spacing();
 	ImGui::Separator();
@@ -409,7 +318,6 @@ void GameDebugUI::ShowDetailedPerformanceTab(FrameRateController* frameRate)
 	ImGui::TextColored(ImVec4(0.2f, 1.0f, 0.8f, 1.0f), "[デルタタイム詳細]");
 	ImGui::Spacing();
 	
-	float deltaTime = frameRate->GetDeltaTime();
 	float expectedDeltaTime = 1.0f / targetFPS;
 	
 	ImGui::Columns(2, "DeltaTimeColumns", true);
@@ -442,6 +350,11 @@ void GameDebugUI::ShowDetailedPerformanceTab(FrameRateController* frameRate)
 	ImGui::NextColumn();
 	
 	ImGui::Columns(1);
+	
+	ImGui::Spacing();
+	ImGui::Separator();
+	ImGui::Spacing();
+	
 }
 
 void GameDebugUI::ShowSystemStatusTab()
@@ -516,17 +429,17 @@ void GameDebugUI::RegisterWindowsForDocking()
 	if (!dockingUI_) return;
 
 	// エンジンデバッグ情報を左上に配置
-	dockingUI_->RegisterWindow(ENGINE_DEBUG_WINDOW, DockArea::LeftTop);
+	dockingUI_->RegisterWindow(engineDebugWindow, DockArea::LeftTop);
 
 	// カメラ情報を左下に配置
 	dockingUI_->RegisterWindow("Camera", DockArea::LeftBottom);
 
 	// ライティング情報を右側に配置（インスペクター系と統一）
-	dockingUI_->RegisterWindow(LIGHTING_WINDOW, DockArea::Right);
+	dockingUI_->RegisterWindow(LightWindow, DockArea::Right);
 
 	// コンソールを下部左に配置
-	dockingUI_->RegisterWindow(CONSOLE_WINDOW, DockArea::BottomLeft);
+	dockingUI_->RegisterWindow(consoleWindow, DockArea::BottomLeft);
 
 	// シーンマネージャーを下部右に配置
-	dockingUI_->RegisterWindow(SCENE_MANAGER_WINDOW, DockArea::BottomRight);
+	dockingUI_->RegisterWindow(sceneManagerWindow, DockArea::BottomRight);
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Engine/Graphics/Render/RenderPassType.h"
+#include "Engine/Graphics/PipelineStateManager.h"
 
 /// @brief 描画可能オブジェクトの共通インターフェース
 class IDrawable {
@@ -24,6 +25,10 @@ public:
     
     /// @brief 2Dオブジェクトかどうかを判定
     virtual bool Is2D() const = 0;
+    
+    /// @brief ブレンドモードを取得
+    /// @return ブレンドモード（デフォルトはkBlendModeNone）
+    virtual BlendMode GetBlendMode() const { return BlendMode::kBlendModeNone; }
     
 protected:
     bool isActive_ = true;

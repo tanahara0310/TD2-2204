@@ -65,12 +65,21 @@ TextureManager::LoadedTexture TextureManager::Load(const std::string& filePath)
 		mipImages = std::move(image); //圧縮フォーマットの場合はミップマップ生成せずそのまま使う
 
 	} else {
+		// 画像サイズが1x1の場合はミップマップ生成をスキップ
+		const DirectX::TexMetadata& metadata = image.GetMetadata();
+		if (metadata.width == 1 && metadata.height == 1) {
+			// 1x1テクスチャの場合はそのまま使用
+			mipImages = std::move(image);
+		} else {
 
-		hr = DirectX::GenerateMipMaps(image.GetImages(), image.GetImageCount(), image.GetMetadata(), DirectX::TEX_FILTER_SRGB, 4, mipImages);
-	}
-
-	if (FAILED(hr)) {
-		throw std::runtime_error("Failed to generate mipmaps for texture: " + filePath);
+			size_t mipLevels = 0; // 0を指定すると自動的に最大ミップレベルを計算
+			
+			hr = DirectX::GenerateMipMaps(image.GetImages(), image.GetImageCount(), image.GetMetadata(), DirectX::TEX_FILTER_SRGB, mipLevels, mipImages);
+			
+			if (FAILED(hr)) {
+				throw std::runtime_error("Failed to generate mipmaps for texture: " + filePath);
+			}
+		}
 	}
 
 	const DirectX::TexMetadata& texMetadata = mipImages.GetMetadata();

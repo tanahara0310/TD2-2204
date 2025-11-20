@@ -54,10 +54,10 @@ private: // メンバ変数
     bool showSceneManager_ = true; // シーンマネージャーウィンドウの表示フラグ
 
     // ウィンドウ名定数（変更しやすくするため）
-    static constexpr const char* ENGINE_DEBUG_WINDOW = "Engine Debug Info";
-    static constexpr const char* LIGHTING_WINDOW = "Lighting";
-    static constexpr const char* CONSOLE_WINDOW = "Console"; // コンソールウィンドウ
-    static constexpr const char* SCENE_MANAGER_WINDOW = "Scene Manager"; // シーンマネージャーウィンドウ
+    static constexpr const char* engineDebugWindow = "Engine Debug Info";
+    static constexpr const char* LightWindow = "Lighting";
+    static constexpr const char* consoleWindow = "Console"; // コンソールウィンドウ
+    static constexpr const char* sceneManagerWindow = "Scene Manager"; // シーンマネージャーウィンドウ
 
 private: // デバッグ用のUIを表示するためのメソッド
     /// @brief エンジン情報UIを表示

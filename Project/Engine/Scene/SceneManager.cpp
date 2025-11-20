@@ -2,6 +2,7 @@
 #include <EngineSystem.h>
 #include "Engine/Graphics/Common/DirectXCommon.h"
 #include "Engine/Graphics/Light/LightManager.h"
+#include "Engine/Utility/FrameRate/FrameRateController.h"
 
 void SceneManager::Initialize(EngineSystem* engine) {
 	engine_ = engine;
@@ -82,6 +83,12 @@ void SceneManager::DoChangeScene(const std::string& name) {
 	auto lightManager = engine_->GetComponent<LightManager>();
 	if (lightManager) {
 		lightManager->ClearAllLights();
+	}
+	
+	// FPS計測をリセット（シーン切り替え時の異常値を防ぐ）
+	auto frameRateController = engine_->GetComponent<FrameRateController>();
+	if (frameRateController) {
+		frameRateController->ResetFPSMeasurement();
 	}
 	
 	// 新しいシーンを作成・初期化

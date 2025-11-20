@@ -1,6 +1,5 @@
 #include "Render.h"
 #include "Graphics/Common/DirectXCommon.h"
-#include "Utility/FrameRate/FrameRateController.h"
 #include "WinApp/WinApp.h"
 
 using namespace Microsoft::WRL;
@@ -36,12 +35,6 @@ void Render::Initialize(DirectXCommon* dxCommon, ComPtr<ID3D12DescriptorHeap> ds
 	scissorRect_.right = WinApp::kClientWidth;
 	scissorRect_.top = 0;
 	scissorRect_.bottom = WinApp::kClientHeight;
-}
-
-// FrameRateControllerを設定（EngineSystemから呼び出される）
-void Render::SetFrameRateController(FrameRateController* frameRateController)
-{
-	frameRateController_ = frameRateController;
 }
 
 // 描画前処理（1枚目のオフスクリーン）
