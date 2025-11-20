@@ -221,4 +221,4 @@ namespace CollisionUtils {
     /// @return 作成されたAABB
     BoundingBox CreateAABBFromPoints(const Vector3* points, size_t count);
 
-} // namespace CollisionUtils
+}

@@ -23,7 +23,7 @@
 #include "Engine/Graphics/PipelineStateManager.h"
 
 // IDrawableインターフェース
-#include "Engine/TestGameObject/IDrawable.h"
+#include <IDrawable.h>
 
 // モジュール関連
 #include "Modules/EmissionModule.h"

@@ -3,9 +3,12 @@
 #include <memory>
 #include "Scene/IScene.h"
 
+//ゲームオブジェクトのインクルード
+#include "Object3d.h"
+#include "Application/GameObjects/Title/Sphere.h"
+
 class EngineSystem;
 class CameraManager;
-struct DirectionalLightData;
 
 /// @brief タイトルシーンクラス
 class TitleScene : public IScene {
@@ -30,4 +33,6 @@ private:
 	
 	// このシーン専用のディレクショナルライト
 	DirectionalLightData* directionalLight_ = nullptr;
+
+	std::vector<std::unique_ptr<Object3d>> gameObjects_;
 };

@@ -35,32 +35,31 @@ void TitleScene::Initialize(EngineSystem* engine) {
 		// デフォルトでデバッグカメラをアクティブに設定
 		cameraManager_->SetActiveCamera("Debug");
 
-#ifdef _DEBUG
-		auto console = engine_->GetConsole();
-		if (console) {
-			console->LogInfo("TitleScene: カメラマネージャーを初期化しました");
-		}
-#endif
 	}
 
-	// このシーン専用のディレクショナルライトを作成
-	auto lightManager = engine_->GetComponent<LightManager>();
-	if (lightManager) {
-		directionalLight_ = lightManager->AddDirectionalLight();
-		if (directionalLight_) {
-			directionalLight_->color = { 1.0f, 1.0f, 1.0f, 1.0f };
-			directionalLight_->direction = MathCore::Vector::Normalize({ 0.0f, -1.0f, 0.5f });
-			directionalLight_->intensity = 1.0f;
-			directionalLight_->enabled = true;
+	{
+
+		// このシーン専用のディレクショナルライトを作成
+		auto lightManager = engine_->GetComponent<LightManager>();
+		if (lightManager) {
+			directionalLight_ = lightManager->AddDirectionalLight();
+			if (directionalLight_) {
+				directionalLight_->color = { 1.0f, 1.0f, 1.0f, 1.0f };
+				directionalLight_->direction = MathCore::Vector::Normalize({ 0.0f, -1.0f, 0.5f });
+				directionalLight_->intensity = 1.0f;
+				directionalLight_->enabled = true;
+			}
 		}
 	}
 
-#ifdef _DEBUG
-	auto console = engine_->GetConsole();
-	if (console) {
-		console->LogInfo("TitleScene: 初期化完了");
+	// ゲームオブジェクトの初期化
+	{
+		// 球体オブジェクトの生成と初期化
+		auto sphere = std::make_unique<Sphere>();
+		sphere->Initialize(engine_);
+		gameObjects_.push_back(std::move(sphere));
+
 	}
-#endif
 }
 
 void TitleScene::Update() {
@@ -74,6 +73,14 @@ void TitleScene::Update() {
 	if (lightManager) {
 		lightManager->UpdateAll();
 	}
+
+	// ゲームオブジェクトの更新
+	for (auto& obj : gameObjects_) {
+		if (obj->IsActive()) {
+			obj->Update();
+		}
+	}
+
 
 #ifdef _DEBUG
 	// カメラマネージャーのImGui
@@ -97,10 +104,17 @@ void TitleScene::Draw() {
 		// フレーム開始時に描画コンテキストを設定（1回のみ）
 		renderManager->SetCamera(activeCamera);
 		renderManager->SetCommandList(dxCommon->GetCommandList());
-		
+
+		// 描画対象オブジェクトをキューに追加
+		for (auto& obj : gameObjects_) {
+			if (obj->IsActive()) {
+				renderManager->AddDrawable(obj.get());
+			}
+		}
+
 		// 一括描画（自動的にパスごとにソート・グループ化）
 		renderManager->DrawAll();
-		
+
 		// フレーム終了時にキューをクリア
 		renderManager->ClearQueue();
 	}
@@ -110,6 +124,6 @@ void TitleScene::Finalize() {
 
 	// このシーン専用のライトを削除
 	directionalLight_ = nullptr;
-	
+
 	engine_ = nullptr;
 }

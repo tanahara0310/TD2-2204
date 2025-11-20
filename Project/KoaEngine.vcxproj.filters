@@ -208,7 +208,7 @@
     <ClCompile Include="Engine\Graphics\Model\ModelManager.cpp" />
     <ClCompile Include="Engine\Scene\TestScene\TestScene.cpp" />
     <ClCompile Include="Engine\EngineSystem\EngineSystem.cpp" />
-    <ClCompile Include="Engine\TestGameObject\Object3d.cpp" />
+    <ClCompile Include="Engine\ObjectCommon\Object3d.cpp" />
     <ClCompile Include="Engine\TestGameObject\SphereObject.cpp" />
     <ClCompile Include="Engine\TestGameObject\FenceObject.cpp" />
     <ClCompile Include="Engine\TestGameObject\TerrainObject.cpp" />
@@ -248,6 +248,7 @@
     <ClCompile Include="Application\Scene\Game\GameScene.cpp" />
     <ClCompile Include="Application\Scene\Game\ResultScene.cpp" />
     <ClCompile Include="Engine\Graphics\Render\Particle\ParticleRenderer.cpp" />
+    <ClCompile Include="Application\GameObjects\Title\Sphere.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Engine\WinApp\WinApp.h">
@@ -495,7 +496,7 @@
     <ClInclude Include="Engine\Graphics\Model\ModelManager.h" />
     <ClInclude Include="Engine\Graphics\Light\LightBuffers.h" />
     <ClInclude Include="Engine\EngineSystem\ComponentManager.h" />
-    <ClInclude Include="Engine\TestGameObject\Object3d.h" />
+    <ClInclude Include="Engine\ObjectCommon\Object3d.h" />
     <ClInclude Include="Engine\TestGameObject\SphereObject.h" />
     <ClInclude Include="Engine\TestGameObject\FenceObject.h" />
     <ClInclude Include="Engine\TestGameObject\TerrainObject.h" />
@@ -639,8 +640,8 @@
     <ClInclude Include="Engine\Graphics\Render\SkyBox\SkyBoxRenderer.h" />
     <ClInclude Include="Engine\Graphics\Render\Sprite\SpriteRenderer.h" />
     <ClInclude Include="Engine\TestGameObject\SpriteObject.h" />
-    <ClInclude Include="Engine\TestGameObject\IDrawable.h" />
-    <ClInclude Include="Engine\TestGameObject\Object2d.h" />
+    <ClInclude Include="Engine\ObjectCommon\IDrawable.h" />
+    <ClInclude Include="Engine\ObjectCommon\Object2d.h" />
     <ClInclude Include="Engine\Graphics\Light\LightData.h" />
     <ClInclude Include="Engine\Particle\ParticlePresetManager.h" />
     <ClInclude Include="Engine\Graphics\PostEffect\PostEffectPresetManager.h" />
@@ -658,6 +659,7 @@
     <ClInclude Include="Application\Scene\Game\GameScene.h" />
     <ClInclude Include="Application\Scene\Game\ResultScene.h" />
     <ClInclude Include="Engine\Graphics\Render\Particle\ParticleRenderer.h" />
+    <ClInclude Include="Application\GameObjects\Title\Sphere.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Engine\Particle\README.md">

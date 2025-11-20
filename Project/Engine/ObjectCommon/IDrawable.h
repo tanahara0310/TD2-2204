@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Engine/Graphics/Render/RenderPassType.h"
-#include "Engine/Graphics/PipelineStateManager.h"
+#include "Graphics/Render/RenderPassType.h"
+#include "Graphics/PipelineStateManager.h"
 
 /// @brief 描画可能オブジェクトの共通インターフェース
 class IDrawable {

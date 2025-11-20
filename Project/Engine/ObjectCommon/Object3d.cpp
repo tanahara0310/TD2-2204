@@ -1,6 +1,6 @@
 #include "Object3d.h"
-#include "Engine/Camera/ICamera.h"
-#include "Engine/Graphics/LineRenderer.h"
+#include "Camera/ICamera.h"
+#include "Graphics/LineRenderer.h"
 
 void Object3d::Update() {
 	// デフォルト実装は空（派生クラスでオーバーライドすることを想定）

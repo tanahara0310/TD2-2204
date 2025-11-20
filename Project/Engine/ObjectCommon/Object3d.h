@@ -6,9 +6,9 @@
 
 #include "IDrawable.h"
 #include <EngineSystem.h>
-#include "Engine/Graphics/Render/RenderPassType.h"
-#include "Engine/Graphics/TextureManager.h"
-#include "Engine/Graphics/LineRenderer.h"
+#include "Graphics/Render/RenderPassType.h"
+#include "Graphics/TextureManager.h"
+#include "Graphics/LineRenderer.h"
 
 // 前方宣言
 class ICamera;
