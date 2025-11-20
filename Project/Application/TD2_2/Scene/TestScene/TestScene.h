@@ -21,7 +21,7 @@
 #include "Engine/Graphics/Light/LightData.h"
 
 // シーン関連
-#include "Scene/IScene.h"
+#include "Scene/BaseScene.h"
 #include "EngineSystem/EngineSystem.h"
 
 // GameObjectのインクルード
@@ -43,7 +43,7 @@ using namespace Microsoft::WRL;
 
 
 /// @brief テストシーンクラス
-class TestScene : public IScene {
+class TestScene : public BaseScene {
 public:
 	/// @brief 初期化
 	void Initialize(EngineSystem* engine) override;
@@ -60,11 +60,6 @@ public:
 private: // メンバ変数
 
 	Logger& logger = Logger::GetInstance();
-
-	EngineSystem* engine_ = nullptr; // エンジンシステムへのポインタ
-
-	// カメラマネージャー
-	std::unique_ptr<CameraManager> cameraManager_ = std::make_unique<CameraManager>();
 
 	// ===== ゲームオブジェクト =====
 	std::vector<std::unique_ptr<Object3d>> gameObjects_;  // 全3Dオブジェクト
@@ -84,7 +79,4 @@ private: // メンバ変数
 	float masterVolume_ = 1.0f;
 	float mp3Volume_ = 1.0f;
 	bool soundLoaded_ = false;
-	
-	// このシーン専用のディレクショナルライト
-	DirectionalLightData* directionalLight_ = nullptr;
 };
