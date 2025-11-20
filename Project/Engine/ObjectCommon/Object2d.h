@@ -12,10 +12,6 @@ class Object2d : public IDrawable {
 public:
     virtual ~Object2d() = default;
     
-    /// @brief 初期化
-    /// @param engine エンジンシステム
-    virtual void Initialize(EngineSystem* engine) = 0;
-    
     /// @brief 更新
     virtual void Update() {}
     

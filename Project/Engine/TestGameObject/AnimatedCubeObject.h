@@ -8,7 +8,7 @@ class AnimatedCubeObject : public Object3d {
 public:
     /// @brief 初期化処理
     /// @param engine エンジンシステムへのポインタ
-    void Initialize(EngineSystem* engine) override;
+    void Initialize();
 
     /// @brief 更新処理
     void Update() override;

@@ -17,39 +17,11 @@ void GameScene::Initialize(EngineSystem* engine) {
 
 void GameScene::Update() {
    BaseScene::Update();
-
-#ifdef _DEBUG
-   // カメラマネージャーのImGui
-   cameraManager_->DrawImGui();
-#endif
 }
 
 void GameScene::Draw() {
-   // コンポーネント取得
-   auto renderManager = engine_->GetComponent<RenderManager>();
-   auto dxCommon = engine_->GetComponent<DirectXCommon>();
-   ICamera* activeCamera = cameraManager_->GetActiveCamera();
-
-   // 必須コンポーネントのチェック
-   if (!renderManager || !dxCommon || !activeCamera) {
-	  return;
-   }
-
-   if (renderManager) {
-	  // フレーム開始時に描画コンテキストを設定（1回のみ）
-	  renderManager->SetCamera(activeCamera);
-	  renderManager->SetCommandList(dxCommon->GetCommandList());
-
-	  // 一括描画（自動的にパスごとにソート・グループ化）
-	  renderManager->DrawAll();
-
-	  // フレーム終了時にキューをクリア
-	  renderManager->ClearQueue();
-   }
+   BaseScene::Draw();
 }
 
 void GameScene::Finalize() {
-
-   // このシーン専用のライトを削除
-   directionalLight_ = nullptr;
 }

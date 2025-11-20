@@ -23,6 +23,8 @@
 // フレームレート制御
 #include "Engine/Utility/FrameRate/FrameRateController.h"
 
+#include "IDrawable.h"
+
 
 void EngineSystem::Initialize(WinApp* winApp)
 {
@@ -79,6 +81,8 @@ void EngineSystem::Initialize(WinApp* winApp)
 		dockingUI->RegisterWindow("Particle System Debug", DockArea::Right);
 	}
 #endif // _DEBUG
+
+	IDrawable::Initialize(this);
 }
 
 void EngineSystem::Finalize()

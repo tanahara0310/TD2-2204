@@ -15,50 +15,43 @@ class Object3d;
 class BaseScene : public IScene {
 public:
 
-	virtual ~BaseScene() = default;
+   virtual ~BaseScene() = default;
 
-	/// @brief 初期化（共通処理 + 派生クラスの初期化）
-	virtual void Initialize(EngineSystem* engine) override;
+   /// @brief 初期化（共通処理 + 派生クラスの初期化）
+   virtual void Initialize(EngineSystem* engine) override;
 
-	/// @brief 更新（共通処理 + 派生クラスの更新）
-	virtual void Update() override;
+   /// @brief 更新（共通処理 + 派生クラスの更新）
+   virtual void Update() override;
 
-	/// @brief 描画処理（共通処理 + 派生クラスの描画）
-	virtual void Draw() override;
+   /// @brief 描画処理（共通処理 + 派生クラスの描画）
+   virtual void Draw() override;
 
-	/// @brief 解放（共通処理 + 派生クラスの解放）
-	virtual void Finalize() override;
+   /// @brief 解放（共通処理 + 派生クラスの解放）
+   virtual void Finalize() override;
 
-protected:
+private:
 
-	/// @brief カメラのセットアップ
-	void SetupCamera();
+   /// @brief カメラのセットアップ
+   void SetupCamera();
 
-	/// @brief ライトのセットアップ
-	void SetupLight();
+   /// @brief ライトのセットアップ
+   void SetupLight();
 
-	/// @brief ゲームオブジェクトの更新（派生クラスから呼び出し可能）
-	void UpdateGameObjects();
+   /// @brief ゲームオブジェクトの更新（派生クラスから呼び出し可能）
+   void UpdateGameObjects();
 
-	/// @brief ゲームオブジェクトのImGuiデバッグUI表示
-	void DrawGameObjectsImGui();
+   /// @brief ゲームオブジェクトのImGuiデバッグUI表示
+   void DrawGameObjectsImGui();
 
-	/// @brief 描画オブジェクトを登録（初期化時に呼び出し）
-	/// @param drawable スプライト、パーティクルなどの描画可能オブジェクト
-	void AddDrawable(IDrawable* drawable);
-
-	/// @brief デバッグ描画を行う（派生クラスでオーバーライド可能）
-	virtual void DrawDebug();
+   /// @brief デバッグ描画を行う（派生クラスでオーバーライド可能）
+   virtual void DrawDebug();
 
 protected:
-	// 派生クラスからアクセス可能な共通メンバー
-	EngineSystem* engine_ = nullptr;
-	std::unique_ptr<CameraManager> cameraManager_;
-	DirectionalLightData* directionalLight_ = nullptr;
+   // 派生クラスからアクセス可能な共通メンバー
+   EngineSystem* engine_ = nullptr;
+   std::unique_ptr<CameraManager> cameraManager_;
+   DirectionalLightData* directionalLight_ = nullptr;
 
-	// ゲームオブジェクト管理
-	std::vector<std::unique_ptr<Object3d>> gameObjects_;
-
-	// 追加の描画可能オブジェクト（スプライト、パーティクルなど）
-	std::vector<IDrawable*> additionalDrawables_;
+   // ゲームオブジェクト管理
+   std::vector<std::unique_ptr<IDrawable>> gameObjects_;
 };

@@ -4,9 +4,10 @@
 #include "MathCore.h"
 #include "Object3D.h"
 #include "../Collider/Collider.h"
+#include "EngineSystem.h"
 
 /// @brief シンプルなゲームオブジェクト基底
-class GameObject :Object3d {
+class GameObject :public Object3d {
 public:
 
    static void InitializeSystem(EngineSystem* engine);
