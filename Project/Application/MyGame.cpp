@@ -1,10 +1,10 @@
 #include "MyGame.h"
 #include <EngineSystem.h>
 #include "WinApp/WinApp.h"
-#include "Scene/TestScene/TestScene.h"
-#include "Scene/Game/TitleScene.h"
-#include "Scene/Game/GameScene.h"
-#include "Scene/Game/ResultScene.h"
+#include "TD2_2/Scene/TestScene/TestScene.h"
+#include "TD2_2/Scene/Game/TitleScene.h"
+#include "TD2_2/Scene/Game/GameScene.h"
+#include "TD2_2/Scene/Game/ResultScene.h"
 
 MyGame::~MyGame() = default;
 

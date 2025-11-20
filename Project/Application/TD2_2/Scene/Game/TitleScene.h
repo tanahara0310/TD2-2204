@@ -5,7 +5,7 @@
 
 //ゲームオブジェクトのインクルード
 #include "Object3d.h"
-#include "Application/GameObjects/Title/Sphere.h"
+#include "../../GameObject/Title/Sphere.h"
 
 class EngineSystem;
 class CameraManager;
