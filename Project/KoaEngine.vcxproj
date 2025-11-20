@@ -160,6 +160,11 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Application\TD2_2\GameObject\Title\Sphere.cpp" />
+    <ClCompile Include="Application\TD2_2\Scene\Game\GameScene.cpp" />
+    <ClCompile Include="Application\TD2_2\Scene\Game\ResultScene.cpp" />
+    <ClCompile Include="Application\TD2_2\Scene\Game\TitleScene.cpp" />
+    <ClCompile Include="Application\TD2_2\Scene\TestScene\TestScene.cpp" />
     <ClCompile Include="Engine\Camera\CameraManager.cpp" />
     <ClCompile Include="Engine\EngineSystem\EngineSystem.cpp" />
     <ClCompile Include="Engine\Framework\Framework.cpp" />
@@ -178,9 +183,6 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="Engine\Graphics\Render\SkyBox\SkyBoxRenderer.cpp" />
     <ClCompile Include="Engine\Graphics\Render\Sprite\SpriteRenderer.cpp" />
     <ClCompile Include="Engine\Particle\ParticlePresetManager.cpp" />
-    <ClCompile Include="Application\Scene\Game\GameScene.cpp" />
-    <ClCompile Include="Application\Scene\Game\ResultScene.cpp" />
-    <ClCompile Include="Application\Scene\Game\TitleScene.cpp" />
     <ClCompile Include="Engine\TestGameObject\AnimatedCubeObject.cpp" />
     <ClCompile Include="Engine\TestGameObject\FenceObject.cpp" />
     <ClCompile Include="Engine\ObjectCommon\Object3d.cpp" />
@@ -197,7 +199,6 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="Engine\Graphics\PostEffect\Effect\Invert.cpp" />
     <ClCompile Include="Engine\Graphics\PostEffect\Effect\RasterScroll.cpp" />
     <ClCompile Include="Engine\Graphics\PostEffect\Effect\Sepia.cpp" />
-    <ClCompile Include="Engine\Scene\TestScene\TestScene.cpp" />
     <ClCompile Include="Engine\TestGameObject\WalkModelObject.cpp" />
     <ClCompile Include="Engine\Utility\Collision\CollisionUtils.cpp" />
     <ClCompile Include="Engine\Utility\Debug\ConsoleUI.cpp" />
@@ -308,9 +309,14 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="Engine\Scene\SceneManager.cpp" />
     <ClCompile Include="Engine\Input\MouseInput.cpp" />
     <ClCompile Include="Engine\Utility\Debug\ImGui\SceneViewport.cpp" />
-    <ClCompile Include="Application\GameObjects\Title\Sphere.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Application\GameObject\GameObject.h" />
+    <ClInclude Include="Application\TD2_2\GameObject\Title\Sphere.h" />
+    <ClInclude Include="Application\TD2_2\Scene\Game\GameScene.h" />
+    <ClInclude Include="Application\TD2_2\Scene\Game\ResultScene.h" />
+    <ClInclude Include="Application\TD2_2\Scene\Game\TitleScene.h" />
+    <ClInclude Include="Application\TD2_2\Scene\TestScene\TestScene.h" />
     <ClInclude Include="Engine\Camera\CameraManager.h" />
     <ClInclude Include="Engine\Camera\CameraStructs.h" />
     <ClInclude Include="Engine\Camera\ICamera.h" />
@@ -344,9 +350,6 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="Engine\Math\EulerTransform.h" />
     <ClInclude Include="Engine\Math\QuaternionTransform.h" />
     <ClInclude Include="Engine\Particle\ParticlePresetManager.h" />
-    <ClInclude Include="Application\Scene\Game\GameScene.h" />
-    <ClInclude Include="Application\Scene\Game\ResultScene.h" />
-    <ClInclude Include="Application\Scene\Game\TitleScene.h" />
     <ClInclude Include="Engine\TestGameObject\AnimatedCubeObject.h" />
     <ClInclude Include="Engine\TestGameObject\FenceObject.h" />
     <ClInclude Include="Engine\ObjectCommon\IDrawable.h" />
@@ -404,7 +407,6 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="Engine\Particle\Modules\RotationModule.h" />
     <ClInclude Include="Engine\Particle\Modules\SizeModule.h" />
     <ClInclude Include="Engine\Particle\Modules\VelocityModule.h" />
-    <ClInclude Include="Engine\Scene\TestScene\TestScene.h" />
     <ClInclude Include="Engine\Utility\Debug\ImGui\DockingUI.h" />
     <ClInclude Include="Engine\Camera\Debug\DebugCamera.h" />
     <ClInclude Include="Engine\Camera\Release\Camera.h" />
@@ -559,7 +561,6 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="externals\imgui\imstb_rectpack.h" />
     <ClInclude Include="externals\imgui\imstb_textedit.h" />
     <ClInclude Include="externals\imgui\imstb_truetype.h" />
-    <ClInclude Include="Application\GameObjects\Title\Sphere.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="externals\DirectXTex\DirectXTex_Desktop_2022_Win10.vcxproj">
