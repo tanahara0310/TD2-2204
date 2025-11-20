@@ -5,7 +5,6 @@
 #include <wrl.h>
 
 class DirectXCommon;
-class FrameRateController;
 
 class Render {
 public: // メンバ関数
@@ -15,10 +14,6 @@ public: // メンバ関数
     /// <param name="dxCommon">DirectXCommon</param>
     /// <param name="dsvHeap">DSVヒープ</param>
     void Initialize(DirectXCommon* dxCommon, Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> dsvHeap);
-
-    /// @brief FrameRateControllerを設定
-    /// @param frameRateController フレームレート制御クラス
-    void SetFrameRateController(FrameRateController* frameRateController);
 
     /// @brief オフスクリーンの描画前処理
     /// @param offscreenIndex オフスクリーンのインデックス（0=1枚目、1=2枚目）
@@ -52,7 +47,6 @@ private:
 
     // クラスをポインタで保持
     DirectXCommon* dxCommon_ = nullptr;
-    FrameRateController* frameRateController_ = nullptr;
 
     // DSVヒープとサイズ（DirectXCommonから取得）
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> dsvHeap_;

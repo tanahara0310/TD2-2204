@@ -25,6 +25,9 @@ public:
     /// @brief 2Dオブジェクトであることを示す
     bool Is2D() const override { return true; }
     
+    /// @brief ブレンドモードを取得（2Dオブジェクトはデフォルトでアルファブレンド）
+    BlendMode GetBlendMode() const override { return BlendMode::kBlendModeNormal; }
+    
     /// @brief トランスフォームを取得
     EulerTransform& GetTransform() { return transform_; }
     const EulerTransform& GetTransform() const { return transform_; }

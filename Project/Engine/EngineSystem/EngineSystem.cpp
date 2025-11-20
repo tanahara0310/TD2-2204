@@ -150,10 +150,8 @@ void EngineSystem::EndFrame()
 	imGui_->End();
 #endif // _DEBUG
 
-	// フレームレート制御の終了
-	if (auto* frameRate = GetComponent<FrameRateController>()) {
-		frameRate->EndFrame();
-	}
+	// VSync有効時はフレームレート制御の終了処理は不要
+	// Present(1, 0)が自動的に60Hzに同期してくれる
 }
 
 void EngineSystem::ExecuteRenderPipeline(std::function<void()> renderCallback)
@@ -235,7 +233,6 @@ void EngineSystem::CreateGraphicsComponents()
 	// Renderの作成と初期化（DSVヒープが必要）
 	auto render = std::make_unique<Render>();
 	render->Initialize(dxPtr, dxPtr->GetDSVHeap());
-	render->SetFrameRateController(GetComponent<FrameRateController>());
 	Render* renderPtr = render.get();
 	RegisterComponent(std::move(render));
 

@@ -70,12 +70,8 @@ void RenderManager::DrawAll() {
 			currentPass = cmd.passType;
 			auto it = renderers_.find(currentPass);
 			if (it != renderers_.end()) {
-				// パーティクルの場合はブレンドモードを取得して渡す
-				BlendMode blendMode = BlendMode::kBlendModeNone;
-				if (currentPass == RenderPassType::Particle) {
-					auto* particle = static_cast<ParticleSystem*>(cmd.object);
-					blendMode = particle->GetBlendMode();
-				}
+				// オブジェクトからブレンドモードを取得
+				BlendMode blendMode = cmd.object->GetBlendMode();
 				it->second->BeginPass(cmdList_, blendMode);
 			}
 		}

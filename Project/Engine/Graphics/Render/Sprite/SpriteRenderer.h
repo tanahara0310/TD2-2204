@@ -83,7 +83,7 @@ private:
     std::unique_ptr<ShaderCompiler> shaderCompiler_ = std::make_unique<ShaderCompiler>();
     
     ID3D12PipelineState* pipelineState_ = nullptr;
-    BlendMode currentBlendMode_ = BlendMode::kBlendModeNormal;
+    BlendMode currentBlendMode_ = BlendMode::kBlendModeAdd;
     
     // DirectXCommonとResourceFactory
     DirectXCommon* dxCommon_ = nullptr;
