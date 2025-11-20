@@ -1,7 +1,7 @@
 #pragma once
 
 #include "IDrawable.h"
-#include "Engine/Math/MathCore.h"
+#include "MathCore.h"
 #include <memory>
 
 // 前方宣言

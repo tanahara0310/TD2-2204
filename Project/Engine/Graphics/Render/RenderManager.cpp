@@ -1,7 +1,7 @@
 #include "RenderManager.h"
-#include "Engine/TestGameObject/IDrawable.h"
-#include "Engine/TestGameObject/Object2d.h"
-#include "Engine/TestGameObject/Object3d.h"
+#include <IDrawable.h>
+#include <Object2d.h>
+#include <Object3d.h>
 #include "Engine/Particle/ParticleSystem.h"
 #include "Engine/Graphics/Render/Particle/ParticleRenderer.h"
 #include <algorithm>

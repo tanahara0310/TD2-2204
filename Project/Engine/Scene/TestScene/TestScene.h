@@ -25,7 +25,7 @@
 #include "EngineSystem/EngineSystem.h"
 
 // GameObjectのインクルード
-#include "TestGameObject/Object3d.h"
+#include "Object3d.h"
 #include "TestGameObject/SphereObject.h"
 #include "TestGameObject/FenceObject.h"
 #include "TestGameObject/TerrainObject.h"
