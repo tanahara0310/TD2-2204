@@ -11,7 +11,5 @@ void GameObject::InitializeSystem(EngineSystem* engine) {
 }
 
 EngineSystem* GameObject::GetEngineSystem() const {
-   if (sEngine == nullptr) {
-	  return sEngine;
-   }
+   return sEngine;
 }

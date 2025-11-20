@@ -14,7 +14,7 @@ public:
 
 	/// @brief 初期化
 	/// @param engine エンジンシステム
-	void Initialize(EngineSystem* engine) override;
+	void Initialize();
 
 	/// @brief 更新
 	void Update() override;

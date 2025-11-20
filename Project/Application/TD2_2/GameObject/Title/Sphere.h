@@ -4,7 +4,7 @@
 class Sphere : public Object3d {
 public:
 
-	void Initialize(EngineSystem* engine) override;
+	void Initialize();
 
 	void Update() override;
 

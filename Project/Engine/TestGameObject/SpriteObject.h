@@ -15,14 +15,10 @@ public:
     /// @brief デストラクタ
     ~SpriteObject() override = default;
     
-    /// @brief 初期化
-    /// @param engine エンジンシステム
-    void Initialize(EngineSystem* engine) override;
-    
     /// @brief 初期化（テクスチャ指定版 - 推奨）
     /// @param engine エンジンシステム
     /// @param textureFilePath テクスチャファイルパス
-    void Initialize(EngineSystem* engine, const std::string& textureFilePath);
+    void Initialize(const std::string& textureFilePath);
     
     /// @brief 更新
     void Update() override;
@@ -51,8 +47,6 @@ public:
     void SetTexture(const std::string& textureFilePath);
     
 private:
-    /// @brief エンジンシステムへのポインタ
-    EngineSystem* engine_ = nullptr;
     
     /// @brief Spriteインスタンス
     std::unique_ptr<Sprite> sprite_;

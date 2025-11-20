@@ -1,6 +1,5 @@
 #include "Framework.h"
 
-
 Framework::~Framework() = default;
 
 void Framework::Run()

@@ -18,7 +18,7 @@ void MyGame::Initialize()
 	sceneManager_->Initialize(GetEngineSystem());
 
 	// 全シーンを登録（アプリ層で実装）
-	sceneManager_->RegisterScene<TestScene>("TestScene");
+	//sceneManager_->RegisterScene<TestScene>("TestScene");
 	sceneManager_->RegisterScene<TitleScene>("TitleScene");
 	sceneManager_->RegisterScene<GameScene>("GameScene");
 	sceneManager_->RegisterScene<ResultScene>("ResultScene");

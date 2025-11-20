@@ -5,25 +5,26 @@
 #include "Engine/Graphics/TextureManager.h"
 #include <numbers>
 
-void TerrainObject::Initialize(EngineSystem* engine) {
-    // 必須コンポーネントの取得
-    auto dxCommon = engine->GetComponent<DirectXCommon>();
-    auto modelManager = engine->GetComponent<ModelManager>();
-    
-    if (!dxCommon || !modelManager) {
-        return;
-    }
+void TerrainObject::Initialize() {
+   auto engine = GetEngineSystem();
+   // 必須コンポーネントの取得
+   auto dxCommon = engine->GetComponent<DirectXCommon>();
+   auto modelManager = engine->GetComponent<ModelManager>();
 
-    // 静的モデルとして作成
-    model_ = modelManager->CreateStaticModel("Resources/SampleResources/terrain/terrain.obj");
+   if (!dxCommon || !modelManager) {
+	  return;
+   }
 
-    // トランスフォームの初期化
-    transform_.Initialize(dxCommon->GetDevice());
-    
-    // テレインの初期回転
-    transform_.rotate = { 0.0f, std::numbers::pi_v<float> * 0.5f, 0.0f };
+   // 静的モデルとして作成
+   model_ = modelManager->CreateStaticModel("Resources/SampleResources/terrain/terrain.obj");
 
-    // テクスチャの読み込み
-    auto& textureManager = TextureManager::GetInstance();
-    texture_ = textureManager.Load("Resources/SampleResources/terrain/grass.png");
+   // トランスフォームの初期化
+   transform_.Initialize(dxCommon->GetDevice());
+
+   // テレインの初期回転
+   transform_.rotate = { 0.0f, std::numbers::pi_v<float> *0.5f, 0.0f };
+
+   // テクスチャの読み込み
+   auto& textureManager = TextureManager::GetInstance();
+   texture_ = textureManager.Load("Resources/SampleResources/terrain/grass.png");
 }

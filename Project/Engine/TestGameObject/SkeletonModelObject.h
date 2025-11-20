@@ -9,7 +9,7 @@ class SkeletonModelObject : public Object3d {
 public:
     /// @brief 初期化処理
     /// @param engine エンジンシステムへのポインタ
-    void Initialize(EngineSystem* engine) override;
+    void Initialize();
 
     /// @brief 更新処理
     void Update() override;
@@ -47,7 +47,6 @@ public:
     float GetJointRadius() const { return jointRadius_; }
 
 private:
-    EngineSystem* engine_ = nullptr;  // エンジンシステムへのポインタ
     bool drawSkeleton_ = true;    // Skeleton描画フラグ
     float jointRadius_ = 0.05f;  // Joint半径
     float animationTime_ = 0.0f;      // アニメーション時刻

@@ -208,30 +208,21 @@
     <ClCompile Include="Engine\Graphics\Model\ModelManager.cpp" />
     <ClCompile Include="Engine\EngineSystem\EngineSystem.cpp" />
     <ClCompile Include="Engine\ObjectCommon\Object3d.cpp" />
-    <ClCompile Include="Engine\TestGameObject\SphereObject.cpp" />
-    <ClCompile Include="Engine\TestGameObject\FenceObject.cpp" />
-    <ClCompile Include="Engine\TestGameObject\TerrainObject.cpp" />
     <ClCompile Include="Engine\Framework\Framework.cpp" />
     <ClCompile Include="Application\MyGame.cpp" />
     <ClCompile Include="Engine\Camera\CameraManager.cpp" />
     <ClCompile Include="Engine\Graphics\Model\Animation\AnimationLoader.cpp" />
     <ClCompile Include="Engine\Graphics\Model\Animation\Animator.cpp" />
-    <ClCompile Include="Engine\TestGameObject\AnimatedCubeObject.cpp" />
     <ClCompile Include="Engine\Graphics\Model\Skeleton\SkeletonLoader.cpp" />
     <ClCompile Include="Engine\Graphics\Model\Skeleton\SkeletonAnimator.cpp" />
     <ClCompile Include="Engine\Graphics\Model\Skeleton\SkeletonDebugRenderer.cpp" />
-    <ClCompile Include="Engine\TestGameObject\SkeletonModelObject.cpp" />
-    <ClCompile Include="Engine\TestGameObject\WalkModelObject.cpp" />
     <ClCompile Include="Engine\Graphics\Model\Animation\AnimationUtils.cpp" />
-    <ClCompile Include="Engine\TestGameObject\SneakWalkModelObject.cpp" />
     <ClCompile Include="Engine\Graphics\Model\Skeleton\SkinClusterGenerator.cpp" />
-    <ClCompile Include="Engine\TestGameObject\SkyBoxObject.cpp" />
     <ClCompile Include="Engine\Graphics\Render\RenderManager.cpp" />
     <ClCompile Include="Engine\Graphics\Render\Model\ModelRenderer.cpp" />
     <ClCompile Include="Engine\Graphics\Render\Model\SkinnedModelRenderer.cpp" />
     <ClCompile Include="Engine\Graphics\Render\SkyBox\SkyBoxRenderer.cpp" />
     <ClCompile Include="Engine\Graphics\Render\Sprite\SpriteRenderer.cpp" />
-    <ClCompile Include="Engine\TestGameObject\SpriteObject.cpp" />
     <ClCompile Include="Engine\Particle\ParticlePresetManager.cpp" />
     <ClCompile Include="Engine\Graphics\PostEffect\PostEffectPresetManager.cpp" />
     <ClCompile Include="Engine\Utility\Debug\ImGui\SceneManagerTab.cpp" />
@@ -244,12 +235,28 @@
     <ClCompile Include="externals\imgui\imgui_widgets.cpp" />
     <ClCompile Include="externals\imgui\ImGuizmo.cpp" />
     <ClCompile Include="Engine\Graphics\Render\Particle\ParticleRenderer.cpp" />
-    <ClCompile Include="Application\TD2_2\Scene\TestScene\TestScene.cpp" />
     <ClCompile Include="Application\TD2_2\Scene\Game\GameScene.cpp" />
     <ClCompile Include="Application\TD2_2\Scene\Game\ResultScene.cpp" />
     <ClCompile Include="Application\TD2_2\Scene\Game\TitleScene.cpp" />
-    <ClCompile Include="Application\TD2_2\GameObject\Title\Sphere.cpp" />
     <ClCompile Include="Engine\Scene\BaseScene.cpp" />
+    <ClCompile Include="Application\TD2_2\Collider\AABBCollider.cpp" />
+    <ClCompile Include="Application\TD2_2\Collider\Collider.cpp" />
+    <ClCompile Include="Application\TD2_2\Collider\CollisionConfig.cpp" />
+    <ClCompile Include="Application\TD2_2\Collider\CollisionManager.cpp" />
+    <ClCompile Include="Application\TD2_2\Collider\SphereCollider.cpp" />
+    <ClCompile Include="Application\TD2_2\GameObject\Player\Player.cpp" />
+    <ClCompile Include="Application\TD2_2\GameObject\GameObject.cpp" />
+    <ClCompile Include="Engine\ObjectCommon\IDrawable.cpp" />
+    <ClCompile Include="Application\TD2_2\GameObject\Title\Sphere.cpp" />
+    <ClCompile Include="Engine\TestGameObject\AnimatedCubeObject.cpp" />
+    <ClCompile Include="Engine\TestGameObject\FenceObject.cpp" />
+    <ClCompile Include="Engine\TestGameObject\SkeletonModelObject.cpp" />
+    <ClCompile Include="Engine\TestGameObject\SkyBoxObject.cpp" />
+    <ClCompile Include="Engine\TestGameObject\SneakWalkModelObject.cpp" />
+    <ClCompile Include="Engine\TestGameObject\SphereObject.cpp" />
+    <ClCompile Include="Engine\TestGameObject\SpriteObject.cpp" />
+    <ClCompile Include="Engine\TestGameObject\TerrainObject.cpp" />
+    <ClCompile Include="Engine\TestGameObject\WalkModelObject.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Engine\WinApp\WinApp.h">
@@ -287,9 +294,6 @@
     </ClInclude>
     <ClInclude Include="Engine\Scene\SceneManager.h">
       <Filter>Header Files\Scene</Filter>
-    </ClInclude>
-    <ClInclude Include="Engine\Particle\ParticleSystem.h">
-      <Filter>Header Files\Particle</Filter>
     </ClInclude>
     <ClInclude Include="Engine\Particle\Modules\ColorModule.h">
       <Filter>Header Files\Particle\Modules</Filter>
@@ -495,9 +499,6 @@
     <ClInclude Include="Engine\Graphics\Light\LightBuffers.h" />
     <ClInclude Include="Engine\EngineSystem\ComponentManager.h" />
     <ClInclude Include="Engine\ObjectCommon\Object3d.h" />
-    <ClInclude Include="Engine\TestGameObject\SphereObject.h" />
-    <ClInclude Include="Engine\TestGameObject\FenceObject.h" />
-    <ClInclude Include="Engine\TestGameObject\TerrainObject.h" />
     <ClInclude Include="Engine\Framework\Framework.h" />
     <ClInclude Include="Application\MyGame.h" />
     <ClInclude Include="externals\spdlog\include\spdlog\cfg\argv.h" />
@@ -613,7 +614,6 @@
     <ClInclude Include="Engine\Graphics\Model\Animation\Animation.h" />
     <ClInclude Include="Engine\Graphics\Model\Animation\AnimationLoader.h" />
     <ClInclude Include="Engine\Graphics\Model\Animation\Animator.h" />
-    <ClInclude Include="Engine\TestGameObject\AnimatedCubeObject.h" />
     <ClInclude Include="Engine\Math\QuaternionTransform.h" />
     <ClInclude Include="Engine\Math\EulerTransform.h" />
     <ClInclude Include="Engine\Graphics\Structs\Node.h" />
@@ -622,14 +622,10 @@
     <ClInclude Include="Engine\Graphics\Model\Skeleton\SkeletonLoader.h" />
     <ClInclude Include="Engine\Graphics\Model\Skeleton\SkeletonAnimator.h" />
     <ClInclude Include="Engine\Graphics\Model\Skeleton\SkeletonDebugRenderer.h" />
-    <ClInclude Include="Engine\TestGameObject\SkeletonModelObject.h" />
-    <ClInclude Include="Engine\TestGameObject\WalkModelObject.h" />
     <ClInclude Include="Engine\Graphics\Model\Animation\IAnimationController.h" />
     <ClInclude Include="Engine\Graphics\Model\Animation\AnimationUtils.h" />
-    <ClInclude Include="Engine\TestGameObject\SneakWalkModelObject.h" />
     <ClInclude Include="Engine\Graphics\Structs\SkinCluster.h" />
     <ClInclude Include="Engine\Graphics\Model\Skeleton\SkinClusterGenerator.h" />
-    <ClInclude Include="Engine\TestGameObject\SkyBoxObject.h" />
     <ClInclude Include="Engine\Graphics\Render\RenderPassType.h" />
     <ClInclude Include="Engine\Graphics\Render\IRenderer.h" />
     <ClInclude Include="Engine\Graphics\Render\RenderManager.h" />
@@ -637,7 +633,6 @@
     <ClInclude Include="Engine\Graphics\Render\Model\SkinnedModelRenderer.h" />
     <ClInclude Include="Engine\Graphics\Render\SkyBox\SkyBoxRenderer.h" />
     <ClInclude Include="Engine\Graphics\Render\Sprite\SpriteRenderer.h" />
-    <ClInclude Include="Engine\TestGameObject\SpriteObject.h" />
     <ClInclude Include="Engine\ObjectCommon\IDrawable.h" />
     <ClInclude Include="Engine\ObjectCommon\Object2d.h" />
     <ClInclude Include="Engine\Graphics\Light\LightData.h" />
@@ -655,12 +650,29 @@
     <ClInclude Include="externals\imgui\imstb_truetype.h" />
     <ClInclude Include="Engine\Graphics\Render\Particle\ParticleRenderer.h" />
     <ClInclude Include="Application\GameObject\GameObject.h" />
-    <ClInclude Include="Application\TD2_2\Scene\TestScene\TestScene.h" />
     <ClInclude Include="Application\TD2_2\Scene\Game\GameScene.h" />
     <ClInclude Include="Application\TD2_2\Scene\Game\ResultScene.h" />
     <ClInclude Include="Application\TD2_2\Scene\Game\TitleScene.h" />
-    <ClInclude Include="Application\TD2_2\GameObject\Title\Sphere.h" />
     <ClInclude Include="Engine\Scene\BaseScene.h" />
+    <ClInclude Include="Application\TD2_2\Collider\AABBCollider.h" />
+    <ClInclude Include="Application\TD2_2\Collider\Collider.h" />
+    <ClInclude Include="Application\TD2_2\Collider\CollisionConfig.h" />
+    <ClInclude Include="Application\TD2_2\Collider\CollisionLayer.h" />
+    <ClInclude Include="Application\TD2_2\Collider\CollisionManager.h" />
+    <ClInclude Include="Application\TD2_2\Collider\SphereCollider.h" />
+    <ClInclude Include="Application\TD2_2\GameObject\Player\Player.h" />
+    <ClInclude Include="Application\TD2_2\GameObject\GameObject.h" />
+    <ClInclude Include="Engine\Particle\ParticleSystem.h" />
+    <ClInclude Include="Application\TD2_2\GameObject\Title\Sphere.h" />
+    <ClInclude Include="Engine\TestGameObject\AnimatedCubeObject.h" />
+    <ClInclude Include="Engine\TestGameObject\FenceObject.h" />
+    <ClInclude Include="Engine\TestGameObject\SkeletonModelObject.h" />
+    <ClInclude Include="Engine\TestGameObject\SkyBoxObject.h" />
+    <ClInclude Include="Engine\TestGameObject\SneakWalkModelObject.h" />
+    <ClInclude Include="Engine\TestGameObject\SphereObject.h" />
+    <ClInclude Include="Engine\TestGameObject\SpriteObject.h" />
+    <ClInclude Include="Engine\TestGameObject\TerrainObject.h" />
+    <ClInclude Include="Engine\TestGameObject\WalkModelObject.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Engine\Particle\README.md">

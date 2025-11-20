@@ -26,6 +26,4 @@ public:
 	void Finalize() override;
 
 private:
-
-	std::vector<std::unique_ptr<Object3d>> gameObjects_;
 };
