@@ -30,7 +30,7 @@ public:
 
    /// @brief 描画処理（3D専用 - カメラ必須）
    /// @param camera カメラ
-   virtual void Draw(ICamera* camera);
+   virtual void Draw(const ICamera* camera) override;
 
    /// @brief デバッグ描画処理（派生クラスでオーバーライド可能）
    /// @param outLines ライン配列の出力先
@@ -43,9 +43,6 @@ public:
    /// @brief オブジェクト名を取得（派生クラスでオーバーライド推奨）
    /// @return オブジェクト名
    const char* GetObjectName() const override { return "Object3D"; }
-
-   /// @brief 3Dオブジェクトであることを示す
-   bool Is2D() const override { return false; }
 
    /// @brief トランスフォームを取得
    /// @return トランスフォーム参照

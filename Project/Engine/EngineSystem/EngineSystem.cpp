@@ -108,6 +108,11 @@ void EngineSystem::BeginFrame()
 		frameRate->BeginFrame();
 	}
 
+	// RenderManagerの描画キューをクリア（前フレームのコマンドを削除）
+	if (auto* renderManager = GetComponent<RenderManager>()) {
+		renderManager->ClearQueue();
+	}
+
 	// 入力の更新
 	if (auto* inputManager = GetComponent<InputManager>()) {
 		inputManager->Update();

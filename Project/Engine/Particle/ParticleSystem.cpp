@@ -1,6 +1,8 @@
 #include "ParticleSystem.h"
 #include "Engine/Utility/Random/RandomGenerator.h"
 #include "Engine/Camera/ICamera.h"
+#include "Engine/Camera/CameraManager.h"
+#include "Engine/EngineSystem/EngineSystem.h"
 #include <iostream>
 #ifdef _DEBUG
 #include "Engine/Utility/Debug/ImGui/ImguiManager.h"
@@ -46,24 +48,14 @@ void ParticleSystem::Initialize(DirectXCommon* dxCommon, ResourceFactory* resour
     SetTexture("Resources/SampleResources/circle.png");
 }
 
-// 更新処理関数（カメラから行列を取得）
-void ParticleSystem::Update(ICamera* camera)
+// 更新処理関数（他のオブジェクトと統一）
+void ParticleSystem::Update()
 {
-    if (!camera) return;
-
-    const float kDeltaTime = 1.0f / 60.0f; // フレームレートを60FPSと仮定
-
-    // カメラから行列を取得
-    Matrix4x4 viewMatrix = camera->GetViewMatrix();
-    Matrix4x4 projectionMatrix = camera->GetProjectionMatrix();
-    Matrix4x4 viewProjectionMatrix = Matrix::Multiply(viewMatrix, projectionMatrix);
+    const float kDeltaTime = 1.0f / 60.0f;
 
     // 統計情報の更新
     statistics_.systemRuntime += kDeltaTime;
     deltaTimeAccumulator_ += kDeltaTime;
-
-    // ビルボード行列を作成
-    Matrix4x4 billboardMatrix = CreateBillboardMatrix(viewMatrix);
 
     // エミッションモジュールの更新
     emissionModule_->UpdateTime(kDeltaTime);
@@ -77,8 +69,36 @@ void ParticleSystem::Update(ICamera* camera)
     // パーティクルの更新前の数を記録
     uint32_t particleCountBefore = GetParticleCount();
 
-    // パーティクルの更新
-    UpdateParticles(kDeltaTime, viewProjectionMatrix, billboardMatrix);
+    // パーティクルの更新（カメラ行列は描画時に使用するためここでは基本的な更新のみ）
+    for (auto particleIterator = particles_.begin(); particleIterator != particles_.end();) {
+        // ライフタイムチェック
+        if (!lifetimeModule_->UpdateLifetime(*particleIterator, kDeltaTime)) {
+            particleIterator = particles_.erase(particleIterator);
+            continue;
+        }
+
+        // 力の適用
+        forceModule_->ApplyForces(*particleIterator, kDeltaTime);
+
+        // 速度の更新
+        velocityModule_->UpdateVelocity(*particleIterator, kDeltaTime);
+
+        // 位置の更新
+        particleIterator->transform.translate.x += particleIterator->velocity.x * kDeltaTime;
+        particleIterator->transform.translate.y += particleIterator->velocity.y * kDeltaTime;
+        particleIterator->transform.translate.z += particleIterator->velocity.z * kDeltaTime;
+
+        // 色の更新
+        colorModule_->UpdateColor(*particleIterator);
+
+        // サイズの更新
+        sizeModule_->UpdateSize(*particleIterator);
+
+        // 回転の更新
+        rotationModule_->UpdateRotation(*particleIterator, kDeltaTime);
+
+        ++particleIterator;
+    }
 
     // パーティクルの更新後の統計情報を更新
     uint32_t currentParticleCount = GetParticleCount();
@@ -102,13 +122,41 @@ void ParticleSystem::Update(ICamera* camera)
     }
 }
 
-// 描画関数（統一描画システム用）
-void ParticleSystem::Draw(ICamera* camera)
+// 描画関数（Object3dと同じインターフェース）
+void ParticleSystem::Draw(const ICamera* camera)
 {
-    // この関数は統一描画システムから呼ばれるが、
-    // 実際の描画はParticleRendererが行う
-    // ここでは何もしない（RenderManagerがParticleRendererを呼び出す）
-    (void)camera;
+    if (!camera) return;
+
+    // カメラから行列を取得してGPUデータを更新
+    Matrix4x4 viewMatrix = camera->GetViewMatrix();
+    Matrix4x4 projectionMatrix = camera->GetProjectionMatrix();
+    Matrix4x4 viewProjectionMatrix = Matrix::Multiply(viewMatrix, projectionMatrix);
+
+    // ビルボード行列を作成
+    Matrix4x4 billboardMatrix = CreateBillboardMatrix(viewMatrix);
+
+    // GPU用データの更新
+    instanceCount_ = 0;
+    for (auto& particle : particles_) {
+        if (instanceCount_ >= kNumMaxInstance) break;
+
+        Matrix4x4 worldMatrix = Matrix::MakeAffine(
+            particle.transform.scale,
+            particle.transform.rotate,
+            particle.transform.translate);
+
+        // ビルボードに変換を適用
+        worldMatrix = Matrix::Multiply(worldMatrix, billboardMatrix);
+
+        // ワールド行列とビュー投影行列を掛け合わせてWVPを計算
+        Matrix4x4 worldViewProjection = Matrix::Multiply(worldMatrix, viewProjectionMatrix);
+
+        instancingData_[instanceCount_].WVP = worldViewProjection;
+        instancingData_[instanceCount_].World = worldMatrix;
+        instancingData_[instanceCount_].color = particle.color;
+
+        ++instanceCount_;
+    }
 }
 
 void ParticleSystem::Play()
@@ -304,8 +352,12 @@ Matrix4x4 ParticleSystem::CreateBillboardMatrix(const Matrix4x4& viewMatrix)
 void ParticleSystem::ShowImGui()
 {
 #ifdef _DEBUG
-    ImGui::Begin("Particle System Debug");
+    if (!ImGui::CollapsingHeader("Particle System")) {
+        return;
+    }
 
+    ImGui::Indent();
+    
     ImGui::Text("=== パーティクルシステム ===");
     
     uint32_t currentCount = GetParticleCount();
@@ -396,7 +448,7 @@ void ParticleSystem::ShowImGui()
         }
     }
 
-    ImGui::End();
+    ImGui::Unindent();
 #endif
 }
 

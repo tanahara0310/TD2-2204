@@ -33,6 +33,9 @@ public:
     /// @brief 最大スプライト数
     static constexpr size_t kMaxSpriteCount = 1024;
     
+    /// @brief フレーム数（ダブルバッファリング）
+    static constexpr UINT kFrameCount = 2;
+    
     // IRendererインターフェースの実装
     void Initialize(ID3D12Device* device) override;
     void BeginPass(ID3D12GraphicsCommandList* cmdList, BlendMode blendMode) override;
@@ -66,16 +69,16 @@ public:
     ResourceFactory* GetResourceFactory() { return resourceFactory_; }
     
     /// @brief マテリアルデータプールを取得
-    std::vector<SpriteMaterial*>& GetMaterialDataPool() { return materialDataPool_; }
+    std::vector<SpriteMaterial*>& GetMaterialDataPool() { return materialDataPool_[currentFrameIndex_]; }
     
     /// @brief トランスフォームデータプールを取得
-    std::vector<TransformationMatrix*>& GetTransformDataPool() { return transformDataPool_; }
+    std::vector<TransformationMatrix*>& GetTransformDataPool() { return transformDataPool_[currentFrameIndex_]; }
     
     /// @brief マテリアルリソースを取得
-    Microsoft::WRL::ComPtr<ID3D12Resource>& GetMaterialResource(size_t index) { return materialResources_[index]; }
+    Microsoft::WRL::ComPtr<ID3D12Resource>& GetMaterialResource(size_t index) { return materialResources_[currentFrameIndex_][index]; }
     
     /// @brief トランスフォームリソースを取得
-    Microsoft::WRL::ComPtr<ID3D12Resource>& GetTransformResource(size_t index) { return transformResources_[index]; }
+    Microsoft::WRL::ComPtr<ID3D12Resource>& GetTransformResource(size_t index) { return transformResources_[currentFrameIndex_][index]; }
     
 private:
     std::unique_ptr<RootSignatureManager> rootSignatureMg_ = std::make_unique<RootSignatureManager>();
@@ -89,12 +92,13 @@ private:
     DirectXCommon* dxCommon_ = nullptr;
     ResourceFactory* resourceFactory_ = nullptr;
     
-    // 定数バッファプール
-    std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> materialResources_;
-    std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> transformResources_;
-    std::vector<SpriteMaterial*> materialDataPool_;
-    std::vector<TransformationMatrix*> transformDataPool_;
+    // 定数バッファプール（フレームごとに分離）
+    std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> materialResources_[kFrameCount];
+    std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> transformResources_[kFrameCount];
+    std::vector<SpriteMaterial*> materialDataPool_[kFrameCount];
+    std::vector<TransformationMatrix*> transformDataPool_[kFrameCount];
     
-    // 現在のバッファインデックス
+    // 現在のバッファインデックスとフレームインデックス
     size_t currentBufferIndex_ = 0;
+    UINT currentFrameIndex_ = 0;
 };
