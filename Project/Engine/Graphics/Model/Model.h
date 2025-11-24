@@ -53,7 +53,7 @@ public:
 	/// @param transform ワールドトランスフォーム
 	/// @param camera カメラ（ICamera インターフェース）
 	/// @param textureHandle テクスチャハンドル
-	void Draw(const WorldTransform& transform, ICamera* camera,
+	void Draw(const WorldTransform& transform, const ICamera* camera,
 		D3D12_GPU_DESCRIPTOR_HANDLE textureHandle);
 
 	/// @brief 初期化されているか確認
@@ -127,7 +127,7 @@ private:
 
 	// 内部ヘルパーメソッド
 	/// @brief WVP行列データを更新
-	void UpdateTransformationMatrix(const WorldTransform& transform, ICamera* camera);
+	void UpdateTransformationMatrix(const WorldTransform& transform, const ICamera* camera);
 
 	/// @brief SkinClusterを更新（スケルトンアニメーションの場合のみ）
 	void UpdateSkinCluster();

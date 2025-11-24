@@ -66,7 +66,7 @@ void Model::UpdateSkinCluster() {
 	}
 }
 
-void Model::UpdateTransformationMatrix(const WorldTransform& transform, ICamera* camera) {
+void Model::UpdateTransformationMatrix(const WorldTransform& transform, const ICamera* camera) {
 	assert(wvpResource_);
 
 	// 行列計算
@@ -87,7 +87,7 @@ void Model::UpdateTransformationMatrix(const WorldTransform& transform, ICamera*
 	wvpResource_->Unmap(0, nullptr);
 }
 
-void Model::Draw(const WorldTransform& transform, ICamera* camera,
+void Model::Draw(const WorldTransform& transform, const ICamera* camera,
 	D3D12_GPU_DESCRIPTOR_HANDLE textureHandle) {
 	
 	assert(IsInitialized());

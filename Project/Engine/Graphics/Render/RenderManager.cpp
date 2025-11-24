@@ -1,7 +1,5 @@
 #include "RenderManager.h"
 #include <IDrawable.h>
-#include <Object2d.h>
-#include <Object3d.h>
 #include "Engine/Particle/ParticleSystem.h"
 #include "Engine/Graphics/Render/Particle/ParticleRenderer.h"
 #include <algorithm>
@@ -26,7 +24,7 @@ IRenderer* RenderManager::GetRenderer(RenderPassType type) {
 void RenderManager::SetCamera(const ICamera* camera) {
 	camera_ = camera;
 	
-	// 各レンダラーにもカメラを設定（互換性のため）
+	// 各レンダラーにもカメラを設定
 	for (auto& [type, renderer] : renderers_) {
 		renderer->SetCamera(camera);
 	}
@@ -49,57 +47,50 @@ void RenderManager::AddDrawable(IDrawable* obj) {
 void RenderManager::DrawAll() {
 	if (drawQueue_.empty() || !cmdList_) return;
 
-	// 描画パスごとにソート
 	SortDrawQueue();
 
-	// 描画パスごとにまとめて描画
 	RenderPassType currentPass = RenderPassType::Invalid;
+	IRenderer* currentRenderer = nullptr;
 
 	for (const auto& cmd : drawQueue_) {
-		// パスが切り替わったら、前のパスを終了して新しいパスを開始
+		if (!cmd.object->IsActive()) continue;
+
+		// パスが切り替わったら処理
 		if (cmd.passType != currentPass) {
 			// 前のパスを終了
-			if (currentPass != RenderPassType::Invalid) {
-				auto it = renderers_.find(currentPass);
-				if (it != renderers_.end()) {
-					it->second->EndPass();
-				}
+			if (currentRenderer) {
+				currentRenderer->EndPass();
 			}
 
 			// 新しいパスを開始
 			currentPass = cmd.passType;
 			auto it = renderers_.find(currentPass);
 			if (it != renderers_.end()) {
-				// オブジェクトからブレンドモードを取得
-				BlendMode blendMode = cmd.object->GetBlendMode();
-				it->second->BeginPass(cmdList_, blendMode);
+				currentRenderer = it->second.get();
+				currentRenderer->BeginPass(cmdList_, cmd.object->GetBlendMode());
+			} else {
+				currentRenderer = nullptr;
 			}
 		}
 
 		// オブジェクトを描画
-		if (cmd.passType == RenderPassType::Particle) {
-			// パーティクルシステム（ParticleRendererが描画）
-			auto* particleRenderer = dynamic_cast<ParticleRenderer*>(renderers_[currentPass].get());
-			if (particleRenderer && camera_) {
-				particleRenderer->Draw(static_cast<ParticleSystem*>(cmd.object));
-			}
-		} else if (cmd.object->Is2D()) {
-			// 2Dオブジェクト（カメラ不要）
-			static_cast<Object2d*>(cmd.object)->Draw();
-		} else {
-			// 3Dオブジェクト（カメラ使用、ライトは自動セット）
-			if (camera_) {
-				static_cast<Object3d*>(cmd.object)->Draw(const_cast<ICamera*>(camera_));
+		if (currentRenderer) {
+			// オブジェクトのDraw()でGPUデータを更新
+			cmd.object->Draw(camera_);
+			
+			// パーティクルの場合は、レンダラーに描画コマンド発行を依頼
+			if (cmd.passType == RenderPassType::Particle) {
+				if (auto* particleRenderer = static_cast<ParticleRenderer*>(currentRenderer)) {
+					auto* particleSystem = static_cast<ParticleSystem*>(cmd.object);
+					particleRenderer->Draw(particleSystem);
+				}
 			}
 		}
 	}
 
 	// 最後のパスを終了
-	if (currentPass != RenderPassType::Invalid) {
-		auto it = renderers_.find(currentPass);
-		if (it != renderers_.end()) {
-			it->second->EndPass();
-		}
+	if (currentRenderer) {
+		currentRenderer->EndPass();
 	}
 }
 

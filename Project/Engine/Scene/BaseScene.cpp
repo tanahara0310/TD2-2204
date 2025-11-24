@@ -167,9 +167,9 @@ void BaseScene::DrawGameObjectsImGui()
 {
 #ifdef _DEBUG
    if (ImGui::Begin("オブジェクト制御")) {
-	  // 全オブジェクトのImGuiデバッグUI
+	  // 全オブジェクトのImGuiデバッグUI（非アクティブも表示）
 	  for (auto& obj : gameObjects_) {
-		 if (obj && obj->IsActive()) {
+		 if (obj) {
 			obj->DrawImGui();
 		 }
 	  }

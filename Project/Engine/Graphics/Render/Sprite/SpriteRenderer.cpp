@@ -66,36 +66,39 @@ void SpriteRenderer::Initialize(DirectXCommon* dxCommon, ResourceFactory* resour
     // デバイスを使って基本初期化
     Initialize(dxCommon->GetDevice());
     
-    // 定数バッファプールを作成
-    materialResources_.resize(kMaxSpriteCount);
-    transformResources_.resize(kMaxSpriteCount);
-    materialDataPool_.resize(kMaxSpriteCount);
-    transformDataPool_.resize(kMaxSpriteCount);
-    
-    for (size_t i = 0; i < kMaxSpriteCount; ++i) {
-        // マテリアル用定数バッファ
-        materialResources_[i] = resourceFactory_->CreateBufferResource(
-            dxCommon_->GetDevice(), sizeof(SpriteMaterial));
-        materialResources_[i]->Map(0, nullptr, reinterpret_cast<void**>(&materialDataPool_[i]));
+    // フレームごとに定数バッファプールを作成（ダブルバッファリング対応）
+    for (UINT frameIndex = 0; frameIndex < kFrameCount; ++frameIndex) {
+        auto& matResources = materialResources_[frameIndex];
+        auto& tfResources = transformResources_[frameIndex];
+        auto& matData = materialDataPool_[frameIndex];
+        auto& tfData = transformDataPool_[frameIndex];
         
-        // トランスフォーム用定数バッファ
-        transformResources_[i] = resourceFactory_->CreateBufferResource(
-            dxCommon_->GetDevice(), sizeof(TransformationMatrix));
-        transformResources_[i]->Map(0, nullptr, reinterpret_cast<void**>(&transformDataPool_[i]));
+        matResources.resize(kMaxSpriteCount);
+        tfResources.resize(kMaxSpriteCount);
+        matData.resize(kMaxSpriteCount);
+        tfData.resize(kMaxSpriteCount);
+        
+        for (size_t i = 0; i < kMaxSpriteCount; ++i) {
+            // マテリアル用定数バッファを作成してマップ
+            matResources[i] = resourceFactory_->CreateBufferResource(dxCommon_->GetDevice(), sizeof(SpriteMaterial));
+            matResources[i]->Map(0, nullptr, reinterpret_cast<void**>(&matData[i]));
+            
+            // トランスフォーム用定数バッファを作成してマップ
+            tfResources[i] = resourceFactory_->CreateBufferResource(dxCommon_->GetDevice(), sizeof(TransformationMatrix));
+            tfResources[i]->Map(0, nullptr, reinterpret_cast<void**>(&tfData[i]));
+        }
     }
 }
 
 void SpriteRenderer::BeginPass(ID3D12GraphicsCommandList* cmdList, BlendMode blendMode) {
-    // フレームの開始時にバッファインデックスをリセット
     currentBufferIndex_ = 0;
+    currentFrameIndex_ = dxCommon_->GetSwapChain()->GetCurrentBackBufferIndex();
     
-    // ブレンドモードが変更された場合のみPSOを更新
     if (blendMode != currentBlendMode_) {
         currentBlendMode_ = blendMode;
         pipelineState_ = psoMg_->GetPipelineState(blendMode);
     }
     
-    // ルートシグネチャとPSOを設定
     cmdList->SetGraphicsRootSignature(rootSignatureMg_->GetRootSignature());
     cmdList->SetPipelineState(pipelineState_);
     cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);

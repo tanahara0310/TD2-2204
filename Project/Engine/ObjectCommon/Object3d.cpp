@@ -6,7 +6,7 @@ void Object3d::Update() {
    // デフォルト実装は空（派生クラスでオーバーライドすることを想定）
 }
 
-void Object3d::Draw(ICamera* camera) {
+void Object3d::Draw(const ICamera* camera) {
    // デフォルト実装は空（派生クラスでオーバーライドすることを想定）
    (void)camera;
 }

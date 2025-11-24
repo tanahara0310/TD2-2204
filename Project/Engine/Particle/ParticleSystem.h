@@ -80,13 +80,12 @@ public:
     /// @param resourceFactory リソースファクトリ
     void Initialize(DirectXCommon* dxCommon, ResourceFactory* resourceFactory);
 
-    /// @brief 更新処理（カメラから自動的にビュー・プロジェクション行列を取得）
-    /// @param camera カメラオブジェクト
-    void Update(ICamera* camera);
+    /// @brief 更新処理（他のオブジェクトと統一）
+    void Update() override;
 
-    /// @brief 描画（統一描画システム用）
+    /// @brief 描画（3D専用 - カメラ必須、Object3dと同じインターフェース）
     /// @param camera カメラオブジェクト
-    void Draw(ICamera* camera);
+    void Draw(const ICamera* camera) override;
 
     // ──────────────────────────────────────────────────────────
     // IDrawableインターフェース実装
@@ -101,8 +100,13 @@ public:
     /// @brief ImGuiデバッグUI描画
     bool DrawImGui() override;
 
-    /// @brief 2Dオブジェクトかどうかを判定
-    bool Is2D() const override { return false; }
+    /// @brief ブレンドモードを設定
+    /// @param mode ブレンドモード
+    void SetBlendMode(BlendMode mode) { blendMode_ = mode; }
+
+    /// @brief ブレンドモードを取得
+    /// @return ブレンドモード
+    BlendMode GetBlendMode() const override { return blendMode_; }
 
     // ──────────────────────────────────────────────────────────
     // パーティクルシステム制御
@@ -152,14 +156,6 @@ public:
     /// @brief ビルボードタイプを取得
     /// @return ビルボードタイプ
     BillboardType GetBillboardType() const { return billboardType_; }
-
-    /// @brief ブレンドモードを設定
-    /// @param mode ブレンドモード
-    void SetBlendMode(BlendMode mode) { blendMode_ = mode; }
-
-    /// @brief ブレンドモードを取得
-    /// @return ブレンドモード
-    BlendMode GetBlendMode() const { return blendMode_; }
 
     // ──────────────────────────────────────────────────────────
     // レンダラーがアクセスするためのゲッター
