@@ -9,8 +9,6 @@
 /// @brief シンプルなゲームオブジェクト基底
 class GameObject :public Object3d {
 public:
-
-   static void InitializeSystem(EngineSystem* engine);
    virtual void Update() override {}
    virtual void Draw(ICamera* camera) override { (void)camera; }
 
@@ -26,8 +24,6 @@ public:
    virtual void OnCollisionEnter(GameObject* other) { (void)other; }
    virtual void OnCollisionStay(GameObject* other) { (void)other; }
    virtual void OnCollisionExit(GameObject* other) { (void)other; }
-
-   EngineSystem* GetEngineSystem() const;
 
    Collider* GetCollider() const { return collider_.get(); }
 
