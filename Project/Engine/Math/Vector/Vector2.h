@@ -1,4 +1,5 @@
 #pragma once
+#include <cmath>
 
 struct Vector2 {
     float x, y;
@@ -44,6 +45,14 @@ struct Vector2 {
         y /= scalar;
         return *this;
     }
+
+    Vector2 Normalize() const {
+        float length = std::sqrtf(x * x + y * y);
+        if (length == 0.0f) {
+            return { 0.0f, 0.0f };
+        }
+        return { x / length, y / length };
+	}
 };
 
 // スカラーとベクトルの乗算 (float * Vector2)
