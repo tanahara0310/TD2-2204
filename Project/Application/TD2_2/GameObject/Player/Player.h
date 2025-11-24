@@ -22,9 +22,9 @@ private:
    float moveableAreaRadius_ = 50.0f; // 移動可能エリアの半径
 
    // 移動
-   float moveSpeed_ = 30.0f;   // 移動速度
-   float moveDamping_ = 0.8f;    // 移動減衰率
-   float moveMaxSpeed_ = 15.0f; // 移動最大速度
+   float moveSpeed_ = 50.0f;   // 移動速度
+   float moveDamping_ = 0.7f;    // 移動減衰率
+   float moveMaxSpeed_ = 10.0f; // 移動最大速度
 
    // 突進
    float chargeSpeed_ = 5000.0f; // 突進速度
