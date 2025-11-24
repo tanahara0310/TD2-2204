@@ -248,15 +248,9 @@
     <ClCompile Include="Application\TD2_2\GameObject\GameObject.cpp" />
     <ClCompile Include="Engine\ObjectCommon\IDrawable.cpp" />
     <ClCompile Include="Application\TD2_2\GameObject\Title\Sphere.cpp" />
-    <ClCompile Include="Engine\TestGameObject\AnimatedCubeObject.cpp" />
-    <ClCompile Include="Engine\TestGameObject\FenceObject.cpp" />
-    <ClCompile Include="Engine\TestGameObject\SkeletonModelObject.cpp" />
-    <ClCompile Include="Engine\TestGameObject\SkyBoxObject.cpp" />
-    <ClCompile Include="Engine\TestGameObject\SneakWalkModelObject.cpp" />
-    <ClCompile Include="Engine\TestGameObject\SphereObject.cpp" />
-    <ClCompile Include="Engine\TestGameObject\SpriteObject.cpp" />
-    <ClCompile Include="Engine\TestGameObject\TerrainObject.cpp" />
-    <ClCompile Include="Engine\TestGameObject\WalkModelObject.cpp" />
+    <ClCompile Include="Application\TD2_2\GameObject\BehaviorRequestManager.cpp" />
+    <ClCompile Include="Application\TD2_2\Utility\KeyConfig.cpp" />
+    <ClCompile Include="Application\TD2_2\Utility\GameUtils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Engine\WinApp\WinApp.h">
@@ -664,15 +658,9 @@
     <ClInclude Include="Application\TD2_2\GameObject\GameObject.h" />
     <ClInclude Include="Engine\Particle\ParticleSystem.h" />
     <ClInclude Include="Application\TD2_2\GameObject\Title\Sphere.h" />
-    <ClInclude Include="Engine\TestGameObject\AnimatedCubeObject.h" />
-    <ClInclude Include="Engine\TestGameObject\FenceObject.h" />
-    <ClInclude Include="Engine\TestGameObject\SkeletonModelObject.h" />
-    <ClInclude Include="Engine\TestGameObject\SkyBoxObject.h" />
-    <ClInclude Include="Engine\TestGameObject\SneakWalkModelObject.h" />
-    <ClInclude Include="Engine\TestGameObject\SphereObject.h" />
-    <ClInclude Include="Engine\TestGameObject\SpriteObject.h" />
-    <ClInclude Include="Engine\TestGameObject\TerrainObject.h" />
-    <ClInclude Include="Engine\TestGameObject\WalkModelObject.h" />
+    <ClInclude Include="Application\TD2_2\GameObject\BehaviorRequestManager.h" />
+    <ClInclude Include="Application\TD2_2\Utility\KeyConfig.h" />
+    <ClInclude Include="Application\TD2_2\Utility\GameUtils.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Engine\Particle\README.md">

@@ -21,7 +21,7 @@ public:
 
 	/// @brief 描画
 	/// @param camera カメラ
-	void Draw(ICamera* camera) override;
+	void Draw(const ICamera* camera) override;
 
 	/// @brief デバッグUI描画
 	/// @return 変更があった場合true

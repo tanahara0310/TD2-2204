@@ -24,5 +24,5 @@ public:
    void Finalize() override;
 
 private:
-  // std::unique_ptr<Player> player_;
+   Player* player_;
 };

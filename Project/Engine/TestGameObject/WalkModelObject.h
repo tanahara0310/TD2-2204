@@ -15,7 +15,7 @@ public:
 
     /// @brief 描画処理
     /// @param camera カメラ
-    void Draw(ICamera* camera) override;
+    void Draw(const ICamera* camera) override;
 
     /// @brief デバッグ描画処理
     /// @param outLines ライン配列の出力先
