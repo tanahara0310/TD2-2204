@@ -21,7 +21,7 @@ void Sphere::Initialize()
 void Sphere::Update()
 {}
 
-void Sphere::Draw(ICamera* camera)
+void Sphere::Draw(const ICamera* camera)
 {
    if (!model_ || !camera) {
 	  return;

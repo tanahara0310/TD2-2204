@@ -22,11 +22,9 @@ void MyGame::Initialize()
 	sceneManager_->RegisterScene<TitleScene>("TitleScene");
 	sceneManager_->RegisterScene<GameScene>("GameScene");
 	sceneManager_->RegisterScene<ResultScene>("ResultScene");
-	
-	
 
 	// 初期シーンを設定
-	sceneManager_->ChangeScene("TitleScene");
+	sceneManager_->ChangeScene("GameScene");
 
 	// ===== コンソールログ出力とシーンマネージャーの設定 =====
 #ifdef _DEBUG
