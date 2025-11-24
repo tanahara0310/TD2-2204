@@ -7,7 +7,7 @@
 #include "../Collider/AABBCollider.h"
 #include "../Collider/SphereCollider.h"
 #include "EngineSystem.h"
-#include "BehaviorRequestManager.h"
+#include "../Utility/StateMachine.h"
 #include "Application/TD2_2/Utility/GameUtils.h"
 #include "Engine/Utility/Timer/GameTimer.h"
 
@@ -44,7 +44,7 @@ public:
 protected:
 
    std::unique_ptr<Collider> collider_;
-   std::unique_ptr<BehaviorRequestManager>  behavior_;
+   std::unique_ptr<StateMachine> stateMachine_;
 
 protected:
 
@@ -57,6 +57,6 @@ protected:
    /// @param collider コライダー
    void AttachCollider(std::unique_ptr<Collider> collider);
 
-   /// @brief 行動リクエストマネージャーを取り付ける
-   void AttachBehaviorRequestManager();
+   /// @brief ステートマシンを取り付ける
+   void AttachStateMachine();
 };

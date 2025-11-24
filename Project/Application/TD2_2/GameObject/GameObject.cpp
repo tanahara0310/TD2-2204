@@ -15,6 +15,6 @@ void GameObject::AttachCollider(std::unique_ptr<Collider> collider) {
    collider_ = std::move(collider);
 }
 
-void GameObject::AttachBehaviorRequestManager() {
-   behavior_ = std::make_unique<BehaviorRequestManager>();
+void GameObject::AttachStateMachine() {
+   stateMachine_ = std::make_unique<StateMachine>();
 }

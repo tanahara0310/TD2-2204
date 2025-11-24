@@ -46,8 +46,8 @@ private:
    /// @brief キーコンフィグの初期化
    void InitializeKeyConfig();
 
-   /// @brief 行動リクエストマネージャーの初期化
-   void InitializeBehaviorRequestManager();
+   /// @brief ステートマシンの初期化
+   void InitializeStateMachine();
 
    /// @brief コライダーの初期化
    void InitializeCollider();
