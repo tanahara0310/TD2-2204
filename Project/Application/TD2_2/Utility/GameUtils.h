@@ -8,7 +8,5 @@ public:
    static void Initialize(EngineSystem* engine);
 
    static float GetDeltaTime();
-
-   static Vector2 Normalize(const Vector2& v);
 private:
 };

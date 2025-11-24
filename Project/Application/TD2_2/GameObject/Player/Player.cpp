@@ -12,6 +12,9 @@ void Player::Initialize(std::unique_ptr<Model> model, TextureManager::LoadedText
 
    // 初期行動をMoveに設定
    behavior_->Request("Move", 0);
+
+   // コライダーの初期化
+   InitializeCollider();
 }
 
 void Player::Update() {
@@ -31,6 +34,32 @@ void Player::Draw(const ICamera* camera) {
 
    // モデルの描画
    model_->Draw(transform_, camera, texture_.gpuHandle);
+}
+
+void Player::OnCollisionEnter(GameObject* other) {
+   // 反発
+   Vector3 toOther = other->GetWorldPosition() - GetWorldPosition();
+
+   // 反対方向に加速度を与える
+   acceleration_ -= Vector2{ toOther.x, toOther.y }.Normalize() * stunPower_;
+
+   velocity_ *= 0.5f; // 衝突時の速度を半減
+
+   behavior_->Request("Stun", 0);
+}
+
+void Player::OnCollisionStay(GameObject* other) {
+   // 反発
+   Vector3 toOther = other->GetWorldPosition() - GetWorldPosition();
+
+   // 反対方向に加速度を与える
+   acceleration_ -= Vector2{ toOther.x, toOther.y }.Normalize() * stunPower_;
+
+   behavior_->Request("Stun", 0);
+}
+
+void Player::OnCollisionExit(GameObject* other) {
+   (void)other;
 }
 
 void Player::InitializeKeyConfig() {
@@ -55,10 +84,17 @@ void Player::InitializeBehaviorRequestManager() {
    GameObject::AttachBehaviorRequestManager();
 
    behavior_->AddBehavior("Charge", std::bind(&Player::InitializeChargeBehavior, this), std::bind(&Player::Charge, this));
-   behavior_->AddBehavior("Move", nullptr, std::bind(&Player::Move, this));
+   behavior_->AddBehavior("Move", std::bind(&Player::InitializeMoveBehavior, this), std::bind(&Player::Move, this));
+   behavior_->AddBehavior("Stun", std::bind(&Player::InitializeStunBehavior, this), std::bind(&Player::Stun, this));
 
-   behavior_->AddInterruptRule("Charge", { "Move" });
-   behavior_->AddInterruptRule("Move", { "Charge" });
+   behavior_->AddInterruptRule("Charge", { "Move" ,"Stun" });
+   behavior_->AddInterruptRule("Move", { "Charge" ,"Stun" });
+   behavior_->AddInterruptRule("Stun", { "Move" });
+}
+
+void Player::InitializeCollider() {
+   AttachCollider(std::make_unique<SphereCollider>(this, 0.6f));
+   collider_->SetLayer(CollisionLayer::Player);
 }
 
 void Player::UpdateMovement() {
@@ -77,6 +113,11 @@ void Player::UpdateMovement() {
    transform_.translate.x += velocity_.x * GameUtils::GetDeltaTime();
    transform_.translate.y += velocity_.y * GameUtils::GetDeltaTime();
 
+   transform_.translate.z = 0.0f; // Z座標は固定
+
+   transform_.translate.x = std::clamp(transform_.translate.x, -moveableAreaRadius_, moveableAreaRadius_);
+   transform_.translate.y = std::clamp(transform_.translate.y, -moveableAreaRadius_, moveableAreaRadius_);
+
    acceleration_ = { 0.0f, 0.0f };
 
    transform_.TransferMatrix();
@@ -84,7 +125,7 @@ void Player::UpdateMovement() {
 
 Vector2 Player::GetMoveDirection() const {
    Vector2 moveInput = keyConfig_->Get<Vector2>("Move");
-   return GameUtils::Normalize(moveInput);
+   return moveInput.Normalize();
 }
 
 void Player::Move() {
@@ -94,6 +135,13 @@ void Player::Move() {
 void Player::Charge() {
    chargeTimer_.Update(GameUtils::GetDeltaTime());
    if (chargeTimer_.IsFinished()) {
+	  behavior_->Request("Move", 0);
+   }
+}
+
+void Player::Stun() {
+   stunTimer_.Update(GameUtils::GetDeltaTime());
+   if (stunTimer_.IsFinished()) {
 	  behavior_->Request("Move", 0);
    }
 }
@@ -110,4 +158,11 @@ void Player::InitializeChargeBehavior() {
 void Player::InitializeMoveBehavior() {
    dampingPerSecond_ = moveDamping_;
    maxSpeed_ = moveMaxSpeed_;
+}
+
+void Player::InitializeStunBehavior() {
+   dampingPerSecond_ = stunDamping_;
+   maxSpeed_ = stunMaxSpeed_;
+
+   stunTimer_.Start(stunDuration_, false);
 }

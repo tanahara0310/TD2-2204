@@ -1,8 +1,14 @@
 #pragma once
 
+#include <vector>
+#include <list>
 #include <memory>
 #include "Scene/BaseScene.h"
 #include "../../GameObject/Player/Player.h"
+#include "../../GameObject/Boss/Boss.h"
+#include "../../GameObject/GameObject.h"
+#include "../../Collider/CollisionManager.h"
+#include "../../Collider/CollisionConfig.h"
 
 class EngineSystem;
 class CameraManager;
@@ -25,4 +31,13 @@ public:
 
 private:
    Player* player_;
+   Boss* boss_;
+
+   std::unique_ptr<CollisionManager> collisionManager_;
+   std::unique_ptr<CollisionConfig> collisionConfig_;
+
+private:
+   void RegisterAllColliders();
+
+   void CheckCollisions();
 };

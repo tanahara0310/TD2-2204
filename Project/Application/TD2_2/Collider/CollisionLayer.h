@@ -4,9 +4,7 @@
 enum class CollisionLayer {
    Default = 0,
    Player,
-   Enemy,
-   Planet,
-   EnemyBullet,
-   Star,
+   Boss,
+   BossBullet,
    Count
 };

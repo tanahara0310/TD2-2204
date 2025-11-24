@@ -4,6 +4,8 @@
 #include "MathCore.h"
 #include "Object3D.h"
 #include "../Collider/Collider.h"
+#include "../Collider/AABBCollider.h"
+#include "../Collider/SphereCollider.h"
 #include "EngineSystem.h"
 #include "BehaviorRequestManager.h"
 #include "Application/TD2_2/Utility/GameUtils.h"
