@@ -13,6 +13,13 @@
 
 void GameScene::Initialize(EngineSystem* engine) {
    BaseScene::Initialize(engine);
+
+  /* auto dxCommon = engine_->GetComponent<DirectXCommon>();
+   auto modelManager = engine_->GetComponent<ModelManager>();
+   auto& textureManager = TextureManager::GetInstance();
+
+   auto playerModel = modelManager->CreateStaticModel("Resources/Models/Player/Player.obj");*/
+   //player_ = std::make_unique<Player>();
 }
 
 void GameScene::Update() {
@@ -23,5 +30,4 @@ void GameScene::Draw() {
    BaseScene::Draw();
 }
 
-void GameScene::Finalize() {
-}
+void GameScene::Finalize() {}
