@@ -7,11 +7,11 @@ void Player::Initialize(std::unique_ptr<Model> model, TextureManager::LoadedText
    // キーコンフィグの初期化
    InitializeKeyConfig();
 
-   // 行動リクエストマネージャーの初期化
-   InitializeBehaviorRequestManager();
+   // ステートマシンの初期化
+   InitializeStateMachine();
 
-   // 初期行動をMoveに設定
-   behavior_->Request("Move", 0);
+   // 初期状態をMoveに設定
+   stateMachine_->RequestState("Move", 0);
 
    // コライダーの初期化
    InitializeCollider();
@@ -19,10 +19,10 @@ void Player::Initialize(std::unique_ptr<Model> model, TextureManager::LoadedText
 
 void Player::Update() {
    if (keyConfig_->Get<bool>("Charge")) {
-	  behavior_->Request("Charge", 0);
+	  stateMachine_->RequestState("Charge", 0);
    }
 
-   behavior_->Update();
+   stateMachine_->Update();
 
    UpdateMovement();
 }
@@ -45,7 +45,7 @@ void Player::OnCollisionEnter(GameObject* other) {
 
    velocity_ *= 0.5f; // 衝突時の速度を半減
 
-   behavior_->Request("Stun", 0);
+   stateMachine_->RequestState("Stun", 0);
 }
 
 void Player::OnCollisionStay(GameObject* other) {
@@ -55,7 +55,7 @@ void Player::OnCollisionStay(GameObject* other) {
    // 反対方向に加速度を与える
    acceleration_ -= Vector2{ toOther.x, toOther.y }.Normalize() * stunPower_;
 
-   behavior_->Request("Stun", 0);
+   stateMachine_->RequestState("Stun", 0);
 }
 
 void Player::OnCollisionExit(GameObject* other) {
@@ -79,17 +79,17 @@ void Player::InitializeKeyConfig() {
 	  .BindGamepadButton(GamepadButton::A);
 }
 
-void Player::InitializeBehaviorRequestManager() {
-   // 行動リクエストマネージャーの取り付け
-   GameObject::AttachBehaviorRequestManager();
+void Player::InitializeStateMachine() {
+   // ステートマシンの取り付け
+   GameObject::AttachStateMachine();
 
-   behavior_->AddBehavior("Charge", std::bind(&Player::InitializeChargeBehavior, this), std::bind(&Player::Charge, this));
-   behavior_->AddBehavior("Move", std::bind(&Player::InitializeMoveBehavior, this), std::bind(&Player::Move, this));
-   behavior_->AddBehavior("Stun", std::bind(&Player::InitializeStunBehavior, this), std::bind(&Player::Stun, this));
+   stateMachine_->AddState("Charge", std::bind(&Player::InitializeChargeBehavior, this), std::bind(&Player::Charge, this));
+   stateMachine_->AddState("Move", std::bind(&Player::InitializeMoveBehavior, this), std::bind(&Player::Move, this));
+   stateMachine_->AddState("Stun", std::bind(&Player::InitializeStunBehavior, this), std::bind(&Player::Stun, this));
 
-   behavior_->AddInterruptRule("Charge", { "Move" ,"Stun" });
-   behavior_->AddInterruptRule("Move", { "Charge" ,"Stun" });
-   behavior_->AddInterruptRule("Stun", { "Move" });
+   stateMachine_->AddTransitionRule("Charge", { "Move" ,"Stun" });
+   stateMachine_->AddTransitionRule("Move", { "Charge" ,"Stun" });
+   stateMachine_->AddTransitionRule("Stun", { "Move" });
 }
 
 void Player::InitializeCollider() {
@@ -135,14 +135,14 @@ void Player::Move() {
 void Player::Charge() {
    chargeTimer_.Update(GameUtils::GetDeltaTime());
    if (chargeTimer_.IsFinished()) {
-	  behavior_->Request("Move", 0);
+	  stateMachine_->RequestState("Move", 0);
    }
 }
 
 void Player::Stun() {
    stunTimer_.Update(GameUtils::GetDeltaTime());
    if (stunTimer_.IsFinished()) {
-	  behavior_->Request("Move", 0);
+	  stateMachine_->RequestState("Move", 0);
    }
 }
 
