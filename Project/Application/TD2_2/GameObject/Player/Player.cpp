@@ -23,88 +23,25 @@ void Player::Initialize(std::unique_ptr<Model> model, TextureManager::LoadedText
 
 void Player::Update() {
    if (keyConfig_->Get<bool>("Charge")) {
-      stateMachine_->RequestState("Charge", 0);
+	  if (GetMoveDirection().Length() > 0.0f) {
+		 stateMachine_->RequestState("Charge", 0);
+	  }
    }
 
    stateMachine_->Update();
+
+   UpdateRotation();
 
    UpdateMovement();
 }
 
 void Player::Draw(const ICamera* camera) {
    if (!model_ || !camera) {
-      return;
+	  return;
    }
 
    // モデルの描画
    model_->Draw(transform_, camera, texture_.gpuHandle);
-}
-
-bool Player::DrawImGui() {
-#ifdef _DEBUG
-   bool changed = false;
-   
-   if (ImGui::TreeNode(GetObjectName())) {
-      // アクティブ状態
-      bool active = IsActive();
-      if (ImGui::Checkbox("アクティブ", &active)) {
-         SetActive(active);
-         changed = true;
-      }
-      
-      // 現在のステート表示
-      if (stateMachine_) {
-         ImGui::Text("現在のステート: %s", stateMachine_->GetCurrentState().c_str());
-      }
-      
-      // 速度情報
-      ImGui::Separator();
-      ImGui::Text("速度: (%.2f, %.2f)", velocity_.x, velocity_.y);
-      ImGui::Text("加速度: (%.2f, %.2f)", acceleration_.x, acceleration_.y);
-      ImGui::Text("最大速度: %.2f", maxSpeed_);
-      
-      // 移動パラメータ
-      if (ImGui::TreeNode("移動パラメータ")) {
-         ImGui::DragFloat("移動速度", &moveSpeed_, 1.0f, 0.0f, 100.0f);
-         ImGui::DragFloat("移動減衰率", &moveDamping_, 0.01f, 0.0f, 1.0f);
-         ImGui::DragFloat("移動最大速度", &moveMaxSpeed_, 0.1f, 0.0f, 50.0f);
-         ImGui::TreePop();
-      }
-      
-      // 突進パラメータ
-      if (ImGui::TreeNode("突進パラメータ")) {
-         ImGui::DragFloat("突進速度", &chargeSpeed_, 10.0f, 0.0f, 10000.0f);
-         ImGui::DragFloat("突進減衰率", &chargeDamping_, 0.001f, 0.0f, 1.0f);
-         ImGui::DragFloat("突進持続時間", &chargeDuration_, 0.01f, 0.0f, 2.0f);
-         ImGui::DragFloat("突進最大速度", &chargeMaxSpeed_, 0.1f, 0.0f, 100.0f);
-         ImGui::TreePop();
-      }
-      
-      // スタンパラメータ
-      if (ImGui::TreeNode("スタンパラメータ")) {
-         ImGui::DragFloat("スタン反発力", &stunPower_, 10.0f, 0.0f, 5000.0f);
-         ImGui::DragFloat("スタン持続時間", &stunDuration_, 0.01f, 0.0f, 2.0f);
-         ImGui::DragFloat("スタン減衰率", &stunDamping_, 0.001f, 0.0f, 1.0f);
-         ImGui::DragFloat("スタン最大速度", &stunMaxSpeed_, 0.1f, 0.0f, 100.0f);
-         ImGui::TreePop();
-      }
-      
-      // 移動エリア
-      ImGui::DragFloat("移動可能範囲", &moveableAreaRadius_, 1.0f, 0.0f, 100.0f);
-      
-      // トランスフォーム
-      if (transform_.DrawImGui(GetObjectName())) {
-         transform_.TransferMatrix();
-         changed = true;
-      }
-      
-      ImGui::TreePop();
-   }
-   
-   return changed;
-#else
-   return false;
-#endif
 }
 
 void Player::OnCollisionEnter(GameObject* other) {
@@ -199,8 +136,25 @@ Vector2 Player::GetMoveDirection() const {
    return moveInput.Normalize();
 }
 
+void Player::UpdateRotation() {
+
+   direction_.x = std::clamp(direction_.x, -1.0f, 1.0f);
+   direction_.y = std::clamp(direction_.y, -1.0f, 1.0f);
+
+   if (direction_.Length() == 0.0f) {
+	  direction_ = velocity_.Normalize();
+	  direction_.x = std::clamp(direction_.x, -0.2f, 0.2f);
+	  direction_.y = std::clamp(direction_.y, -0.2f, 0.2f);
+   }
+
+   GameObject::TiltByVelocity(direction_);
+   GameObject::UpdateRotation();
+}
+
 void Player::Move() {
    acceleration_ = GetMoveDirection() * moveSpeed_;
+
+   direction_ = GetMoveDirection();
 }
 
 void Player::Charge() {
@@ -224,6 +178,10 @@ void Player::InitializeChargeBehavior() {
    velocity_ = { 0.0f, 0.0f };
 
    chargeTimer_.Start(chargeDuration_, false);
+
+   StartRotateAroundAxis(chargeDuration_, 3.0f);
+
+   direction_ = GetMoveDirection() * chargeSpeed_;
 }
 
 void Player::InitializeMoveBehavior() {
