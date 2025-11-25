@@ -681,6 +681,7 @@
     </None>
     <None Include="docs\Logger_Usage.md" />
     <None Include="docs\RenderingFlow.md" />
+    <None Include="Docs\ModelParticle_Implementation_Guide.md" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Source Files">
