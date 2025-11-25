@@ -16,6 +16,7 @@
 #include "Engine/Graphics/Render/SkyBox/SkyBoxRenderer.h"
 #include "Engine/Graphics/Render/Sprite/SpriteRenderer.h"
 #include "Engine/Graphics/Render/Particle/ParticleRenderer.h"
+#include "Engine/Graphics/Render/Particle/ModelParticleRenderer.h"
 
 // 入力管理
 #include "Engine/Input/InputManager.h"
@@ -272,6 +273,12 @@ void EngineSystem::CreateGraphicsComponents()
 	particleRenderer->SetResourceFactory(resourcePtr);
 	particleRenderer->Initialize(dxPtr->GetDevice());
 	renderManager->RegisterRenderer(RenderPassType::Particle, std::move(particleRenderer));
+	
+	// ModelParticleRendererの作成と登録
+	auto modelParticleRenderer = std::make_unique<ModelParticleRenderer>();
+	modelParticleRenderer->SetResourceFactory(resourcePtr);
+	modelParticleRenderer->Initialize(dxPtr->GetDevice());
+	renderManager->RegisterRenderer(RenderPassType::ModelParticle, std::move(modelParticleRenderer));
 	
 	// RenderManagerを登録
 	RegisterComponent(std::move(renderManager));

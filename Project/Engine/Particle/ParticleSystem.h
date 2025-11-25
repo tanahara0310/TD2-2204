@@ -41,6 +41,7 @@ using namespace MathCore;
 
 // 前方宣言
 class ICamera;
+class ModelResource;
 
 // ビルボードタイプ
 enum class BillboardType {
@@ -48,6 +49,12 @@ enum class BillboardType {
     ViewFacing,     // カメラに向く
     YAxisOnly,      // Y軸のみ固定
     ScreenAligned   // スクリーン平行
+};
+
+// パーティクル描画モード
+enum class ParticleRenderMode {
+    Billboard,      // ビルボードテクスチャ（従来）
+    Model           // 3Dモデル
 };
 
 // パーティクルのパラメータ
@@ -92,7 +99,9 @@ public:
     // ──────────────────────────────────────────────────────────
 
     /// @brief 描画パスタイプを取得
-    RenderPassType GetRenderPassType() const override { return RenderPassType::Particle; }
+    RenderPassType GetRenderPassType() const override { 
+        return renderMode_ == ParticleRenderMode::Model ? RenderPassType::ModelParticle : RenderPassType::Particle; 
+    }
 
     /// @brief オブジェクト名を取得
     const char* GetObjectName() const override { return "ParticleSystem"; }
@@ -136,6 +145,26 @@ public:
     /// @brief テクスチャハンドルを取得
     /// @return テクスチャのGPUハンドル
     D3D12_GPU_DESCRIPTOR_HANDLE GetTextureHandle() const { return texture_.gpuHandle; }
+
+    // ──────────────────────────────────────────────────────────
+    // モデルパーティクル管理
+    // ──────────────────────────────────────────────────────────
+
+    /// @brief モデルリソースを設定（モデルパーティクルとして使用）
+    /// @param modelResource モデルリソースのポインタ
+    void SetModelResource(ModelResource* modelResource);
+
+    /// @brief モデルリソースを取得
+    /// @return モデルリソースのポインタ（nullptrの場合はビルボードモード）
+    ModelResource* GetModelResource() const { return modelResource_; }
+
+    /// @brief 描画モードを取得
+    /// @return 描画モード
+    ParticleRenderMode GetRenderMode() const { return renderMode_; }
+
+    /// @brief モデルパーティクルかどうか
+    /// @return モデルパーティクルの場合true
+    bool IsModelParticle() const { return renderMode_ == ParticleRenderMode::Model; }
 
     // ──────────────────────────────────────────────────────────
     // 設定アクセッサ
@@ -248,8 +277,14 @@ private:
     BillboardType billboardType_ = BillboardType::ViewFacing;
     BlendMode blendMode_ = BlendMode::kBlendModeAdd;
 
-    // テクスチャ
+    // 描画モード
+    ParticleRenderMode renderMode_ = ParticleRenderMode::Billboard;
+
+    // テクスチャ（ビルボードモード用）
     TextureManager::LoadedTexture texture_;
+
+    // モデルリソース（モデルモード用）
+    ModelResource* modelResource_ = nullptr;
 
     // 統計情報
     Statistics statistics_;
