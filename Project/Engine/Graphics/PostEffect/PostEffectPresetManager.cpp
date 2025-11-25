@@ -15,11 +15,6 @@
 #include "Engine/Utility/Debug/ImGui/ImguiManager.h"
 #endif
 
-// Windows.hのマクロ干渉を回避
-#ifdef CreateDirectory
-#undef CreateDirectory
-#endif
-
 bool PostEffectPresetManager::SavePreset(const PostEffectManager* postEffectManager, const std::string& filePath)
 {
     json presetData;
@@ -40,7 +35,7 @@ bool PostEffectPresetManager::SavePreset(const PostEffectManager* postEffectMana
     presetData["enabledStates"] = enabledStates;
 
     // Blurのパラメータ保存
-    if (auto* blur = const_cast<PostEffectManager*>(postEffectManager)->GetBlur()) {
+    if (auto* blur = const_cast<PostEffectManager*>(postEffectManager)->GetEffect<Blur>("Blur")) {
         auto params = blur->GetParams();
         json blurJson;
         blurJson["intensity"] = params.intensity;
@@ -49,7 +44,7 @@ bool PostEffectPresetManager::SavePreset(const PostEffectManager* postEffectMana
     }
 
     // RadialBlurのパラメータ保存
-    if (auto* radialBlur = const_cast<PostEffectManager*>(postEffectManager)->GetRadialBlur()) {
+    if (auto* radialBlur = const_cast<PostEffectManager*>(postEffectManager)->GetEffect<RadialBlur>("RadialBlur")) {
         auto params = radialBlur->GetParams();
         json radialBlurJson;
         radialBlurJson["intensity"] = params.intensity;
@@ -60,7 +55,7 @@ bool PostEffectPresetManager::SavePreset(const PostEffectManager* postEffectMana
     }
 
     // Vignetteのパラメータ保存
-    if (auto* vignette = const_cast<PostEffectManager*>(postEffectManager)->GetVignette()) {
+    if (auto* vignette = const_cast<PostEffectManager*>(postEffectManager)->GetEffect<Vignette>("Vignette")) {
         auto params = vignette->GetParams();
         json vignetteJson;
         vignetteJson["intensity"] = params.intensity;
@@ -70,7 +65,7 @@ bool PostEffectPresetManager::SavePreset(const PostEffectManager* postEffectMana
     }
 
     // ColorGradingのパラメータ保存
-    if (auto* colorGrading = const_cast<PostEffectManager*>(postEffectManager)->GetColorGrading()) {
+    if (auto* colorGrading = const_cast<PostEffectManager*>(postEffectManager)->GetEffect<ColorGrading>("ColorGrading")) {
         auto params = colorGrading->GetParams();
         json colorGradingJson;
         colorGradingJson["hue"] = params.hue;
@@ -88,7 +83,7 @@ bool PostEffectPresetManager::SavePreset(const PostEffectManager* postEffectMana
     }
 
     // ChromaticAberrationのパラメータ保存
-    if (auto* chromaticAberration = const_cast<PostEffectManager*>(postEffectManager)->GetChromaticAberration()) {
+    if (auto* chromaticAberration = const_cast<PostEffectManager*>(postEffectManager)->GetEffect<ChromaticAberration>("ChromaticAberration")) {
         auto params = chromaticAberration->GetParams();
         json chromaticJson;
         chromaticJson["intensity"] = params.intensity;
@@ -101,7 +96,7 @@ bool PostEffectPresetManager::SavePreset(const PostEffectManager* postEffectMana
     }
 
     // Shockwaveのパラメータ保存
-    if (auto* shockwave = const_cast<PostEffectManager*>(postEffectManager)->GetShockwave()) {
+    if (auto* shockwave = const_cast<PostEffectManager*>(postEffectManager)->GetEffect<Shockwave>("Shockwave")) {
         auto params = shockwave->GetParams();
         json shockwaveJson;
         shockwaveJson["centerX"] = params.center[0];
@@ -113,7 +108,7 @@ bool PostEffectPresetManager::SavePreset(const PostEffectManager* postEffectMana
     }
 
     // RasterScrollのパラメータ保存
-    if (auto* rasterScroll = const_cast<PostEffectManager*>(postEffectManager)->GetRasterScroll()) {
+    if (auto* rasterScroll = const_cast<PostEffectManager*>(postEffectManager)->GetEffect<RasterScroll>("RasterScroll")) {
         auto params = rasterScroll->GetParams();
         json rasterScrollJson;
         rasterScrollJson["scrollSpeed"] = params.scrollSpeed;
@@ -126,7 +121,7 @@ bool PostEffectPresetManager::SavePreset(const PostEffectManager* postEffectMana
     }
 
     // FadeEffectのパラメータ保存
-    if (auto* fadeEffect = const_cast<PostEffectManager*>(postEffectManager)->GetFadeEffect()) {
+    if (auto* fadeEffect = const_cast<PostEffectManager*>(postEffectManager)->GetEffect<FadeEffect>("FadeEffect")) {
         auto params = fadeEffect->GetParams();
         json fadeJson;
         fadeJson["fadeAlpha"] = params.fadeAlpha;
@@ -139,16 +134,13 @@ bool PostEffectPresetManager::SavePreset(const PostEffectManager* postEffectMana
         presetData["fadeEffect"] = fadeJson;
     }
 
-    // メタデータ
     presetData["version"] = "1.0";
 
-    // ファイルに保存
     bool success = JsonManager::GetInstance().SaveJson(filePath, presetData);
     if (success) {
         std::cout << "PostEffect preset saved: " << filePath << std::endl;
         needUpdateFileList_ = true;
         
-        // 保存したファイルを現在のプリセットとして設定
         currentPresetPath_ = filePath;
         currentPresetName_ = GetFileNameWithoutExtension(std::filesystem::path(filePath).filename().string());
     } else {
@@ -160,13 +152,11 @@ bool PostEffectPresetManager::SavePreset(const PostEffectManager* postEffectMana
 
 bool PostEffectPresetManager::LoadPreset(PostEffectManager* postEffectManager, const std::string& filePath)
 {
-    // ファイルが存在するかチェック
     if (!JsonManager::GetInstance().FileExists(filePath)) {
         std::cerr << "PostEffect preset file not found: " << filePath << std::endl;
         return false;
     }
 
-    // ファイルを読み込み
     json presetData = JsonManager::GetInstance().LoadJson(filePath);
     if (presetData.empty()) {
         std::cerr << "Failed to load PostEffect preset: " << filePath << std::endl;
@@ -192,7 +182,7 @@ bool PostEffectPresetManager::LoadPreset(PostEffectManager* postEffectManager, c
     // Blurのパラメータ読み込み
     if (presetData.contains("blur")) {
         auto blurJson = presetData["blur"];
-        if (auto* blur = postEffectManager->GetBlur()) {
+        if (auto* blur = postEffectManager->GetEffect<Blur>("Blur")) {
             Blur::BlurParams params;
             params.intensity = JsonManager::SafeGet(blurJson, "intensity", 1.0f);
             params.kernelSize = JsonManager::SafeGet(blurJson, "kernelSize", 1.0f);
@@ -203,7 +193,7 @@ bool PostEffectPresetManager::LoadPreset(PostEffectManager* postEffectManager, c
     // RadialBlurのパラメータ読み込み
     if (presetData.contains("radialBlur")) {
         auto radialBlurJson = presetData["radialBlur"];
-        if (auto* radialBlur = postEffectManager->GetRadialBlur()) {
+        if (auto* radialBlur = postEffectManager->GetEffect<RadialBlur>("RadialBlur")) {
             RadialBlur::RadialBlurParams params;
             params.intensity = JsonManager::SafeGet(radialBlurJson, "intensity", 0.5f);
             params.sampleCount = JsonManager::SafeGet(radialBlurJson, "sampleCount", 8.0f);
@@ -216,7 +206,7 @@ bool PostEffectPresetManager::LoadPreset(PostEffectManager* postEffectManager, c
     // Vignetteのパラメータ読み込み
     if (presetData.contains("vignette")) {
         auto vignetteJson = presetData["vignette"];
-        if (auto* vignette = postEffectManager->GetVignette()) {
+        if (auto* vignette = postEffectManager->GetEffect<Vignette>("Vignette")) {
             Vignette::VignetteParams params;
             params.intensity = JsonManager::SafeGet(vignetteJson, "intensity", 0.8f);
             params.smoothness = JsonManager::SafeGet(vignetteJson, "smoothness", 0.8f);
@@ -228,7 +218,7 @@ bool PostEffectPresetManager::LoadPreset(PostEffectManager* postEffectManager, c
     // ColorGradingのパラメータ読み込み
     if (presetData.contains("colorGrading")) {
         auto colorGradingJson = presetData["colorGrading"];
-        if (auto* colorGrading = postEffectManager->GetColorGrading()) {
+        if (auto* colorGrading = postEffectManager->GetEffect<ColorGrading>("ColorGrading")) {
             ColorGrading::ColorGradingParams params;
             params.hue = JsonManager::SafeGet(colorGradingJson, "hue", 0.0f);
             params.saturation = JsonManager::SafeGet(colorGradingJson, "saturation", 1.0f);
@@ -273,7 +263,7 @@ bool PostEffectPresetManager::LoadPreset(PostEffectManager* postEffectManager, c
     // ChromaticAberrationのパラメータ読み込み
     if (presetData.contains("chromaticAberration")) {
         auto chromaticJson = presetData["chromaticAberration"];
-        if (auto* chromaticAberration = postEffectManager->GetChromaticAberration()) {
+        if (auto* chromaticAberration = postEffectManager->GetEffect<ChromaticAberration>("ChromaticAberration")) {
             ChromaticAberration::ChromaticAberrationParams params;
             params.intensity = JsonManager::SafeGet(chromaticJson, "intensity", 3.0f);
             params.radialFactor = JsonManager::SafeGet(chromaticJson, "radialFactor", 1.0f);
@@ -288,14 +278,13 @@ bool PostEffectPresetManager::LoadPreset(PostEffectManager* postEffectManager, c
     // Shockwaveのパラメータ読み込み
     if (presetData.contains("shockwave")) {
         auto shockwaveJson = presetData["shockwave"];
-        if (auto* shockwave = postEffectManager->GetShockwave()) {
+        if (auto* shockwave = postEffectManager->GetEffect<Shockwave>("Shockwave")) {
             Shockwave::ShockwaveParams params;
             params.center[0] = JsonManager::SafeGet(shockwaveJson, "centerX", 0.5f);
             params.center[1] = JsonManager::SafeGet(shockwaveJson, "centerY", 0.5f);
             params.strength = JsonManager::SafeGet(shockwaveJson, "strength", 0.1f);
             params.thickness = JsonManager::SafeGet(shockwaveJson, "thickness", 0.1f);
             params.speed = JsonManager::SafeGet(shockwaveJson, "speed", 1.0f);
-            // 時間は読み込まない（動的エフェクトのため）
             params.time = 0.0f;
             shockwave->SetParams(params);
         }
@@ -304,7 +293,7 @@ bool PostEffectPresetManager::LoadPreset(PostEffectManager* postEffectManager, c
     // RasterScrollのパラメータ読み込み
     if (presetData.contains("rasterScroll")) {
         auto rasterScrollJson = presetData["rasterScroll"];
-        if (auto* rasterScroll = postEffectManager->GetRasterScroll()) {
+        if (auto* rasterScroll = postEffectManager->GetEffect<RasterScroll>("RasterScroll")) {
             RasterScroll::RasterScrollParams params;
             params.scrollSpeed = JsonManager::SafeGet(rasterScrollJson, "scrollSpeed", 1.0f);
             params.lineHeight = JsonManager::SafeGet(rasterScrollJson, "lineHeight", 10.0f);
@@ -312,7 +301,6 @@ bool PostEffectPresetManager::LoadPreset(PostEffectManager* postEffectManager, c
             params.frequency = JsonManager::SafeGet(rasterScrollJson, "frequency", 1.5f);
             params.lineOffset = JsonManager::SafeGet(rasterScrollJson, "lineOffset", 0.0f);
             params.distortionStrength = JsonManager::SafeGet(rasterScrollJson, "distortionStrength", 1.0f);
-            // 時間は読み込まない（アニメーション用のため）
             params.time = 0.0f;
             rasterScroll->SetParams(params);
         }
@@ -321,7 +309,7 @@ bool PostEffectPresetManager::LoadPreset(PostEffectManager* postEffectManager, c
     // FadeEffectのパラメータ読み込み
     if (presetData.contains("fadeEffect")) {
         auto fadeJson = presetData["fadeEffect"];
-        if (auto* fadeEffect = postEffectManager->GetFadeEffect()) {
+        if (auto* fadeEffect = postEffectManager->GetEffect<FadeEffect>("FadeEffect")) {
             fadeEffect->SetFadeAlpha(JsonManager::SafeGet(fadeJson, "fadeAlpha", 0.0f));
             
             float fadeType = JsonManager::SafeGet(fadeJson, "fadeType", 0.0f);
@@ -335,7 +323,6 @@ bool PostEffectPresetManager::LoadPreset(PostEffectManager* postEffectManager, c
         }
     }
 
-    // 現在のプリセット情報を保存
     currentPresetPath_ = filePath;
     currentPresetName_ = GetFileNameWithoutExtension(std::filesystem::path(filePath).filename().string());
 
@@ -447,7 +434,11 @@ void PostEffectPresetManager::ShowImGui(PostEffectManager* postEffectManager)
                 std::string fullPath = std::string(directoryPathBuffer_) + fileName;
                 
                 // ディレクトリが存在しない場合は作成
-                JsonManager::GetInstance().CreateDirectory(directoryPathBuffer_);
+                try {
+                    std::filesystem::create_directories(directoryPathBuffer_);
+                } catch (const std::exception& e) {
+                    std::cerr << "Failed to create directory: " << e.what() << std::endl;
+                }
                 
                 if (SavePreset(postEffectManager, fullPath)) {
                     ImGui::OpenPopup("保存成功");

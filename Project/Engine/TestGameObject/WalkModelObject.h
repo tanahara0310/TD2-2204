@@ -46,7 +46,6 @@ public:
     float GetJointRadius() const { return jointRadius_; }
 
 private:
-    EngineSystem* engine_ = nullptr;  // エンジンシステムへのポインタ
     bool drawSkeleton_ = true;    // Skeleton描画フラグ
     float jointRadius_ = 0.05f;    // Joint半径
     float animationTime_ = 0.0f;   // アニメーション時刻

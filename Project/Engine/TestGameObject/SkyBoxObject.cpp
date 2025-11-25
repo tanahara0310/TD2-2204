@@ -173,7 +173,7 @@ void SkyBoxObject::CreateTransformBuffer() {
    transformBuffer_->Map(0, nullptr, reinterpret_cast<void**>(&transformData_));
 }
 
-void SkyBoxObject::Draw(ICamera* camera) {
+void SkyBoxObject::Draw(const ICamera* camera) {
    if (!camera) return;
    auto engine = GetEngineSystem();
    auto* dxCommon = engine->GetComponent<DirectXCommon>();

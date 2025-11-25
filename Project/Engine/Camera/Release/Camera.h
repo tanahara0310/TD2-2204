@@ -47,6 +47,9 @@ public:
 	/// @brief 行列をGPUに転送（ICamera から）
 	void TransferMatrix() override;
 
+	/// @brief カメラのタイプを取得
+	CameraType GetCameraType() const override { return CameraType::Camera3D; }
+
 	// ====== Camera 固有のアクセッサ ======
 
 	void SetScale(const Vector3& scale) { this->scale_ = scale; }

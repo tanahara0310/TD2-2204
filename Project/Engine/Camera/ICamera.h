@@ -2,6 +2,12 @@
 #include <Math/MathCore.h>
 #include <d3d12.h>
 
+/// @brief カメラのタイプ
+enum class CameraType {
+	Camera3D,  // 3D用カメラ（透視投影）
+	Camera2D   // 2D用カメラ（正射影）
+};
+
 /// @brief カメラインターフェース
 class ICamera {
 public:
@@ -32,6 +38,9 @@ public:
 	
 	/// @brief カメラの有効/無効状態を取得
 	virtual bool GetActive() const { return isActive_; }
+
+	/// @brief カメラのタイプを取得
+	virtual CameraType GetCameraType() const = 0;
 
 protected:
 

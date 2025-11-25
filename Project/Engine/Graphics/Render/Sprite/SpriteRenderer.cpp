@@ -137,3 +137,25 @@ Matrix4x4 SpriteRenderer::CalculateWVPMatrix(const Vector3& position, const Vect
     
     return MathCore::Matrix::Multiply(worldMatrix, MathCore::Matrix::Multiply(viewMatrix, projectionMatrix));
 }
+
+Matrix4x4 SpriteRenderer::CalculateWVPMatrix(const Vector3& position, const Vector3& scale, const Vector3& rotation, const ICamera* camera) const {
+    // ワールド変換
+    Matrix4x4 worldMatrix = MathCore::Matrix::MakeAffine(scale, rotation, position);
+    
+    if (camera) {
+        // カメラのビュー・プロジェクション行列を使用
+        Matrix4x4 viewMatrix = camera->GetViewMatrix();
+        Matrix4x4 projectionMatrix = camera->GetProjectionMatrix();
+        return MathCore::Matrix::Multiply(worldMatrix, MathCore::Matrix::Multiply(viewMatrix, projectionMatrix));
+    }
+    else {
+        // カメラがない場合は従来の方式（スクリーン座標固定）
+        Matrix4x4 viewMatrix = MathCore::Matrix::Identity();
+        Matrix4x4 projectionMatrix = MathCore::Rendering::Orthographic(
+            0.0f, 0.0f,
+            static_cast<float>(WinApp::kClientWidth),
+            static_cast<float>(WinApp::kClientHeight),
+            0.0f, 100.0f);
+        return MathCore::Matrix::Multiply(worldMatrix, MathCore::Matrix::Multiply(viewMatrix, projectionMatrix));
+    }
+}

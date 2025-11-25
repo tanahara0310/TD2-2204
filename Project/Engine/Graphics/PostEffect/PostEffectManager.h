@@ -4,24 +4,14 @@
 #include <string>
 #include <vector>
 #include <d3d12.h>
+#include <cassert>
 
 #include "Engine/Graphics/PostEffect/PostEffectBase.h"
+#include "Engine/Graphics/PostEffect/PostEffectNames.h"
 #include "PostEffectPresetManager.h"
 
 class DirectXCommon;
 class Render;
-class GrayScale;
-class FullScreen;
-class Blur;
-class Shockwave;
-class Vignette;
-class RadialBlur;
-class ColorGrading;
-class ChromaticAberration;
-class Sepia;
-class Invert;
-class RasterScroll;
-class FadeEffect;
 
 /// @brief ポストエフェクト管理クラス
 class PostEffectManager {
@@ -31,20 +21,26 @@ public:
     /// @param render Renderクラスのポインタ
     void Initialize(DirectXCommon* dxCommon, Render* render);
 
-    /// @brief ポストエフェクトを登録
+    /// @brief テンプレートでエフェクトを登録（型推論による簡潔な登録）
+    /// @tparam T エフェクトの型（PostEffectBaseを継承）
     /// @param name エフェクト名
-    /// @param effect ポストエフェクトのインスタンス
-    void RegisterEffect(const std::string& name, std::unique_ptr<PostEffectBase> effect);
+    /// @param enabled 初期有効状態
+    template<typename T>
+    void RegisterEffect(const std::string& name, bool enabled = false);
 
-    /// @brief ポストエフェクトを取得
+    /// @brief 型安全なエフェクト取得
+    /// @tparam T エフェクトの型
     /// @param name エフェクト名
-    /// @return ポストエフェクトのポインタ（見つからない場合はnullptr）
-    PostEffectBase* GetEffect(const std::string& name);
+    /// @return キャストされたエフェクトのポインタ（見つからない場合はnullptr）
+    template<typename T>
+    T* GetEffect(const std::string& name);
 
-    /// @brief ポストエフェクトを取得（const版）
+    /// @brief 型安全なエフェクト取得（const版）
+    /// @tparam T エフェクトの型
     /// @param name エフェクト名
-    /// @return ポストエフェクトのポインタ（見つからない場合はnullptr）
-    const PostEffectBase* GetEffect(const std::string& name) const;
+    /// @return キャストされたエフェクトのポインタ（見つからない場合はnullptr）
+    template<typename T>
+    const T* GetEffect(const std::string& name) const;
 
     /// @brief 特定のポストエフェクトを実行（有効/無効チェックなし）
     /// @param name エフェクト名
@@ -61,6 +57,14 @@ public:
     /// @return 有効ならtrue
     bool IsEffectEnabled(const std::string& effectName) const;
 
+    /// @brief エフェクトチェーンの順序を設定
+    /// @param effectNames エフェクト名のリスト
+    void SetEffectChain(const std::vector<std::string>& effectNames);
+
+    /// @brief 現在のエフェクトチェーンを取得
+    /// @return エフェクト名のリスト
+    const std::vector<std::string>& GetEffectChain() const;
+
     /// @brief 更新処理
     /// @param deltaTime フレーム時間
     void Update(float deltaTime);
@@ -72,56 +76,20 @@ public:
     /// @return プリセットマネージャーの参照
     PostEffectPresetManager& GetPresetManager() { return *presetManager_; }
 
-    /// @brief GrayScaleエフェクトを取得
-    GrayScale* GetGrayScale();
-
-    /// @brief FullScreenエフェクトを取得
-    FullScreen* GetFullScreen();
-
-    /// @brief Blurエフェクトを取得
-    Blur* GetBlur();
-
-    /// @brief Shockwaveエフェクトを取得
-    Shockwave* GetShockwave();
-
-    /// @brief Vignetteエフェクトを取得
-    Vignette* GetVignette();
-
-    /// @brief RadialBlurエフェクトを取得
-    RadialBlur* GetRadialBlur();
-
-    /// @brief ColorGradingエフェクトを取得
-    ColorGrading* GetColorGrading();
-
-    /// @brief ChromaticAberrationエフェクトを取得
-    ChromaticAberration* GetChromaticAberration();
-
-    /// @brief Sepiaエフェクトを取得
-    Sepia* GetSepia();
-
-    /// @brief Invertエフェクトを取得
-    Invert* GetInvert();
-
-    /// @brief RasterScrollエフェクトを取得
-    RasterScroll* GetRasterScroll();
-
-    /// @brief FadeEffectエフェクトを取得
-    FadeEffect* GetFadeEffect();
-
     /// @brief 現在表示すべき最終テクスチャハンドルを取得
     /// @return 表示すべきテクスチャのSRVハンドル
     D3D12_GPU_DESCRIPTOR_HANDLE GetFinalDisplayTextureHandle() const;
 
-    /// @brief デフォルトエフェクトチェーンを実行し、結果のテクスチャハンドルを取得
+    /// @brief エフェクトチェーンを実行し、結果のテクスチャハンドルを取得
     /// @param inputSrvHandle 入力テクスチャのSRVハンドル
     /// @return 最終出力のSRVハンドル
-    D3D12_GPU_DESCRIPTOR_HANDLE ExecuteDefaultEffectChain(D3D12_GPU_DESCRIPTOR_HANDLE inputSrvHandle);
+    D3D12_GPU_DESCRIPTOR_HANDLE ExecuteEffectChain(D3D12_GPU_DESCRIPTOR_HANDLE inputSrvHandle);
 
 private:
     /// @brief Ping-Pongバッファ管理用ヘルパークラス
     class PingPongBuffer {
     public:
-      PingPongBuffer(DirectXCommon* dxCommon, Render* render);
+        PingPongBuffer(DirectXCommon* dxCommon, Render* render);
 
         /// @brief エフェクトを適用し、バッファを切り替える
         /// @param effect 適用するエフェクト
@@ -133,7 +101,7 @@ private:
 
         /// @brief 最終結果をオフスクリーン#1に保証する
         /// @param fullScreenEffect FullScreenエフェクト（コピー用）
-        void EnsureOutputInBuffer1(FullScreen* fullScreenEffect);
+        void EnsureOutputInBuffer1(PostEffectBase* fullScreenEffect);
 
         /// @brief 入力をリセット
         void Reset(D3D12_GPU_DESCRIPTOR_HANDLE input);
@@ -141,11 +109,29 @@ private:
     private:
         DirectXCommon* dxCommon_;
         Render* render_;
-      D3D12_GPU_DESCRIPTOR_HANDLE currentInput_;
+        D3D12_GPU_DESCRIPTOR_HANDLE currentInput_;
         int currentOutputIndex_;
 
-      D3D12_GPU_DESCRIPTOR_HANDLE GetSrvHandle(int index) const;
+        D3D12_GPU_DESCRIPTOR_HANDLE GetSrvHandle(int index) const;
     };
+
+    /// @brief 全エフェクトを登録
+    void RegisterAllEffects();
+
+    /// @brief ポストエフェクトを登録（内部用）
+    /// @param name エフェクト名
+    /// @param effect ポストエフェクトのインスタンス
+    void RegisterEffectInternal(const std::string& name, std::unique_ptr<PostEffectBase> effect);
+
+    /// @brief エフェクト取得（内部用・型なし）
+    /// @param name エフェクト名
+    /// @return ポストエフェクトのポインタ（見つからない場合はnullptr）
+    PostEffectBase* GetEffectInternal(const std::string& name);
+
+    /// @brief エフェクト取得（内部用・型なし・const版）
+    /// @param name エフェクト名
+    /// @return ポストエフェクトのポインタ（見つからない場合はnullptr）
+    const PostEffectBase* GetEffectInternal(const std::string& name) const;
 
     /// @brief 有効なエフェクトの名前リストを収集
     /// @param effectNames エフェクト名のリスト
@@ -157,29 +143,57 @@ private:
 
     std::unordered_map<std::string, std::unique_ptr<PostEffectBase>> effects_;
     
-    // エフェクトチェーンの定義
-    std::vector<std::string> defaultEffectChain_ = { 
-        "FadeEffect", "Shockwave", "Blur", "RadialBlur", "RasterScroll", 
-        "ColorGrading", "ChromaticAberration", "Sepia", "Invert", "GrayScale", "Vignette" 
+    std::vector<std::string> effectChain_ = { 
+        PostEffectNames::FadeEffect, 
+        PostEffectNames::Shockwave, 
+        PostEffectNames::Blur, 
+        PostEffectNames::RadialBlur, 
+        PostEffectNames::RasterScroll, 
+        PostEffectNames::ColorGrading, 
+        PostEffectNames::ChromaticAberration, 
+        PostEffectNames::Sepia, 
+        PostEffectNames::Invert, 
+        PostEffectNames::GrayScale, 
+        PostEffectNames::Vignette 
     };
-
-    // 個別エフェクトへの参照（高速アクセス用）
-    GrayScale* grayScale_ = nullptr;
-    FullScreen* fullScreen_ = nullptr;
-    Blur* blur_ = nullptr;
-Shockwave* shockwave_ = nullptr;
-    Vignette* vignette_ = nullptr;
-    RadialBlur* radialBlur_ = nullptr;
-    ColorGrading* colorGrading_ = nullptr;
- ChromaticAberration* chromaticAberration_ = nullptr;
-    Sepia* sepia_ = nullptr;
-    Invert* invert_ = nullptr;
-    RasterScroll* rasterScroll_ = nullptr;
-    FadeEffect* fadeEffect_ = nullptr;
     
-    // プリセット管理
     std::unique_ptr<PostEffectPresetManager> presetManager_;
     
-    // 最終表示テクスチャハンドル
     D3D12_GPU_DESCRIPTOR_HANDLE finalDisplayHandle_;
 };
+
+// =============================================================================
+// テンプレート関数の実装
+// =============================================================================
+
+template<typename T>
+void PostEffectManager::RegisterEffect(const std::string& name, bool enabled)
+{
+    static_assert(std::is_base_of<PostEffectBase, T>::value, 
+        "T must inherit from PostEffectBase");
+    
+    auto effect = std::make_unique<T>();
+    effect->Initialize(directXCommon_);
+    effect->SetEnabled(enabled);
+    RegisterEffectInternal(name, std::move(effect));
+}
+
+template<typename T>
+T* PostEffectManager::GetEffect(const std::string& name)
+{
+    auto it = effects_.find(name);
+    if (it != effects_.end()) {
+        return dynamic_cast<T*>(it->second.get());
+    }
+    return nullptr;
+}
+
+template<typename T>
+const T* PostEffectManager::GetEffect(const std::string& name) const
+{
+    auto it = effects_.find(name);
+    if (it != effects_.end()) {
+        return dynamic_cast<const T*>(it->second.get());
+    }
+    return nullptr;
+}

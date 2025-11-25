@@ -17,6 +17,10 @@ public:
     /// @brief ImGuiでパラメータを調整する関数
     virtual void DrawImGui() {}
 
+    /// @brief 更新処理（デフォルトは空実装）
+    /// @param deltaTime フレーム時間
+    virtual void Update(float /*deltaTime*/) {}
+
     /// @brief エフェクトの有効/無効を設定
     /// @param enabled 有効にするかどうか
     void SetEnabled(bool enabled) { enabled_ = enabled; }

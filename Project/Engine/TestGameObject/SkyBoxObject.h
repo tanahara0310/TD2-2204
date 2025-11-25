@@ -80,7 +80,4 @@ private:
 
 	/// @brief インデックス数
 	static constexpr UINT kIndexCount = 36;
-
-	/// @brief エンジンシステムへのポインタ
-	EngineSystem* engine_ = nullptr;
 };

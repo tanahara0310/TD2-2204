@@ -2,6 +2,8 @@
 #include <IDrawable.h>
 #include "Engine/Particle/ParticleSystem.h"
 #include "Engine/Graphics/Render/Particle/ParticleRenderer.h"
+#include "Engine/Camera/CameraManager.h"
+#include "Engine/Camera/ICamera.h"
 #include <algorithm>
 
 void RenderManager::Initialize(ID3D12Device* device) {
@@ -21,10 +23,14 @@ IRenderer* RenderManager::GetRenderer(RenderPassType type) {
 	return nullptr;
 }
 
+void RenderManager::SetCameraManager(CameraManager* cameraManager) {
+	cameraManager_ = cameraManager;
+}
+
 void RenderManager::SetCamera(const ICamera* camera) {
 	camera_ = camera;
 	
-	// 各レンダラーにもカメラを設定
+	// 各レンダラーにもカメラを設定（互換性維持）
 	for (auto& [type, renderer] : renderers_) {
 		renderer->SetCamera(camera);
 	}
@@ -44,6 +50,23 @@ void RenderManager::AddDrawable(IDrawable* obj) {
 	drawQueue_.push_back(cmd);
 }
 
+const ICamera* RenderManager::GetCameraForPass(RenderPassType passType) {
+	// カメラマネージャーがある場合はタイプ別のカメラを取得
+	if (cameraManager_) {
+		// 2D描画パス（Sprite）は2Dカメラを使用
+		if (passType == RenderPassType::Sprite) {
+			return cameraManager_->GetActiveCamera(CameraType::Camera2D);
+		}
+		// その他は3Dカメラを使用
+		else {
+			return cameraManager_->GetActiveCamera(CameraType::Camera3D);
+		}
+	}
+	
+	// カメラマネージャーがない場合は従来のカメラを使用
+	return camera_;
+}
+
 void RenderManager::DrawAll() {
 	if (drawQueue_.empty() || !cmdList_) return;
 
@@ -51,6 +74,7 @@ void RenderManager::DrawAll() {
 
 	RenderPassType currentPass = RenderPassType::Invalid;
 	IRenderer* currentRenderer = nullptr;
+	const ICamera* currentCamera = nullptr;
 
 	for (const auto& cmd : drawQueue_) {
 		if (!cmd.object->IsActive()) continue;
@@ -67,16 +91,22 @@ void RenderManager::DrawAll() {
 			auto it = renderers_.find(currentPass);
 			if (it != renderers_.end()) {
 				currentRenderer = it->second.get();
+				
+				// パスに応じたカメラを取得
+				currentCamera = GetCameraForPass(currentPass);
+				currentRenderer->SetCamera(currentCamera);
+				
 				currentRenderer->BeginPass(cmdList_, cmd.object->GetBlendMode());
 			} else {
 				currentRenderer = nullptr;
+				currentCamera = nullptr;
 			}
 		}
 
 		// オブジェクトを描画
 		if (currentRenderer) {
 			// オブジェクトのDraw()でGPUデータを更新
-			cmd.object->Draw(camera_);
+			cmd.object->Draw(currentCamera);
 			
 			// パーティクルの場合は、レンダラーに描画コマンド発行を依頼
 			if (cmd.passType == RenderPassType::Particle) {

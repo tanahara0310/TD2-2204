@@ -29,13 +29,24 @@ public:
 	/// @param name カメラの名前
 	void UnregisterCamera(const std::string& name);
 
-	/// @brief アクティブカメラを設定
- /// @param name カメラの名前
+	/// @brief アクティブカメラを設定（カメラタイプ別）
+	/// @param name カメラの名前
+	/// @param type カメラタイプ（3D or 2D）
+	/// @return 設定に成功した場合true
+	bool SetActiveCamera(const std::string& name, CameraType type);
+
+	/// @brief アクティブカメラを設定（従来の互換性維持版）
+	/// @param name カメラの名前
 	/// @return 設定に成功した場合true
 	bool SetActiveCamera(const std::string& name);
 
-	/// @brief アクティブカメラを取得
-	  /// @return アクティブカメラのポインタ（存在しない場合nullptr）
+	/// @brief アクティブカメラを取得（カメラタイプ別）
+	/// @param type カメラタイプ（3D or 2D）
+	/// @return アクティブカメラのポインタ（存在しない場合nullptr）
+	ICamera* GetActiveCamera(CameraType type) const;
+
+	/// @brief アクティブカメラを取得（従来の互換性維持版 - Camera3Dを返す）
+	/// @return アクティブカメラのポインタ（存在しない場合nullptr）
 	ICamera* GetActiveCamera() const;
 
 	/// @brief 名前でカメラを取得
@@ -43,28 +54,33 @@ public:
 	/// @return カメラのポインタ（存在しない場合nullptr）
 	ICamera* GetCamera(const std::string& name) const;
 
-	/// @brief アクティブカメラのビュー行列を取得
+	/// @brief アクティブカメラのビュー行列を取得（Camera3D）
 	/// @return ビュー行列
 	const Matrix4x4& GetViewMatrix() const;
 
-	/// @brief アクティブカメラのプロジェクション行列を取得
+	/// @brief アクティブカメラのプロジェクション行列を取得（Camera3D）
 	/// @return プロジェクション行列
 	const Matrix4x4& GetProjectionMatrix() const;
 
-	/// @brief アクティブカメラの位置を取得
+	/// @brief アクティブカメラの位置を取得（Camera3D）
 	/// @return カメラ位置
 	Vector3 GetCameraPosition() const;
 
-	/// @brief アクティブカメラを更新
+	/// @brief アクティブカメラを更新（全タイプ）
 	void Update();
 
 	/// @brief 登録されているカメラの数を取得
 	/// @return カメラの数
 	size_t GetCameraCount() const { return cameras_.size(); }
 
-	/// @brief アクティブカメラの名前を取得
+	/// @brief アクティブカメラの名前（Camera3D）を取得
 	/// @return アクティブカメラの名前
-	const std::string& GetActiveCameraName() const { return activeCameraName_; }
+	const std::string& GetActiveCameraName() const { return activeCamera3DName_; }
+
+	/// @brief アクティブカメラの名前を取得（タイプ別）
+	/// @param type カメラタイプ
+	/// @return アクティブカメラの名前
+	const std::string& GetActiveCameraName(CameraType type) const;
 
 #ifdef _DEBUG
 	/// @brief ImGuiデバッグウィンドウを描画
@@ -75,9 +91,11 @@ private:
 	/// @brief カメラのコンテナ
 	std::unordered_map<std::string, std::unique_ptr<ICamera>> cameras_;
 
-	/// @brief アクティブなカメラの名前
-	std::string activeCameraName_;
+	/// @brief アクティブなカメラの名前（タイプ別）
+	std::string activeCamera3DName_;
+	std::string activeCamera2DName_;
 
-	/// @brief アクティブなカメラのポインタ（キャッシュ）
-	ICamera* activeCamera_ = nullptr;
+	/// @brief アクティブなカメラのポインタ（キャッシュ、タイプ別）
+	ICamera* activeCamera3D_ = nullptr;
+	ICamera* activeCamera2D_ = nullptr;
 };

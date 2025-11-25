@@ -62,6 +62,14 @@ public:
     /// @return WVP行列
     Matrix4x4 CalculateWVPMatrix(const Vector3& position, const Vector3& scale, const Vector3& rotation) const;
     
+    /// @brief WVP行列を計算（カメラ使用版）
+    /// @param position 位置
+    /// @param scale スケール
+    /// @param rotation 回転
+    /// @param camera カメラ
+    /// @return WVP行列
+    Matrix4x4 CalculateWVPMatrix(const Vector3& position, const Vector3& scale, const Vector3& rotation, const ICamera* camera) const;
+    
     /// @brief DirectXCommonを取得
     DirectXCommon* GetDirectXCommon() { return dxCommon_; }
     

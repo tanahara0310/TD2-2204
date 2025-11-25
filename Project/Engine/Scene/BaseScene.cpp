@@ -3,10 +3,12 @@
 #include "Engine/Camera/CameraManager.h"
 #include "Engine/Camera/Debug/DebugCamera.h"
 #include "Engine/Camera/Release/Camera.h"
+#include "Engine/Camera/Camera2D.h"
 #include "Engine/Graphics/Common/DirectXCommon.h"
 #include "Engine/Graphics/Light/LightManager.h"
 #include "Engine/Graphics/Render/RenderManager.h"
 #include "Engine/Graphics/LineRenderer.h"
+#include "WinApp/WinApp.h"
 #include "Object3d.h"
 #include <numbers>
 
@@ -38,9 +40,9 @@ void BaseScene::Update()
 
    // デバッグカメラへの切り替え
    if (keyboard->IsKeyTriggered(DIK_F1)) {
-	  cameraManager_->SetActiveCamera("Debug");
+	  cameraManager_->SetActiveCamera("Debug", CameraType::Camera3D);
    } else if (keyboard->IsKeyTriggered(DIK_F2)) {
-	  cameraManager_->SetActiveCamera("Release");
+	  cameraManager_->SetActiveCamera("Release", CameraType::Camera3D);
 
    }
 
@@ -76,16 +78,17 @@ void BaseScene::Draw()
 {
    auto renderManager = engine_->GetComponent<RenderManager>();
    auto dxCommon = engine_->GetComponent<DirectXCommon>();
-   ICamera* activeCamera = cameraManager_->GetActiveCamera();
+   ICamera* activeCamera3D = cameraManager_->GetActiveCamera(CameraType::Camera3D);
 
-   if (!renderManager || !dxCommon || !activeCamera) {
+   if (!renderManager || !dxCommon || !activeCamera3D) {
 	  return;
    }
 
    ID3D12GraphicsCommandList* cmdList = dxCommon->GetCommandList();
 
    // ===== RenderManagerによる統一描画システム =====
-   renderManager->SetCamera(activeCamera);
+   // カメラマネージャーを設定（タイプ別カメラを自動選択）
+   renderManager->SetCameraManager(cameraManager_.get());
    renderManager->SetCommandList(cmdList);
 
    // 全てのゲームオブジェクトを描画キューに追加
@@ -121,6 +124,8 @@ void BaseScene::SetupCamera()
    // カメラマネージャーを作成
    cameraManager_ = std::make_unique<CameraManager>();
 
+   // ===== 3Dカメラの設定 =====
+   
    // リリースカメラを作成して登録（デフォルト設定）
    auto releaseCamera = std::make_unique<Camera>();
    releaseCamera->Initialize(dxCommon->GetDevice());
@@ -134,8 +139,21 @@ void BaseScene::SetupCamera()
    debugCamera->Initialize(engine_, dxCommon->GetDevice());
    cameraManager_->RegisterCamera("Debug", std::move(debugCamera));
 
-   // デフォルトでリリースカメラをアクティブに設定
-   cameraManager_->SetActiveCamera("Debug");
+   // デフォルトでデバッグカメラをアクティブに設定
+   cameraManager_->SetActiveCamera("Debug", CameraType::Camera3D);
+
+   // ===== 2Dカメラの設定 =====
+   
+   // 2Dカメラを作成して登録（スクリーンサイズは自動取得）
+   auto camera2D = std::make_unique<Camera2D>();
+   // 2Dカメラの初期位置（画面中央）
+   camera2D->SetPosition(Vector2{ 0.0f, 0.0f });
+   camera2D->SetZoom(1.0f);
+
+   cameraManager_->RegisterCamera("Camera2D", std::move(camera2D));
+   
+   // 2Dカメラをアクティブに設定
+   cameraManager_->SetActiveCamera("Camera2D", CameraType::Camera2D);
 }
 
 void BaseScene::SetupLight()
@@ -185,7 +203,7 @@ void BaseScene::DrawDebug()
    // デフォルトでは何もしない（派生クラスでオーバーライド可能）
    auto lineRenderer = engine_->GetComponent<LineRenderer>();
    auto dxCommon = engine_->GetComponent<DirectXCommon>();
-   ICamera* activeCamera = cameraManager_->GetActiveCamera();
+   ICamera* activeCamera = cameraManager_->GetActiveCamera(CameraType::Camera3D);
 
    if (!lineRenderer || !dxCommon || !activeCamera) {
 	  return;

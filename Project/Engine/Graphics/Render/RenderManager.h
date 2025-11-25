@@ -11,6 +11,7 @@
 // 前方宣言
 class IDrawable;
 class ICamera;
+class CameraManager;
 
 /// @brief レンダリング全体を自動管理するマネージャー
 class RenderManager {
@@ -29,7 +30,11 @@ public:
     /// @return レンダラーポインタ
     IRenderer* GetRenderer(RenderPassType type);
     
-    /// @brief カメラを設定（フレームごとに1回）
+    /// @brief カメラマネージャーを設定
+    /// @param cameraManager カメラマネージャー
+    void SetCameraManager(CameraManager* cameraManager);
+    
+    /// @brief カメラを設定（従来の互換性維持版）
     /// @param camera カメラオブジェクト
     void SetCamera(const ICamera* camera);
     
@@ -58,8 +63,14 @@ private:
     
     // フレームごとに設定されるコンテキスト
     ID3D12GraphicsCommandList* cmdList_ = nullptr;
-    const ICamera* camera_ = nullptr;
+    CameraManager* cameraManager_ = nullptr;
+    const ICamera* camera_ = nullptr; // 従来の互換性維持用
     
     /// @brief 描画パスごとにソート
     void SortDrawQueue();
+    
+    /// @brief 描画パスタイプに応じた適切なカメラを取得
+    /// @param passType 描画パスタイプ
+    /// @return カメラポインタ
+    const ICamera* GetCameraForPass(RenderPassType passType);
 };
