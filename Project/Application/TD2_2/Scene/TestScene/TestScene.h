@@ -34,7 +34,7 @@
 #include "TestGameObject/WalkModelObject.h"
 #include "TestGameObject/SneakWalkModelObject.h"
 #include "TestGameObject/SkyBoxObject.h"
-#include "TestGameObject/SpriteObject.h"
+#include "ObjectCommon/SpriteObject.h"
 
 // パーティクルシステム
 #include "Engine/Particle/ParticleSystem.h"
