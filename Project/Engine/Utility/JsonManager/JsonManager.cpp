@@ -93,6 +93,22 @@ Vector4 JsonManager::JsonToVector4(const json& j) {
     return Vector4{0.0f, 0.0f, 0.0f, 0.0f};
 }
 
+json JsonManager::QuaternionToJson(const Quaternion& q) {
+    return json::array({q.x, q.y, q.z, q.w});
+}
+
+Quaternion JsonManager::JsonToQuaternion(const json& j) {
+    if (j.is_array() && j.size() >= 4) {
+        return Quaternion{
+            j[0].get<float>(),
+            j[1].get<float>(),
+            j[2].get<float>(),
+            j[3].get<float>()
+        };
+    }
+    return Quaternion{0.0f, 0.0f, 0.0f, 1.0f};
+}
+
 json JsonManager::TransformToJson(const EulerTransform& transform) {
     json j;
     j["scale"] = Vector3ToJson(transform.scale);
@@ -108,6 +124,28 @@ EulerTransform JsonManager::JsonToTransform(const json& j) {
     }
     if (j.contains("rotate")) {
         transform.rotate = JsonToVector3(j["rotate"]);
+    }
+    if (j.contains("translate")) {
+        transform.translate = JsonToVector3(j["translate"]);
+    }
+    return transform;
+}
+
+json JsonManager::QuaternionTransformToJson(const QuaternionTransform& transform) {
+    json j;
+    j["scale"] = Vector3ToJson(transform.scale);
+    j["rotate"] = QuaternionToJson(transform.rotate);
+    j["translate"] = Vector3ToJson(transform.translate);
+    return j;
+}
+
+QuaternionTransform JsonManager::JsonToQuaternionTransform(const json& j) {
+    QuaternionTransform transform;
+    if (j.contains("scale")) {
+        transform.scale = JsonToVector3(j["scale"]);
+    }
+    if (j.contains("rotate")) {
+        transform.rotate = JsonToQuaternion(j["rotate"]);
     }
     if (j.contains("translate")) {
         transform.translate = JsonToVector3(j["translate"]);
@@ -131,6 +169,18 @@ Vector4 JsonManager::SafeGetVector4(const json& j, const std::string& key, const
     if (j.contains(key) && !j[key].is_null()) {
         try {
             return JsonToVector4(j[key]);
+        }
+        catch (...) {
+            return defaultValue;
+        }
+    }
+    return defaultValue;
+}
+
+Quaternion JsonManager::SafeGetQuaternion(const json& j, const std::string& key, const Quaternion& defaultValue) {
+    if (j.contains(key) && !j[key].is_null()) {
+        try {
+            return JsonToQuaternion(j[key]);
         }
         catch (...) {
             return defaultValue;
