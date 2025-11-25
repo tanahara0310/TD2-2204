@@ -175,6 +175,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="Application\TD2_2\Scene\Game\TitleScene.cpp" />
     <ClCompile Include="Application\TD2_2\Utility\GameUtils.cpp" />
     <ClCompile Include="Application\TD2_2\Utility\KeyConfig.cpp" />
+    <ClCompile Include="Engine\Camera\Camera2D.cpp" />
     <ClCompile Include="Engine\Camera\CameraManager.cpp" />
     <ClCompile Include="Engine\EngineSystem\EngineSystem.cpp" />
     <ClCompile Include="Engine\Framework\Framework.cpp" />
@@ -203,6 +204,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="Engine\Graphics\PostEffect\Effect\Invert.cpp" />
     <ClCompile Include="Engine\Graphics\PostEffect\Effect\RasterScroll.cpp" />
     <ClCompile Include="Engine\Graphics\PostEffect\Effect\Sepia.cpp" />
+    <ClCompile Include="Engine\ObjectCommon\SpriteObject.cpp" />
     <ClCompile Include="Engine\Utility\Collision\CollisionUtils.cpp" />
     <ClCompile Include="Engine\Utility\Debug\ConsoleUI.cpp" />
     <ClCompile Include="Engine\Utility\Debug\ImGui\SceneManagerTab.cpp" />
@@ -331,6 +333,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="Application\TD2_2\Scene\Game\TitleScene.h" />
     <ClInclude Include="Application\TD2_2\Utility\GameUtils.h" />
     <ClInclude Include="Application\TD2_2\Utility\KeyConfig.h" />
+    <ClInclude Include="Engine\Camera\Camera2D.h" />
     <ClInclude Include="Engine\Camera\CameraManager.h" />
     <ClInclude Include="Engine\Camera\CameraStructs.h" />
     <ClInclude Include="Engine\Camera\ICamera.h" />
@@ -379,6 +382,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="Engine\Graphics\PostEffect\Effect\Sepia.h" />
     <ClInclude Include="Engine\Math\BoundingBox.h" />
     <ClInclude Include="Engine\Math\Quaternion\Quaternion.h" />
+    <ClInclude Include="Engine\ObjectCommon\SpriteObject.h" />
     <ClInclude Include="Engine\Utility\Collision\CollisionUtils.h" />
     <ClInclude Include="Engine\Utility\Debug\ConsoleUI.h" />
     <ClInclude Include="Engine\Utility\Debug\ImGui\SceneManagerTab.h" />
