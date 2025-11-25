@@ -26,7 +26,7 @@ void GameScene::Initialize(EngineSystem* engine) {
    // プレイヤーの生成と初期化
    {
 	  auto playerModel = modelManager->CreateStaticModel("Resources/Models/Player/Player.obj");
-	  auto playerTexture = textureManager.Load("Resources/SampleResources/white1x1.png");
+	  auto playerTexture = textureManager.Load("Resources/Textures/Player.png");
 	  auto player = std::make_unique<Player>();
 	  player->Initialize(std::move(playerModel), playerTexture);
 	  player_ = player.get();
@@ -36,7 +36,7 @@ void GameScene::Initialize(EngineSystem* engine) {
    // ボスの生成と初期化
    {
 	  auto bossModel = modelManager->CreateStaticModel("Resources/Models/Boss/Boss.obj");
-	  auto bossTexture = textureManager.Load("Resources/SampleResources/white1x1.png");
+	  auto bossTexture = textureManager.Load("Resources/Textures/Boss.png");
 	  auto boss = std::make_unique<Boss>();
 	  boss->Initialize(std::move(bossModel), bossTexture);
 	  boss_ = boss.get();

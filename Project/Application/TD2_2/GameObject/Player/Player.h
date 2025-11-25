@@ -8,7 +8,6 @@ public:
    void Initialize(std::unique_ptr<Model> model, TextureManager::LoadedTexture texture);
    void Update() override;
    void Draw(const ICamera* camera) override;
-   bool DrawImGui() override;
 
    void OnCollisionEnter(GameObject* other) override;
    void OnCollisionStay(GameObject* other) override;
@@ -43,6 +42,8 @@ private:
    float stunMaxSpeed_ = 35.0f; // スタン最大速度
    GameTimer stunTimer_;
 
+   Vector2 direction_ = {};
+
    std::unique_ptr<KeyConfig> keyConfig_;
 
 private:
@@ -58,6 +59,8 @@ private:
    void UpdateMovement();
 
    Vector2 GetMoveDirection() const;
+
+   void UpdateRotation() override;
 
    /// @brief プレイヤーの移動処理
    void Move();

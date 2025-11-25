@@ -59,4 +59,33 @@ protected:
 
    /// @brief ステートマシンを取り付ける
    void AttachStateMachine();
+
+   /// @brief 方向に応じて軸を傾ける（滑らかに補間）
+   /// @param dir 方向ベクトル（x: 左右, y: 前後）
+   void TiltByVelocity(const Vector2& dir);
+
+   /// @brief ベース回転を計算（傾き＋左右回転）
+   /// @param dir 方向ベクトル（x: 左右, y: 前後）
+   /// @return ベース回転のクォータニオン
+   Quaternion CalculateBaseRotation(const Vector2& dir);
+
+   /// @brief 現在の軸を中心に回転を開始
+   /// @param duration 回転にかける時間（秒）
+   /// @param rotationCount 回転回数（デフォルト: 2.0）
+   void StartRotateAroundAxis(float duration, float rotationCount = 2.0f);
+
+   /// @brief 回転の更新処理（Updateから呼び出す）
+   virtual void UpdateRotation();
+
+private:
+   std::unique_ptr<GameTimer> rotationTimer_;
+   Vector3 rotationAxis_ = { 0.0f, 1.0f, 0.0f }; // 回転軸
+   float rotationCount_ = 2.0f; // 回転回数
+   Quaternion rotationStartQuaternion_ = { 0.0f, 0.0f, 0.0f, 1.0f }; // 回転開始時のベースクォータニオン
+   bool isRotationActive_ = false; // 回転が進行中かどうか
+
+   // 滑らかな補間用
+   Vector2 currentDir_ = { 0.0f, 0.0f }; // 現在の方向ベクトル
+   Vector2 targetDir_ = { 0.0f, 0.0f }; // 目標の方向ベクトル
+   float dirLerpSpeed_ = 10.0f; // 補間速度（大きいほど速く追従）
 };
