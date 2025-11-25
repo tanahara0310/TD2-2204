@@ -83,6 +83,7 @@ public:
 
 private:
 	friend class Model;
+	friend class ModelParticleRenderer;
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexBuffer_;
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView_{};

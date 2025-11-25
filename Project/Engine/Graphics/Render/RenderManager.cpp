@@ -2,6 +2,7 @@
 #include <IDrawable.h>
 #include "Engine/Particle/ParticleSystem.h"
 #include "Engine/Graphics/Render/Particle/ParticleRenderer.h"
+#include "Engine/Graphics/Render/Particle/ModelParticleRenderer.h"
 #include "Engine/Camera/CameraManager.h"
 #include "Engine/Camera/ICamera.h"
 #include <algorithm>
@@ -113,6 +114,13 @@ void RenderManager::DrawAll() {
 				if (auto* particleRenderer = static_cast<ParticleRenderer*>(currentRenderer)) {
 					auto* particleSystem = static_cast<ParticleSystem*>(cmd.object);
 					particleRenderer->Draw(particleSystem);
+				}
+			}
+			// モデルパーティクルの場合
+			else if (cmd.passType == RenderPassType::ModelParticle) {
+				if (auto* modelParticleRenderer = static_cast<ModelParticleRenderer*>(currentRenderer)) {
+					auto* particleSystem = static_cast<ParticleSystem*>(cmd.object);
+					modelParticleRenderer->Draw(particleSystem);
 				}
 			}
 		}

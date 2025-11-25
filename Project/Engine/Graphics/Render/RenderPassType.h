@@ -6,6 +6,7 @@ enum class RenderPassType {
     Model = 0,           // 通常モデル
     SkinnedModel,        // スキニングモデル
     SkyBox,              // SkyBox
-    Sprite,              // スプライト
-    Particle,            // パーティクル
+    Particle,            // パーティクル（ビルボード）
+    ModelParticle,       // モデルパーティクル（3D）
+    Sprite,              // スプライト（最前面）
 };
