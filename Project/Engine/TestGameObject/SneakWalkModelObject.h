@@ -46,7 +46,6 @@ public:
     float GetJointRadius() const { return jointRadius_; }
 
 private:
-    EngineSystem* engine_ = nullptr;
     bool drawSkeleton_ = true;
     float jointRadius_ = 0.05f;
     TextureManager::LoadedTexture uvCheckerTexture_;  // テクスチャハンドル

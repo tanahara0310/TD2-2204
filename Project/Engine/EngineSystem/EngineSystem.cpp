@@ -170,7 +170,7 @@ void EngineSystem::ExecuteRenderPipeline(std::function<void()> renderCallback)
 	auto* dx = GetComponent<DirectXCommon>();
 
 	if (!render || !postEffect || !dx) {
-		return; // 必要なコンポーネントが揃っていない
+		return;
 	}
 
 	// レンダリングの開始（1枚目のオフスクリーン）
@@ -184,12 +184,10 @@ void EngineSystem::ExecuteRenderPipeline(std::function<void()> renderCallback)
 	// 1枚目のオフスクリーン描画の終了
 	render->OffscreenPostDraw(0);
 
-	// ===== ポストエフェクトチェーンの適用 =====
-	// PostEffectManagerのデフォルトエフェクトチェーンを実行
-	D3D12_GPU_DESCRIPTOR_HANDLE outputHandle = postEffect->ExecuteDefaultEffectChain(
+	// ポストエフェクトチェーンの適用
+	D3D12_GPU_DESCRIPTOR_HANDLE outputHandle = postEffect->ExecuteEffectChain(
 		dx->GetOffScreenSrvHandle());
 
-	// バックバッファの描画開始
 	render->BackBufferPreDraw();
 
 #ifdef _DEBUG
@@ -229,7 +227,7 @@ void EngineSystem::CreateGraphicsComponents()
 	auto directXCommon = std::make_unique<DirectXCommon>();
 	directXCommon->Initialize(winApp_);
 	DirectXCommon* dxPtr = directXCommon.get();
-	RegisterComponent(std::move(directXCommon));
+ RegisterComponent(std::move(directXCommon));
 
 	// TextureManagerの初期化（シングルトン）
 	TextureManager::GetInstance().Initialize(dxPtr);

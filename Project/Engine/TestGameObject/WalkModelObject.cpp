@@ -77,7 +77,7 @@ void WalkModelObject::Update() {
    }
 }
 
-void WalkModelObject::Draw(ICamera* camera) {
+void WalkModelObject::Draw(const ICamera* camera) {
    if (!model_ || !camera) return;
 
    // モデルの描画（ライトは自動セット）

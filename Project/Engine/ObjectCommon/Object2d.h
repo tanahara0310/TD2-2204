@@ -16,15 +16,15 @@ public:
     /// @brief 更新
     virtual void Update() {}
     
-    /// @brief 描画（2Dオブジェクトはカメラを使用しない）
-    /// @param camera カメラオブジェクト（2Dでは未使用）
+    /// @brief 描画（2Dカメラを使用）
+    /// @param camera カメラオブジェクト（2D用カメラ）
     void Draw(const ICamera* camera) override { 
-        (void)camera; // 未使用警告を回避
-        Draw(); 
+        Draw2D(camera);
     }
     
-    /// @brief 描画（2D専用 - カメラとライト不要）
-    virtual void Draw() = 0;
+    /// @brief 描画（2D専用 - カメラ対応）
+    /// @param camera 2D用カメラ
+    virtual void Draw2D(const ICamera* camera) = 0;
     
     /// @brief ブレンドモードを取得（2Dオブジェクトはデフォルトでアルファブレンド）
     BlendMode GetBlendMode() const override { return BlendMode::kBlendModeNormal; }

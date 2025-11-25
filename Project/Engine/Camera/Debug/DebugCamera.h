@@ -75,6 +75,9 @@ public:
 	/// @brief 行列をGPUに転送（ICamera から）
 	void TransferMatrix() override;
 
+	/// @brief カメラのタイプを取得
+	CameraType GetCameraType() const override { return CameraType::Camera3D; }
+
 	// ====== DebugCamera 固有のアクセッサ ======
 
 	/// @brief カメラ設定を取得

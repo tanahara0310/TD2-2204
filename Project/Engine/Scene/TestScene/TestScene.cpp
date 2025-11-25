@@ -79,23 +79,24 @@ void TestScene::Initialize(EngineSystem* engine)
 	gameObjects_.push_back(std::move(skyBox));
 
 	// スプライトオブジェクトの初期化（複数作成）
+	// 画面中央を(0,0)とする座標系に変更
 	auto sprite1 = std::make_unique<SpriteObject>();
 	sprite1->Initialize("Resources/SampleResources/uvChecker.png");
-	sprite1->GetTransform().translate = { 100.0f, 100.0f, 0.0f };
+	sprite1->GetTransform().translate = { -200.0f, 100.0f, 0.0f };  // 左上付近
 	sprite1->GetTransform().scale = { 0.5f, 0.5f, 1.0f };
 	gameObjects_.push_back(std::move(sprite1));
 
-	// スプライト2: circle
+	// スプライト2: circle（画面中央）
 	auto sprite2 = std::make_unique<SpriteObject>();
 	sprite2->Initialize("Resources/SampleResources/circle.png");
-	sprite2->GetTransform().translate = { 400.0f, 200.0f, 0.0f };
+	sprite2->GetTransform().translate = { 0.0f, 0.0f, 0.0f };  // 画面中央
 	sprite2->GetTransform().scale = { 1.0f, 1.0f, 1.0f };
 	gameObjects_.push_back(std::move(sprite2));
 
-	// スプライト3: 別のuvChecker（異なる位置）
+	// スプライト3: 別のuvChecker（右下）
 	auto sprite3 = std::make_unique<SpriteObject>();
 	sprite3->Initialize("Resources/SampleResources/uvChecker.png");
-	sprite3->GetTransform().translate = { 700.0f, 400.0f, 0.0f };
+	sprite3->GetTransform().translate = { 200.0f, -100.0f, 0.0f };  // 右下付近
 	sprite3->GetTransform().scale = { 0.8f, 0.8f, 1.0f };
 	gameObjects_.push_back(std::move(sprite3));
 

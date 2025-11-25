@@ -77,7 +77,7 @@ void SkeletonModelObject::Update() {
    }
 }
 
-void SkeletonModelObject::Draw(ICamera* camera) {
+void SkeletonModelObject::Draw(const ICamera* camera) {
    if (!model_ || !camera) return;
 
    // モデルの描画（ライトは自動セット）
