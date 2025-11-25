@@ -583,6 +583,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
   </ItemGroup>
   <ItemGroup>
     <None Include="docs\Logger_Usage.md" />
+    <None Include="Docs\ModelParticle_Implementation_Guide.md" />
     <None Include="docs\RenderingFlow.md" />
     <None Include="Engine\Particle\README.md" />
     <None Include="Engine\Utility\Debug\ImGui\README.md" />

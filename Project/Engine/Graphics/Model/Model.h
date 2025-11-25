@@ -49,6 +49,10 @@ public:
 	/// @param controller アニメーションコントローラー
 	void Initialize(ModelResource* resource, std::unique_ptr<IAnimationController> controller);
 
+	/// @brief モデルリソースを切り替える
+	/// @param resource 新しいModelResourceのポインタ
+	void ChangeModelResource(ModelResource* resource);
+
 	/// @brief モデルを描画（スキニングモデルか通常モデルかは内部で自動判別）
 	/// @param transform ワールドトランスフォーム
 	/// @param camera カメラ（ICamera インターフェース）

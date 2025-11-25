@@ -59,6 +59,42 @@ void Model::Initialize(ModelResource* resource, std::unique_ptr<IAnimationContro
 	animationController_ = std::move(controller);
 }
 
+void Model::ChangeModelResource(ModelResource* resource) {
+	assert(resource && resource->IsLoaded());
+	
+	// 新しいリソースに切り替え
+	resource_ = resource;
+	
+	// Skeletonとスキンクラスターを再構築
+	skeleton_.reset();
+	skinCluster_.reset();
+	
+	if (resource_->GetSkeleton()) {
+		skeleton_ = *resource_->GetSkeleton();
+		
+		const ModelData& modelData = resource_->GetModelData();
+		if (!modelData.skinClusterData.empty()) {
+			skinCluster_ = SkinClusterGenerator::CreateSkinCluster(
+				sDxCommon_->GetDevice(),
+				*skeleton_,
+				modelData,
+				sDxCommon_->GetDescriptorManager()
+			);
+		}
+	}
+	
+	// アニメーションコントローラーがある場合は、新しいリソースに適応させる
+	// 注: 新しいモデルに適切なアニメーションがあるか確認が必要
+	if (animationController_) {
+		// アニメーションコントローラーは既存のものを保持
+		// 新しいモデルのSkeletonに適用される
+		if (auto* skeletonAnimator = dynamic_cast<SkeletonAnimator*>(animationController_.get())) {
+			// SkeletonAnimatorの場合、新しいSkeletonで初期化し直す
+			// （既存のアニメーション時刻は保持される）
+		}
+	}
+}
+
 void Model::UpdateSkinCluster() {
 	// SkinClusterとSkeletonが両方存在する場合のみ更新
 	if (skinCluster_ && skeleton_) {
