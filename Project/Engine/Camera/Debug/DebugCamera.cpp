@@ -233,7 +233,7 @@ void DebugCamera::HandleMouseInput()
 		return;
 	}
 
-	// 【Phase 4】新方式でコンポーネントを直接取得
+	// 新方式でコンポーネントを直接取得
 	auto mouse = engineSystem_->GetComponent<MouseInput>();
 	auto keyboard = engineSystem_->GetComponent<KeyboardInput>();
 	if (!mouse || !keyboard) {
@@ -277,7 +277,7 @@ void DebugCamera::HandleMouseInput()
 		float deltaX = currentX - mouseState_.lastX;
 		float deltaY = currentY - mouseState_.lastY;
 
-		float yawDelta = -deltaX * settings_.rotationSensitivity;
+		float yawDelta = deltaX * settings_.rotationSensitivity;
 		float pitchDelta = deltaY * settings_.rotationSensitivity;
 
 		// Y軸反転の処理

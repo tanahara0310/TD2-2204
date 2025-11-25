@@ -16,10 +16,17 @@ struct ConstantBufferDataWorldTransform {
 /// </summary>
 class WorldTransform {
 public:
+    // === 回転モード ===
+    enum class RotationMode {
+        Euler,      // オイラー角による回転
+        Quaternion  // クォータニオンによる回転
+    };
+
     // === トランスフォームパラメータ（直接アクセス可能） ===
     Vector3 scale = { 1.0f, 1.0f, 1.0f };      // スケール
-    Vector3 rotate = { 0.0f, 0.0f, 0.0f };     // 回転角（ラジアン）
+    Vector3 rotate = { 0.0f, 0.0f, 0.0f };     // 回転角（ラジアン）- オイラー角モード用
     Vector3 translate = { 0.0f, 0.0f, 0.0f };  // 位置
+    Quaternion quaternionRotate = { 0.0f, 0.0f, 0.0f, 1.0f }; // クォータニオン回転 - クォータニオンモード用
 
     /// <summary>
     /// 初期化
@@ -72,6 +79,27 @@ public:
     /// <param name="matrix">設定する行列</param>
     void SetWorldMatrix(const Matrix4x4& matrix);
 
+    /// <summary>
+    /// 回転モードを設定
+    /// </summary>
+    /// <param name="mode">回転モード（Euler or Quaternion）</param>
+    void SetRotationMode(RotationMode mode) { rotationMode_ = mode; }
+
+    /// <summary>
+    /// 回転モードを取得
+    /// </summary>
+    RotationMode GetRotationMode() const { return rotationMode_; }
+
+    /// <summary>
+    /// オイラー角からクォータニオンに変換して設定
+    /// </summary>
+    void EulerToQuaternion();
+
+    /// <summary>
+    /// クォータニオンからオイラー角に変換して設定
+    /// </summary>
+    void QuaternionToEuler();
+
 private:
     // 定数バッファリソース
     Microsoft::WRL::ComPtr<ID3D12Resource> constantBuffer_;
@@ -81,4 +109,6 @@ private:
     Matrix4x4 matWorld_;
     // 親トランスフォーム（階層構造用）
     const WorldTransform* parent_ = nullptr;
+    // 回転モード
+    RotationMode rotationMode_ = RotationMode::Euler;
 };

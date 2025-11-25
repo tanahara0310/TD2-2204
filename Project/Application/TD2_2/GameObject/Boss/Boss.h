@@ -8,10 +8,13 @@ public:
    void Initialize(std::unique_ptr<Model> model, TextureManager::LoadedTexture texture);
    void Update() override;
    void Draw(const ICamera* camera) override;
+   bool DrawImGui() override;
    
    void OnCollisionEnter(GameObject* other) override;
    void OnCollisionStay(GameObject* other) override;
    void OnCollisionExit(GameObject* other) override;
+
+   const char* GetObjectName() const override { return "Boss"; }
 
 private:
 

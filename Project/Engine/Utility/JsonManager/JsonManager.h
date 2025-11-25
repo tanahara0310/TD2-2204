@@ -2,6 +2,7 @@
 
 #include "externals/nlohmann/single_include/nlohmann/json.hpp"
 #include "MathCore.h"
+#include "QuaternionTransform.h"
 #include <string>
 #include <filesystem>
 
@@ -59,15 +60,35 @@ public:
     /// @return Vector4オブジェクト
     static Vector4 JsonToVector4(const json& j);
 
-    /// @brief TransformをJSONに変換
-    /// @param transform Transformオブジェクト
+    /// @brief QuaternionをJSONに変換
+    /// @param q Quaternionオブジェクト
+    /// @return JSON配列
+    static json QuaternionToJson(const Quaternion& q);
+
+    /// @brief JSONからQuaternionに変換
+    /// @param j JSONオブジェクト
+    /// @return Quaternionオブジェクト
+    static Quaternion JsonToQuaternion(const json& j);
+
+    /// @brief EulerTransformをJSONに変換
+    /// @param transform EulerTransformオブジェクト
     /// @return JSONオブジェクト
     static json TransformToJson(const EulerTransform& transform);
 
-    /// @brief JSONからTransformに変換
+    /// @brief JSONからEulerTransformに変換
     /// @param j JSONオブジェクト
-    /// @return Transformオブジェクト
+    /// @return EulerTransformオブジェクト
     static EulerTransform JsonToTransform(const json& j);
+
+    /// @brief QuaternionTransformをJSONに変換
+    /// @param transform QuaternionTransformオブジェクト
+    /// @return JSONオブジェクト
+    static json QuaternionTransformToJson(const QuaternionTransform& transform);
+
+    /// @brief JSONからQuaternionTransformに変換
+    /// @param j JSONオブジェクト
+    /// @return QuaternionTransformオブジェクト
+    static QuaternionTransform JsonToQuaternionTransform(const json& j);
 
     /// @brief JSONの値を安全に取得（デフォルト値付き）
     /// @tparam T 取得する値の型
@@ -101,6 +122,13 @@ public:
     /// @param defaultValue デフォルト値
     /// @return 取得したVector4またはデフォルト値
     static Vector4 SafeGetVector4(const json& j, const std::string& key, const Vector4& defaultValue = {0.0f, 0.0f, 0.0f, 0.0f});
+
+    /// @brief Quaternionを安全に取得
+    /// @param j JSONオブジェクト
+    /// @param key キー名
+    /// @param defaultValue デフォルト値
+    /// @return 取得したQuaternionまたはデフォルト値
+    static Quaternion SafeGetQuaternion(const json& j, const std::string& key, const Quaternion& defaultValue = {0.0f, 0.0f, 0.0f, 1.0f});
 
 private:
     JsonManager() = default;

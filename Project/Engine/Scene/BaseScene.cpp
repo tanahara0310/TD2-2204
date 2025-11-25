@@ -49,7 +49,6 @@ void BaseScene::Update()
 #endif // _DEBUG
 
 
-
    // カメラの更新
    if (cameraManager_) {
 	  cameraManager_->Update();
