@@ -46,7 +46,7 @@ void ParticleRenderer::CreatePSO() {
         .AddInputElement("TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, D3D12_APPEND_ALIGNED_ELEMENT)
         .AddInputElement("NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, D3D12_APPEND_ALIGNED_ELEMENT)
         .SetRasterizer(D3D12_CULL_MODE_BACK, D3D12_FILL_MODE_SOLID)
-        .SetDepthStencil(false, true)
+        .SetDepthStencil(false, false)
         .SetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE)
         .BuildAllBlendModes(device_, vertexShaderBlob, pixelShaderBlob, rootSignatureMg_->GetRootSignature());
 

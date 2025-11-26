@@ -17,4 +17,6 @@ void MaterialManager::Initialize(ID3D12Device* device, ResourceFactory* resource
     materialData_->shadingMode = 2; // シェーディングモードをHalf-Lambertに設定
     materialData_->toonThreshold = 0.5f; // トゥーンシェーディングの閾値
     materialData_->toonSmoothness = 0.1f; // トゥーンシェーディングの滑らかさ
+    materialData_->enableDithering = 0; // ディザリング無効
+    materialData_->ditheringScale = 1.0f; // ディザリングスケール
 }

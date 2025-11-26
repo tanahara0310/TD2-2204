@@ -36,9 +36,6 @@ void ParticleSystem::Initialize(DirectXCommon* dxCommon, ResourceFactory* resour
         { 0.0f, 0.0f, 0.0f }  // 平行移動
     };
 
-    // マテリアルクラスの初期化
-    materialManager_->Initialize(dxCommon->GetDevice(), resourceFactory);
-
     // インスタンシング用のリソースを作成
     ResourceCreate();
 

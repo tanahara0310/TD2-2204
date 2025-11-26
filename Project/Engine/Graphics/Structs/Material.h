@@ -13,6 +13,8 @@ struct Material {
     int shadingMode; // シェーディングモード(0: None, 1: Lambert, 2: Half-Lambert, 3: Toon)
     float toonThreshold; // トゥーンシェーディングの閾値 (0.0-1.0)
     float toonSmoothness; // トゥーンシェーディングの滑らかさ (0.0-0.5)
+    int32_t enableDithering; // ディザリング有効化フラグ (0: 無効, 1: 有効)
+    float ditheringScale; // ディザリングのスケール（デフォルト: 1.0f）
     
-    float padding2[6]; // パディング
+    float padding2[4]; // パディング調整
 };

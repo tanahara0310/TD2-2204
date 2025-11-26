@@ -6,22 +6,53 @@
 
 void SceneManager::Initialize(EngineSystem* engine) {
 	engine_ = engine;
+
+	// シーントランジションの初期化
+	sceneTransition_ = std::make_unique<SceneTransition>();
+	sceneTransition_->Initialize(engine);
+}
+
+void SceneManager::SetInitialScene(const std::string& name) {
+	// トランジション無しで即座にシーンを読み込む
+	DoChangeScene(name);
 }
 
 void SceneManager::ChangeScene(std::string name) {
+	// デフォルトトランジション（フェード、1秒）
+	ChangeScene(std::move(name), SceneTransition::TransitionType::Fade, 1.0f);
+}
+
+void SceneManager::ChangeScene(std::string name, SceneTransition::TransitionType transitionType, float duration) {
 	// Update/Draw実行中のクラッシュを防ぐため次フレームで切り替え
 	nextSceneName_ = std::move(name);
+	nextTransitionType_ = transitionType;
+	nextTransitionDuration_ = duration;
 	isSceneChangeRequested_ = true;
 }
 
 void SceneManager::Update() {
-	// 遅延シーン切り替えを最初に実行
-	if (isSceneChangeRequested_) {
-		DoChangeScene(nextSceneName_);
+	// フレームレート取得
+	auto frameRateController = engine_->GetComponent<FrameRateController>();
+	float deltaTime = frameRateController ? frameRateController->GetDeltaTime() : 0.016f;
+
+	// トランジション更新
+	sceneTransition_->Update(deltaTime);
+
+	// 遅延シーン切り替えのリクエスト処理
+	if (isSceneChangeRequested_ && !sceneTransition_->IsTransitioning()) {
+		// トランジション開始
+		sceneTransition_->StartTransition(nextTransitionType_, nextTransitionDuration_);
 		isSceneChangeRequested_ = false;
 	}
 
-	if (currentScene_) {
+	// シーン切り替え準備完了時に実際の切り替えを実行
+	if (sceneTransition_->IsReadyToChangeScene()) {
+		DoChangeScene(nextSceneName_);
+		sceneTransition_->OnSceneChanged(); // フェードイン開始
+	}
+
+	// トランジションがブロック中でない場合のみシーンを更新
+	if (currentScene_ && !sceneTransition_->IsBlocking()) {
 		currentScene_->Update();
 	}
 }
@@ -42,6 +73,9 @@ void SceneManager::Finalize() {
 	currentScene_.reset();
 	currentSceneName_ = "None";
 	sceneFactories_.clear();
+
+	// トランジションの解放
+	sceneTransition_.reset();
 }
 
 bool SceneManager::HasScene(const std::string& name) const {
@@ -59,6 +93,16 @@ std::vector<std::string> SceneManager::GetAllSceneNames() const {
 		sceneNames.push_back(pair.first);
 	}
 	return sceneNames;
+}
+
+bool SceneManager::IsTransitioning() const {
+	return sceneTransition_ && sceneTransition_->IsTransitioning();
+}
+
+void SceneManager::SkipTransition() {
+	if (sceneTransition_) {
+		sceneTransition_->SkipTransition();
+	}
 }
 
 void SceneManager::DoChangeScene(const std::string& name) {

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "IScene.h"
+#include "SceneTransition.h"
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -23,9 +24,19 @@ public:
 		sceneFactories_[name] = []() { return std::make_unique<T>(); };
 	}
 
-	/// @brief シーンを変える関数
+	/// @brief 初期シーンを設定（トランジション無し）
+	/// @param name 初期シーン名
+	void SetInitialScene(const std::string& name);
+
+	/// @brief シーンを変える関数（デフォルトトランジション）
 	/// @param name 変更先のシーン名
 	void ChangeScene(std::string name);
+
+	/// @brief シーンを変える関数（トランジション指定版）
+	/// @param name 変更先のシーン名
+	/// @param transitionType トランジションタイプ
+	/// @param duration トランジション時間（秒）
+	void ChangeScene(std::string name, SceneTransition::TransitionType transitionType, float duration = 1.0f);
 
 	/// @brief 更新処理
 	void Update();
@@ -49,6 +60,13 @@ public:
 	/// @return シーン名のリスト
 	std::vector<std::string> GetAllSceneNames() const;
 
+	/// @brief トランジション中か確認
+	/// @return true: トランジション中, false: 待機中
+	bool IsTransitioning() const;
+
+	/// @brief トランジションをスキップ（デバッグ用）
+	void SkipTransition();
+
 private:
 	std::unordered_map<std::string, std::function<std::unique_ptr<IScene>()>> sceneFactories_;
 
@@ -70,4 +88,16 @@ private:
 	/// @brief 実際のシーン切り替えを実行（内部関数）
 	/// @param name 変更先のシーン名
 	void DoChangeScene(const std::string& name);
+
+	// ──────────────────────────────────────────────────────────
+	// トランジション管理
+	// ──────────────────────────────────────────────────────────
+	/// @brief シーントランジション管理
+	std::unique_ptr<SceneTransition> sceneTransition_;
+
+	/// @brief 次のトランジションタイプ
+	SceneTransition::TransitionType nextTransitionType_ = SceneTransition::TransitionType::Fade;
+
+	/// @brief 次のトランジション時間
+	float nextTransitionDuration_ = 1.0f;
 };

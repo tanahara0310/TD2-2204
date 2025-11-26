@@ -103,6 +103,34 @@ public: // メンバ関数
         SetToonSmoothness(smoothness);
     }
 
+    /// @brief ディザリングを有効/無効にする
+    /// @param enable true: 有効, false: 無効
+    void SetEnableDithering(bool enable)
+    {
+        materialData_->enableDithering = enable ? 1 : 0;
+    }
+
+    /// @brief ディザリングが有効かどうかを取得
+    /// @return true: 有効, false: 無効
+    bool IsEnableDithering() const
+    {
+        return materialData_->enableDithering != 0;
+    }
+
+    /// @brief ディザリングスケールを設定
+    /// @param scale スケール値（デフォルト: 1.0f、大きいほど粗いパターン）
+    void SetDitheringScale(float scale)
+    {
+        materialData_->ditheringScale = scale;
+    }
+
+    /// @brief ディザリングスケールを取得
+    /// @return 現在のスケール値
+    float GetDitheringScale() const
+    {
+        return materialData_->ditheringScale;
+    }
+
     /// @brief マテリアルのGPU仮想アドレスを取得
     /// @return GPU仮想アドレス
     D3D12_GPU_VIRTUAL_ADDRESS GetGPUVirtualAddress() const

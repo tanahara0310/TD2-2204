@@ -1,5 +1,6 @@
 #include "SphereObject.h"
 #include <EngineSystem.h>
+#include "Engine/Camera/ICamera.h"
 
 void SphereObject::Initialize() {
    // 必須コンポーネントの取得
@@ -21,4 +22,23 @@ void SphereObject::Initialize() {
    // テクスチャの読み込み
    auto& textureManager = TextureManager::GetInstance();
    texture_ = textureManager.Load("Resources/SampleResources/monsterBall.png");
+
+   // アクティブ状態に設定
+   SetActive(true);
+}
+
+void SphereObject::Update() {
+   if (!IsActive() || !model_) {
+      return;
+   }
+
+   // トランスフォームの更新
+   transform_.TransferMatrix();
+}
+
+void SphereObject::Draw(const ICamera* camera) {
+   if (!model_ || !camera) return;
+
+   // モデルの描画
+   model_->Draw(transform_, camera, texture_.gpuHandle);
 }

@@ -55,13 +55,7 @@ void BaseParticleRenderer::CreateRootSignature() {
     instanceRange.baseShaderRegister = 0;  // t0
     rootSignatureMg_->AddDescriptorTable({ instanceRange }, D3D12_SHADER_VISIBILITY_VERTEX);
 
-    // Root Parameter 1: マテリアル用CBV (b0, Pixel Shader)
-    RootSignatureManager::RootDescriptorConfig materialCBV;
-    materialCBV.shaderRegister = 0;
-    materialCBV.visibility = D3D12_SHADER_VISIBILITY_PIXEL;
-    rootSignatureMg_->AddRootCBV(materialCBV);
-
-    // Root Parameter 2: テクスチャ用ディスクリプタテーブル (t0, Pixel Shader)
+    // Root Parameter 1: テクスチャ用ディスクリプタテーブル (t0, Pixel Shader)
     RootSignatureManager::DescriptorRangeConfig textureRange;
     textureRange.type = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
     textureRange.numDescriptors = 1;
@@ -92,9 +86,6 @@ void BaseParticleRenderer::SetupCommonResources(ParticleSystem* particle, D3D12_
     // インスタンシングリソースを設定（Root Parameter 0）
     cmdList_->SetGraphicsRootDescriptorTable(0, particle->GetInstancingSrvHandleGPU());
     
-    // マテリアルを設定（Root Parameter 1）
-    cmdList_->SetGraphicsRootConstantBufferView(1, particle->GetMaterialGPUAddress());
-    
-    // テクスチャを設定（Root Parameter 2）
-    cmdList_->SetGraphicsRootDescriptorTable(2, textureHandle);
+    // テクスチャを設定（Root Parameter 1）
+    cmdList_->SetGraphicsRootDescriptorTable(1, textureHandle);
 }
