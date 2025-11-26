@@ -12,6 +12,8 @@ struct Material
     int shadingMode; // 0: None, 1: Lambert, 2: Half-Lambert, 3: Toon
     float toonThreshold; // トゥーンシェーディングの閾値
     float toonSmoothness; // トゥーンシェーディングの滑らかさ
+    int enableDithering; // ディザリング有効化フラグ
+    float ditheringScale; // ディザリングのスケール（パターンの大きさ調整）
 };
 
 //カメラ
@@ -34,6 +36,23 @@ StructuredBuffer<DirectionalLightData> gDirectionalLights : register(t1);
 StructuredBuffer<PointLightData> gPointLights : register(t2);
 StructuredBuffer<SpotLightData> gSpotLights : register(t3);
 
+// ディザリングパターン関数（4x4 Bayer Matrix）
+float GetDitheringThreshold(float2 screenPos)
+{
+    // 4x4 Bayer Matrix (0-15の値を0-1に正規化)
+    const float bayerMatrix[4][4] =
+    {
+        { 0.0f / 16.0f, 8.0f / 16.0f, 2.0f / 16.0f, 10.0f / 16.0f },
+        { 12.0f / 16.0f, 4.0f / 16.0f, 14.0f / 16.0f, 6.0f / 16.0f },
+        { 3.0f / 16.0f, 11.0f / 16.0f, 1.0f / 16.0f, 9.0f / 16.0f },
+        { 15.0f / 16.0f, 7.0f / 16.0f, 13.0f / 16.0f, 5.0f / 16.0f }
+    };
+    
+    int x = int(screenPos.x) % 4;
+    int y = int(screenPos.y) % 4;
+    return bayerMatrix[y][x];
+}
+
 struct PixelShaderOutput
 {
     float4 color : SV_TARGET0;
@@ -52,10 +71,38 @@ PixelShaderOutput main(VertexShaderOutput input)
     //カメラへの方向を算出
     float3 toEye = normalize(gCamera.worldPosition - input.worldPosition);
     
-    // アルファテスト
-    if (textureColor.a <= 0.5f) // アルファ値がほぼ0なら透明とみなす
+    // 最終的なアルファ値を計算
+    float finalAlpha = gMaterial.color.a * textureColor.a;
+    
+    // ディザリングによる疑似透明化
+    if (gMaterial.enableDithering != 0)
     {
-        discard; // ピクセルを破棄
+        // スクリーン座標を取得（SV_POSITIONから）
+        float2 screenPos = input.position.xy;
+        
+        // ディザリングのスケールを適用（パターンサイズ調整）
+        if (gMaterial.ditheringScale > 0.0f)
+        {
+            screenPos *= gMaterial.ditheringScale;
+        }
+        
+        // ディザリング閾値を取得（わずかなオフセットを加えてα=0で完全に消えるようにする）
+        float threshold = GetDitheringThreshold(screenPos) + 0.001f;
+        
+        // アルファ値が閾値以下の場合、ピクセルを破棄
+        if (finalAlpha <= threshold)
+        {
+            discard;
+        }
+        
+    }
+    else
+    {
+        // ディザリング無効時は従来のアルファテスト
+        if (textureColor.a <= 0.5f)
+        {
+            discard;
+        }
     }
    
     //Lightingする場合
@@ -164,6 +211,12 @@ PixelShaderOutput main(VertexShaderOutput input)
     else // Lightingしない場合
     {
         output.color = gMaterial.color * textureColor;
+    }
+    
+    // ディザリング使用時はアルファを1.0に固定（Zソート不要）
+    if (gMaterial.enableDithering != 0)
+    {
+        output.color.a = 1.0f;
     }
     
     return output;
