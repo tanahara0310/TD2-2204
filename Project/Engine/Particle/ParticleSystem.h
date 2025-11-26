@@ -18,7 +18,6 @@
 // Graphics関連
 #include "Engine/Graphics/Common/DirectXCommon.h"
 #include "Engine/Graphics/Resource/ResourceFactory.h"
-#include "Engine/Graphics/Material/MaterialManager.h"
 #include "Engine/Graphics/TextureManager.h"
 #include "Engine/Graphics/PipelineStateManager.h"
 
@@ -196,9 +195,6 @@ public:
     /// @brief インスタンシングSRVのGPUハンドルを取得
     D3D12_GPU_DESCRIPTOR_HANDLE GetInstancingSrvHandleGPU() const { return instancingSrvHandleGPU_; }
 
-    /// @brief マテリアルのGPU仮想アドレスを取得
-    D3D12_GPU_VIRTUAL_ADDRESS GetMaterialGPUAddress() const { return materialManager_->GetGPUVirtualAddress(); }
-
     // ──────────────────────────────────────────────────────────
     // モジュールアクセッサ
     // ──────────────────────────────────────────────────────────
@@ -313,9 +309,6 @@ private:
     D3D12_CPU_DESCRIPTOR_HANDLE instancingSrvHandleCPU_ = {};
     D3D12_GPU_DESCRIPTOR_HANDLE instancingSrvHandleGPU_ = {};
     ParticleForGPU* instancingData_ = nullptr;
-
-    // マテリアル
-    std::unique_ptr<MaterialManager> materialManager_ = std::make_unique<MaterialManager>();
 
     // ──────────────────────────────────────────────────────────
     // 内部処理

@@ -21,9 +21,9 @@ public:
     /// @param outLines ライン配列の出力先
     void DrawDebug(std::vector<LineRenderer::Line>& outLines) override;
 
-    /// @brief ImGuiデバッグUI描画
+    /// @brief ImGui拡張UI描画（Skeleton制御を追加）
     /// @return ImGuiで変更があった場合true
-    bool DrawImGui() override;
+    bool DrawImGuiExtended() override;
 
     /// @brief オブジェクト名を取得
     /// @return オブジェクト名

@@ -76,6 +76,7 @@ void TestScene::Initialize(EngineSystem* engine)
 	// SkyBoxの初期化（gameObjects_に追加）
 	auto skyBox = std::make_unique<SkyBoxObject>();
 	skyBox->Initialize();
+	skyBox->SetActive(false);
 	gameObjects_.push_back(std::move(skyBox));
 
 	// スプライトオブジェクトの初期化（複数作成）
@@ -84,6 +85,7 @@ void TestScene::Initialize(EngineSystem* engine)
 	sprite1->Initialize("Resources/SampleResources/uvChecker.png");
 	sprite1->GetTransform().translate = { -200.0f, 100.0f, 0.0f };  // 左上付近
 	sprite1->GetTransform().scale = { 0.5f, 0.5f, 1.0f };
+	sprite1->SetActive(false);
 	gameObjects_.push_back(std::move(sprite1));
 
 	// スプライト2: circle（画面中央）
@@ -91,6 +93,7 @@ void TestScene::Initialize(EngineSystem* engine)
 	sprite2->Initialize("Resources/SampleResources/circle.png");
 	sprite2->GetTransform().translate = { 0.0f, 0.0f, 0.0f };  // 画面中央
 	sprite2->GetTransform().scale = { 1.0f, 1.0f, 1.0f };
+	sprite2->SetActive(false);
 	gameObjects_.push_back(std::move(sprite2));
 
 	// スプライト3: 別のuvChecker（右下）
@@ -98,6 +101,7 @@ void TestScene::Initialize(EngineSystem* engine)
 	sprite3->Initialize("Resources/SampleResources/uvChecker.png");
 	sprite3->GetTransform().translate = { 200.0f, -100.0f, 0.0f };  // 右下付近
 	sprite3->GetTransform().scale = { 0.8f, 0.8f, 1.0f };
+	sprite3->SetActive(false);
 	gameObjects_.push_back(std::move(sprite3));
 
 	// ===== パーティクルシステムの初期化 =====
@@ -105,7 +109,6 @@ void TestScene::Initialize(EngineSystem* engine)
 	particleSystem->Initialize(dxCommon, engine_->GetComponent<ResourceFactory>());
 
 	// パーティクルシステムの設定
-	particleSystem ->SetTexture("Resources/SampleResources/circle.png");
 	particleSystem->SetEmitterPosition({ 0.0f, 2.0f, 0.0f });
 	particleSystem->SetBlendMode(BlendMode::kBlendModeAdd);  // 加算合成
 	particleSystem->SetBillboardType(BillboardType::ViewFacing);
