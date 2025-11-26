@@ -256,6 +256,7 @@
     <ClCompile Include="Engine\Camera\Camera2D.cpp" />
     <ClCompile Include="Engine\Graphics\Render\Particle\ModelParticleRenderer.cpp" />
     <ClCompile Include="Engine\Graphics\Render\Particle\BaseParticleRenderer.cpp" />
+    <ClCompile Include="Engine\Scene\SceneTransition.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Engine\WinApp\WinApp.h">
@@ -671,6 +672,7 @@
     <ClInclude Include="Engine\Camera\Camera2D.h" />
     <ClInclude Include="Engine\Graphics\Render\Particle\ModelParticleRenderer.h" />
     <ClInclude Include="Engine\Graphics\Render\Particle\BaseParticleRenderer.h" />
+    <ClInclude Include="Engine\Scene\SceneTransition.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Engine\Particle\README.md">

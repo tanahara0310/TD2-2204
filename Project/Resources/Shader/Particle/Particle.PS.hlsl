@@ -1,14 +1,5 @@
 #include "Particle.hlsli"
 
-struct Material
-{
-    float32_t4 color;
-    int32_t enableLighting;
-    float32_t4x4 uvTransform;
-};
-
-ConstantBuffer<Material> gMaterial : register(b0);
-
 //SRVのregisterはt0
 Texture2D<float32_t4> gTexture : register(t0);
 //Samplerのregisterはs0
@@ -23,18 +14,20 @@ PixelShaderOutput main(VertexShaderOutput input)
 {
     PixelShaderOutput output;
     
-    //テクスチャのUV座標を変換
-    float32_t4 transformedUV = mul(float32_t4(input.texcoord, 0.0f, 1.0f), gMaterial.uvTransform);
-    
     //テクスチャをサンプリング
-    float32_t4 textureColor = gTexture.Sample(gSampler, transformedUV.xy);
+    float32_t4 textureColor = gTexture.Sample(gSampler, input.texcoord);
     
-    output.color = gMaterial.color * textureColor * input.color;
-    if (output.color.a == 0.0f)
+    // パーティクルの色とテクスチャ色を乗算
+    float32_t4 finalColor = textureColor * input.color;
+    
+    // 加算ブレンド用：RGB値にアルファを事前乗算
+    output.color.rgb = finalColor.rgb * finalColor.a;
+    output.color.a = 1.0f;
+    
+    if (finalColor.a == 0.0f)
     {
         discard; // ピクセルを破棄
     }
-    
     
     return output;
 }

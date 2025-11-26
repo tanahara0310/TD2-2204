@@ -207,6 +207,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="Engine\Graphics\PostEffect\Effect\RasterScroll.cpp" />
     <ClCompile Include="Engine\Graphics\PostEffect\Effect\Sepia.cpp" />
     <ClCompile Include="Engine\ObjectCommon\SpriteObject.cpp" />
+    <ClCompile Include="Engine\Scene\SceneTransition.cpp" />
     <ClCompile Include="Engine\Utility\Collision\CollisionUtils.cpp" />
     <ClCompile Include="Engine\Utility\Debug\ConsoleUI.cpp" />
     <ClCompile Include="Engine\Utility\Debug\ImGui\SceneManagerTab.cpp" />
@@ -387,6 +388,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="Engine\Math\BoundingBox.h" />
     <ClInclude Include="Engine\Math\Quaternion\Quaternion.h" />
     <ClInclude Include="Engine\ObjectCommon\SpriteObject.h" />
+    <ClInclude Include="Engine\Scene\SceneTransition.h" />
     <ClInclude Include="Engine\Utility\Collision\CollisionUtils.h" />
     <ClInclude Include="Engine\Utility\Debug\ConsoleUI.h" />
     <ClInclude Include="Engine\Utility\Debug\ImGui\SceneManagerTab.h" />
