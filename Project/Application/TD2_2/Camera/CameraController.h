@@ -2,12 +2,20 @@
 
 #include "Camera/Release/Camera.h"
 #include "Application/TD2_2/GameObject/GameObject.h"
+#include "Engine/Utility/Timer/GameTimer.h"
 #include <memory>
 
 /// @brief 大乱闘スマッシュブラザーズスタイルのカメラコントローラー
 /// @details 2つのゲームオブジェクトの中点を注視し、距離に応じてカメラを自動調整
 class CameraController {
 public:
+	/// @brief カメラシェイクの強度プリセット
+	enum class ShakeIntensity {
+		Small,   ///< 小（軽い揺れ）
+		Medium,  ///< 中（標準的な揺れ）
+		Large    ///< 大（激しい揺れ）
+	};
+
 	/// @brief コンストラクタ
 	CameraController() = default;
 
@@ -22,6 +30,24 @@ public:
 
 	/// @brief 更新処理
 	void Update();
+
+	/// @brief カメラシェイクを開始（カスタムパラメータ版）
+	/// @param duration 継続時間（秒）
+	/// @param magnitude 揺れの大きさ
+	/// @param frequency 揺れの周波数（1秒間の揺れ回数）
+	/// @param damping 減衰率（0.0-1.0、大きいほど早く減衰）
+	void StartShake(float duration, float magnitude, float frequency = 20.0f, float damping = 0.8f);
+
+	/// @brief カメラシェイクを開始（プリセット版 - 継続時間も事前設定）
+	/// @param intensity 揺れの強度（Small/Medium/Large）
+	void StartShake(ShakeIntensity intensity);
+
+	/// @brief カメラシェイクを停止
+	void StopShake();
+
+	/// @brief カメラシェイクが実行中かどうか
+	/// @return 実行中の場合true
+	bool IsShaking() const;
 
 	/// @brief カメラ設定のアクセッサ
 
@@ -114,6 +140,14 @@ private:
 	/// @return カメラの回転（オイラー角）
 	Vector3 CalculateCameraRotation() const;
 
+	/// @brief カメラシェイクの更新
+	/// @param deltaTime デルタタイム
+	void UpdateShake(float deltaTime);
+
+	/// @brief シェイクオフセットを計算
+	/// @return シェイクによるオフセット
+	Vector3 CalculateShakeOffset() const;
+
 	// 制御対象
 	Camera* camera_ = nullptr;              ///< 制御するカメラ
 	GameObject* object1_ = nullptr;         ///< 追跡対象1
@@ -137,4 +171,12 @@ private:
 	Vector3 targetPosition_ = { 0.0f, 0.0f, 0.0f };   ///< 現在の注視点
 	Vector3 currentCameraPos_ = { 0.0f, 0.0f, 0.0f }; ///< 現在のカメラ位置
 	float currentDistance_ = 15.0f;                    ///< 現在のカメラ距離
+
+	// カメラシェイク関連
+	GameTimer shakeTimer_;                  ///< シェイク用タイマー
+	float shakeMagnitude_ = 0.0f;           ///< 揺れの大きさ
+	float shakeFrequency_ = 20.0f;          ///< 揺れの周波数
+	float shakeDamping_ = 0.8f;             ///< 減衰率
+	float shakeTime_ = 0.0f;                ///< シェイクの経過時間
+	Vector3 shakeOffset_ = { 0.0f, 0.0f, 0.0f }; ///< シェイクによるオフセット
 };

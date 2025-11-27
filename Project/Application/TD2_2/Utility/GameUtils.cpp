@@ -20,3 +20,8 @@ float GameUtils::GetDeltaTime() {
    }
    return 0.0f;
 }
+
+float GameUtils::RandomFloat(float min, float max) {
+   auto& randomGen = RandomGenerator::GetInstance();
+   return randomGen.GetFloat(min, max);
+}
