@@ -60,8 +60,8 @@ Quaternion GameObject::CalculateBaseRotation(const Vector2& dir) {
 
    // ピッチ → ヨー → ロールの順で合成
    Quaternion combinedRotation = MathCore::QuaternionMath::Multiply(
-       MathCore::QuaternionMath::Multiply(pitchRotation, yawRotation),
-       rollRotation
+	  MathCore::QuaternionMath::Multiply(pitchRotation, yawRotation),
+	  rollRotation
    );
 
    return MathCore::QuaternionMath::Normalize(combinedRotation);
@@ -85,11 +85,11 @@ void GameObject::TiltByVelocity(const Vector2& dir) {
 
    // 回転アニメーション中かどうかで処理を分岐
    if (isRotationActive_ && rotationTimer_ && rotationTimer_->IsActive()) {
-       // 回転アニメーション中：ベース回転を更新
-       rotationStartQuaternion_ = baseRotation;
+	  // 回転アニメーション中：ベース回転を更新
+	  rotationStartQuaternion_ = baseRotation;
    } else {
-       // 通常時：直接適用
-       transform_.quaternionRotate = baseRotation;
+	  // 通常時：直接適用
+	  transform_.quaternionRotate = baseRotation;
    }
 }
 
@@ -112,8 +112,8 @@ void GameObject::StartRotateAroundAxis(float duration, float rotationCount) {
 void GameObject::UpdateRotation() {
    // タイマーが存在しない、または動作していない場合は何もしない
    if (!rotationTimer_ || !rotationTimer_->IsActive()) {
-       isRotationActive_ = false;
-       return;
+	  isRotationActive_ = false;
+	  return;
    }
 
    // デルタタイムを取得
@@ -139,6 +139,37 @@ void GameObject::UpdateRotation() {
 
    // タイマー終了時の処理
    if (rotationTimer_->IsFinished()) {
-       isRotationActive_ = false;
+	  isRotationActive_ = false;
    }
+}
+
+void GameObject::StartShake(float intensity, float duration) {
+   shakeIntensity_ = intensity;
+   shakeTimer_.Start(duration, false);
+
+   // 基本位置を保存
+   basePosition_ = transform_.translate;
+}
+
+bool GameObject::UpdateShake() {
+   if (!shakeTimer_.IsActive()) {
+	  return false;
+   }
+   float deltaTime = GameUtils::GetDeltaTime();
+   shakeTimer_.Update(deltaTime);
+   Vector3 shakeOffset = {
+	  GameUtils::RandomFloat(-shakeIntensity_ * 0.5f, shakeIntensity_ * 0.5f),
+	  GameUtils::RandomFloat(-shakeIntensity_ * 0.5f, shakeIntensity_ * 0.5f),
+	  0.0f
+   };
+   // オフセットを位置に適用
+   transform_.translate = basePosition_ + shakeOffset;
+
+   if (shakeTimer_.IsFinished()) {
+	  shakeIntensity_ = 0.0f;
+	  transform_.translate = basePosition_;
+	  return false;
+   }
+
+   return true;
 }

@@ -29,6 +29,12 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  auto playerTexture = textureManager.Load("Resources/Textures/Player.png");
 	  auto player = std::make_unique<Player>();
 	  player->Initialize(std::move(playerModel), playerTexture);
+	  player->SetStartDamageFunction([this]() {
+		 if (cameraController_) {
+			// プリセット版は継続時間も事前設定されている
+			cameraController_->StartShake(CameraController::ShakeIntensity::Medium);
+		 }
+		 });
 	  player_ = player.get();
 	  gameObjects_.push_back(std::move(player));
    }
