@@ -166,9 +166,17 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="Application\TD2_2\Collider\CollisionConfig.cpp" />
     <ClCompile Include="Application\TD2_2\Collider\CollisionManager.cpp" />
     <ClCompile Include="Application\TD2_2\Collider\SphereCollider.cpp" />
+    <ClCompile Include="Application\TD2_2\GameObject\Boss\ActionNode\ActionNode.cpp" />
+    <ClCompile Include="Application\TD2_2\GameObject\Boss\ActionNode\ChargeToPlayerAction.cpp" />
+    <ClCompile Include="Application\TD2_2\AI\BehaviorTree\BehaviorTree.cpp" />
     <ClCompile Include="Application\TD2_2\GameObject\Boss\Boss.cpp" />
     <ClCompile Include="Application\TD2_2\GameObject\GameObject.cpp" />
     <ClCompile Include="Application\TD2_2\GameObject\Player\Player.cpp" />
+    <ClCompile Include="Application\TD2_2\AI\BehaviorTree\BehaviorTreeBuilder.cpp" />
+    <ClCompile Include="Application\TD2_2\AI\Node\CompositeNode.cpp" />
+    <ClCompile Include="Application\TD2_2\AI\Node\DecoratorNode.cpp" />
+    <ClCompile Include="Application\TD2_2\AI\Node\Evaluator.cpp" />
+    <ClCompile Include="Application\TD2_2\AI\Node\LeafNode.cpp" />
     <ClCompile Include="Application\TD2_2\Utility\StateMachine.cpp" />
     <ClCompile Include="Application\TD2_2\GameObject\Title\Sphere.cpp" />
     <ClCompile Include="Application\TD2_2\Scene\Game\GameScene.cpp" />
@@ -321,6 +329,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application\GameObject\GameObject.h" />
+    <ClInclude Include="Application\TD2_2\AI\Node\BossAIExamples.h" />
     <ClInclude Include="Application\TD2_2\Camera\CameraController.h" />
     <ClInclude Include="Application\TD2_2\Collider\AABBCollider.h" />
     <ClInclude Include="Application\TD2_2\Collider\Collider.h" />
@@ -328,9 +337,19 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="Application\TD2_2\Collider\CollisionLayer.h" />
     <ClInclude Include="Application\TD2_2\Collider\CollisionManager.h" />
     <ClInclude Include="Application\TD2_2\Collider\SphereCollider.h" />
+    <ClInclude Include="Application\TD2_2\GameObject\Boss\ActionNode\ActionNode.h" />
+    <ClInclude Include="Application\TD2_2\GameObject\Boss\ActionNode\ChargeToPlayerAction.h" />
+    <ClInclude Include="Application\TD2_2\GameObject\Boss\ActionNode\UsageExample.h" />
+    <ClInclude Include="Application\TD2_2\AI\BehaviorTree\BehaviorTree.h" />
     <ClInclude Include="Application\TD2_2\GameObject\Boss\Boss.h" />
     <ClInclude Include="Application\TD2_2\GameObject\GameObject.h" />
     <ClInclude Include="Application\TD2_2\GameObject\Player\Player.h" />
+    <ClInclude Include="Application\TD2_2\AI\Node\BaseNode.h" />
+    <ClInclude Include="Application\TD2_2\AI\BehaviorTree\BehaviorTreeBuilder.h" />
+    <ClInclude Include="Application\TD2_2\AI\Node\CompositeNode.h" />
+    <ClInclude Include="Application\TD2_2\AI\Node\DecoratorNode.h" />
+    <ClInclude Include="Application\TD2_2\AI\Node\Evaluator.h" />
+    <ClInclude Include="Application\TD2_2\AI\Node\LeafNode.h" />
     <ClInclude Include="Application\TD2_2\Utility\StateMachine.h" />
     <ClInclude Include="Application\TD2_2\GameObject\Title\Sphere.h" />
     <ClInclude Include="Application\TD2_2\Scene\Game\GameScene.h" />
@@ -586,6 +605,11 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Application\TD2_2\AI\Node\BehaviorTreeUsageExamples.md" />
+    <None Include="Application\TD2_2\AI\Node\README.md" />
+    <None Include="Application\TD2_2\GameObject\Boss\ActionNode\README.md" />
+    <None Include="Application\TD2_2\GameObject\Boss\ARCHITECTURE.md" />
+    <None Include="Application\TD2_2\AI\BehaviorTree\README.md" />
     <None Include="docs\Logger_Usage.md" />
     <None Include="Docs\ModelParticle_Implementation_Guide.md" />
     <None Include="docs\RenderingFlow.md" />
