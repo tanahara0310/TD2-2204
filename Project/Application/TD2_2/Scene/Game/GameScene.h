@@ -9,6 +9,7 @@
 #include "../../GameObject/GameObject.h"
 #include "../../Collider/CollisionManager.h"
 #include "../../Collider/CollisionConfig.h"
+#include "../../Camera/CameraController.h"
 
 class EngineSystem;
 class CameraManager;
@@ -35,6 +36,9 @@ private:
 
    std::unique_ptr<CollisionManager> collisionManager_;
    std::unique_ptr<CollisionConfig> collisionConfig_;
+
+   // カメラコントローラー
+   std::unique_ptr<CameraController> cameraController_;
 
 private:
    void RegisterAllColliders();

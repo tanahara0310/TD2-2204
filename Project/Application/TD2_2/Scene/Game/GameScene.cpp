@@ -51,10 +51,38 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  collisionConfig_->SetCollisionEnabled(CollisionLayer::Boss, CollisionLayer::BossBullet, false);
 	  collisionManager_ = std::make_unique<CollisionManager>(collisionConfig_.get());
    }
+
+   // カメラコントローラーの初期化（プレイヤーとボスを追跡）
+   {
+	  cameraController_ = std::make_unique<CameraController>();
+	  auto* releaseCamera = static_cast<Camera*>(cameraManager_->GetCamera("Release"));
+	  cameraController_->Initialize(releaseCamera, player_, boss_);
+	  
+	  // カメラパラメータの調整（オプション）
+	  cameraController_->SetMinDistance(20.0f);
+	  cameraController_->SetMaxDistance(100.0f);
+	  cameraController_->SetDistanceScale(1.8f);
+	  cameraController_->SetHeightOffset(0.0f);
+	  cameraController_->SetPitchAngle(0.0f);
+	  cameraController_->SetSmoothSpeed(50.0f);
+	  cameraController_->SetMarginDistance(8.0f);
+   }
 }
 
 void GameScene::Update() {
    BaseScene::Update();
+
+   // カメラコントローラーの更新
+   if (cameraController_) {
+	  cameraController_->Update();
+   }
+
+#ifdef _DEBUG
+   // カメラコントローラーのデバッグUI
+   if (cameraController_) {
+	  cameraController_->DrawImGui();
+   }
+#endif
 
    // コライダー登録
    RegisterAllColliders();
