@@ -64,10 +64,14 @@ public:
    /// @return モデルポインタ
    const Model* GetModel() const { return model_.get(); }
 
+   /// @brief モデルリソースを変更（既存のModelインスタンスを再初期化）
+   /// @param resource 新しいModelResourceのポインタ
+   void ChangeModelResource(ModelResource* resource);
+
    /// @brief このオブジェクトの描画タイプを取得
    /// @return 描画タイプ（モデルがない場合はNormal）
    Model::RenderType GetRenderType() const {
-	  return model_ ? model_->GetRenderType() : Model::RenderType::Normal;
+      return model_ ? model_->GetRenderType() : Model::RenderType::Normal;
    }
 
    /// @brief このオブジェクトの描画パスタイプを取得
@@ -82,6 +86,8 @@ public:
    /// @param blendMode 設定するブレンドモード
    void SetBlendMode(BlendMode blendMode) override { blendMode_ = blendMode; }
 
+
+
 protected:
    /// @brief モデルインスタンス
    std::unique_ptr<Model> model_;
@@ -94,4 +100,5 @@ protected:
 
    /// @brief ブレンドモード
    BlendMode blendMode_ = BlendMode::kBlendModeNone;
+
 };

@@ -1,6 +1,7 @@
 #pragma once
 #include <memory>
 #include <vector>
+#include <string>
 #include "MathCore.h"
 #include "Object3D.h"
 #include "../Collider/Collider.h"
@@ -77,6 +78,12 @@ protected:
    /// @brief 回転の更新処理（Updateから呼び出す）
    virtual void UpdateRotation();
 
+   void StartShake(float intensity, float duration);
+
+   bool UpdateShake();
+
+   void ChangeModelResource(const std::string& path);
+
 private:
    std::unique_ptr<GameTimer> rotationTimer_;
    Vector3 rotationAxis_ = { 0.0f, 1.0f, 0.0f }; // 回転軸
@@ -88,4 +95,9 @@ private:
    Vector2 currentDir_ = { 0.0f, 0.0f }; // 現在の方向ベクトル
    Vector2 targetDir_ = { 0.0f, 0.0f }; // 目標の方向ベクトル
    float dirLerpSpeed_ = 10.0f; // 補間速度（大きいほど速く追従）
+
+   GameTimer shakeTimer_;
+
+   Vector3 basePosition_ = { 0.0f, 0.0f, 0.0f };
+   float shakeIntensity_ = 0.0f;
 };

@@ -15,6 +15,13 @@ public:
 
    const char* GetObjectName() const override { return "Player"; }
 
+   void SetStartDamageFunction(const std::function<void()>& func) {
+	  startDamageFunction_ = func;
+   }
+
+   void SetDamageFunction(const std::function<void()>& func) {
+	  damageFunction_ = func;
+   }
 private:
 
    Vector2 acceleration_ = { 0.0f, 0.0f }; // 加速度ベクトル
@@ -46,6 +53,9 @@ private:
 
    std::unique_ptr<KeyConfig> keyConfig_;
 
+   std::function<void()> startDamageFunction_;
+
+   std::function<void()> damageFunction_;
 private:
    /// @brief キーコンフィグの初期化
    void InitializeKeyConfig();
@@ -70,9 +80,13 @@ private:
 
    void Stun();
 
-   void InitializeChargeBehavior();
+   void Damage();
 
-   void InitializeMoveBehavior();
+   void InitializeCharge();
 
-   void InitializeStunBehavior();
+   void InitializeMove();
+
+   void InitializeStun();
+
+   void InitializeDamage();
 };

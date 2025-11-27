@@ -28,11 +28,17 @@ void Player::Update() {
 	  }
    }
 
+   if (keyConfig_->Get<bool>("Damage")) {
+	  stateMachine_->RequestState("Damage", 1);
+   }
+
    stateMachine_->Update();
 
    UpdateRotation();
 
    UpdateMovement();
+
+   transform_.TransferMatrix();
 }
 
 void Player::Draw(const ICamera* camera) {
@@ -85,19 +91,25 @@ void Player::InitializeKeyConfig() {
    ActionBuilder(keyConfig_->GetAction("Charge"))
 	  .BindKey(DIK_SPACE)
 	  .BindGamepadButton(GamepadButton::A);
+
+   keyConfig_->AddAction("Damage", ActionType::Bool);
+   ActionBuilder(keyConfig_->GetAction("Damage"))
+	  .BindKey(DIK_0);
 }
 
 void Player::InitializeStateMachine() {
    // ステートマシンの取り付け
    GameObject::AttachStateMachine();
 
-   stateMachine_->AddState("Charge", std::bind(&Player::InitializeChargeBehavior, this), std::bind(&Player::Charge, this));
-   stateMachine_->AddState("Move", std::bind(&Player::InitializeMoveBehavior, this), std::bind(&Player::Move, this));
-   stateMachine_->AddState("Stun", std::bind(&Player::InitializeStunBehavior, this), std::bind(&Player::Stun, this));
+   stateMachine_->AddState("Charge", std::bind(&Player::InitializeCharge, this), std::bind(&Player::Charge, this));
+   stateMachine_->AddState("Move", std::bind(&Player::InitializeMove, this), std::bind(&Player::Move, this));
+   stateMachine_->AddState("Stun", std::bind(&Player::InitializeStun, this), std::bind(&Player::Stun, this));
+   stateMachine_->AddState("Damage", std::bind(&Player::InitializeDamage, this), std::bind(&Player::Damage, this));
 
-   stateMachine_->AddTransitionRule("Charge", { "Move" ,"Stun" });
-   stateMachine_->AddTransitionRule("Move", { "Charge" ,"Stun" });
-   stateMachine_->AddTransitionRule("Stun", { "Move" });
+   stateMachine_->AddTransitionRule("Charge", { "Move" ,"Stun" ,"Damage" });
+   stateMachine_->AddTransitionRule("Move", { "Charge" ,"Stun" ,"Damage" });
+   stateMachine_->AddTransitionRule("Stun", { "Move" ,"Damage" });
+   stateMachine_->AddTransitionRule("Damage", { "Move" });
 }
 
 void Player::InitializeCollider() {
@@ -127,8 +139,6 @@ void Player::UpdateMovement() {
    transform_.translate.y = std::clamp(transform_.translate.y, -moveableAreaRadius_, moveableAreaRadius_);
 
    acceleration_ = { 0.0f, 0.0f };
-
-   transform_.TransferMatrix();
 }
 
 Vector2 Player::GetMoveDirection() const {
@@ -158,6 +168,7 @@ void Player::Move() {
 }
 
 void Player::Charge() {
+
    chargeTimer_.Update(GameUtils::GetDeltaTime());
    if (chargeTimer_.IsFinished()) {
 	  stateMachine_->RequestState("Move", 0);
@@ -165,13 +176,25 @@ void Player::Charge() {
 }
 
 void Player::Stun() {
+
    stunTimer_.Update(GameUtils::GetDeltaTime());
    if (stunTimer_.IsFinished()) {
 	  stateMachine_->RequestState("Move", 0);
    }
 }
 
-void Player::InitializeChargeBehavior() {
+void Player::Damage() {
+   if (damageFunction_) {
+	  damageFunction_();
+   }
+
+   if (GameObject::UpdateShake()) return;
+
+   GameObject::ChangeModelResource("Resources/Models/Player/Player.obj");
+   stateMachine_->RequestState("Move", 0);
+}
+
+void Player::InitializeCharge() {
    acceleration_ = GetMoveDirection() * chargeSpeed_;
    dampingPerSecond_ = chargeDamping_;
    maxSpeed_ = chargeMaxSpeed_;
@@ -184,14 +207,26 @@ void Player::InitializeChargeBehavior() {
    direction_ = GetMoveDirection() * chargeSpeed_;
 }
 
-void Player::InitializeMoveBehavior() {
+void Player::InitializeMove() {
    dampingPerSecond_ = moveDamping_;
    maxSpeed_ = moveMaxSpeed_;
 }
 
-void Player::InitializeStunBehavior() {
+void Player::InitializeStun() {
    dampingPerSecond_ = stunDamping_;
    maxSpeed_ = stunMaxSpeed_;
 
    stunTimer_.Start(stunDuration_, false);
+}
+
+void Player::InitializeDamage() {
+   if (startDamageFunction_) {
+	  startDamageFunction_();
+   }
+
+   GameObject::StartShake(0.15f, 1.0f);
+
+   velocity_ = { 0.0f, 0.0f };
+
+   GameObject::ChangeModelResource("Resources/Models/Player/Damage/PlayerDamage.obj");
 }

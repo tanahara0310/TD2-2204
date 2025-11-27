@@ -2,6 +2,7 @@
 #include "MathCore.h"
 #include "Application/TD2_2/Utility/GameUtils.h"
 #include "Engine/Math/Easing/EasingUtil.h"
+#include "Engine/Utility/Random/RandomGenerator.h"
 #include <algorithm>
 #include <cmath>
 
@@ -40,6 +41,9 @@ void CameraController::Update()
 
 	float deltaTime = GameUtils::GetDeltaTime();
 
+	// シェイクの更新
+	UpdateShake(deltaTime);
+
 	// ターゲット位置を計算（2つのオブジェクトの中点）
 	Vector3 newTargetPos = CalculateTargetPosition();
 
@@ -50,8 +54,6 @@ void CameraController::Update()
 	float targetDistance = CalculateCameraDistance(objectDistance);
 
 	// スムーズな補間速度を適用（デルタタイムベース）
-	// smoothSpeed_ は通常 5.0f 程度の値
-	// これにより 1.0 に達するまでの時間は約 0.2 秒となる
 	float lerpFactor = std::clamp(1.0f - std::exp(-smoothSpeed_ * deltaTime), 0.0f, 1.0f);
 
 	// EaseOutQuad を使用して減速カーブを適用（より滑らかな停止）
@@ -69,9 +71,115 @@ void CameraController::Update()
 	// カメラ位置の補間（最も重要：急激な移動を防ぐ）
 	currentCameraPos_ = EasingUtil::LerpVector3(currentCameraPos_, targetCameraPos, easedFactor);
 
+	// シェイクオフセットを適用
+	Vector3 finalCameraPos = {
+		currentCameraPos_.x + shakeOffset_.x,
+		currentCameraPos_.y + shakeOffset_.y,
+		currentCameraPos_.z + shakeOffset_.z
+	};
+
 	// カメラに適用
-	camera_->SetTranslate(currentCameraPos_);
+	camera_->SetTranslate(finalCameraPos);
 	camera_->SetRotate(CalculateCameraRotation());
+}
+
+void CameraController::StartShake(float duration, float magnitude, float frequency, float damping)
+{
+	shakeTimer_.Start(duration, false);
+	shakeMagnitude_ = magnitude;
+	shakeFrequency_ = frequency;
+	shakeDamping_ = damping;
+	shakeTime_ = 0.0f;
+}
+
+void CameraController::StartShake(ShakeIntensity intensity)
+{
+	// プリセットパラメータの設定（継続時間も含む）
+	switch (intensity) {
+	case ShakeIntensity::Small:
+		// 軽い揺れ: 短時間（0.3秒）、小さい振幅、高周波数、速い減衰
+		StartShake(0.3f, 0.1f, 25.0f, 0.85f);
+		break;
+
+	case ShakeIntensity::Medium:
+		// 中程度の揺れ: 中時間（0.5秒）、中程度の振幅、中周波数、中速減衰
+		StartShake(0.5f, 0.3f, 20.0f, 0.8f);
+		break;
+
+	case ShakeIntensity::Large:
+		// 激しい揺れ: 長時間（0.8秒）、大きい振幅、低周波数、遅い減衰
+		StartShake(0.8f, 0.6f, 15.0f, 0.75f);
+		break;
+	}
+}
+
+void CameraController::StopShake()
+{
+	shakeTimer_.Stop();
+	shakeOffset_ = { 0.0f, 0.0f, 0.0f };
+	shakeTime_ = 0.0f;
+}
+
+bool CameraController::IsShaking() const
+{
+	return shakeTimer_.IsActive();
+}
+
+void CameraController::UpdateShake(float deltaTime)
+{
+	if (!shakeTimer_.IsActive()) {
+		shakeOffset_ = { 0.0f, 0.0f, 0.0f };
+		return;
+	}
+
+	// タイマーの更新
+	shakeTimer_.Update(deltaTime);
+	shakeTime_ += deltaTime;
+
+	// シェイクが終了したらオフセットをリセット
+	if (shakeTimer_.IsFinished()) {
+		shakeOffset_ = { 0.0f, 0.0f, 0.0f };
+		return;
+	}
+
+	// シェイクオフセットを計算
+	shakeOffset_ = CalculateShakeOffset();
+}
+
+Vector3 CameraController::CalculateShakeOffset() const
+{
+	if (!shakeTimer_.IsActive()) {
+		return { 0.0f, 0.0f, 0.0f };
+	}
+
+	// 進行度（0.0～1.0）
+	float progress = shakeTimer_.GetProgress();
+
+	// 減衰カーブを適用（指数関数的減衰）
+	float dampingFactor = std::pow(1.0f - progress, 1.0f / (1.0f - shakeDamping_));
+
+	// 現在の振幅
+	float currentMagnitude = shakeMagnitude_ * dampingFactor;
+
+	// ランダムな方向ベクトルを生成
+	auto& random = RandomGenerator::GetInstance();
+	
+	// パーリンノイズ風の滑らかなランダム値
+	float angleX = shakeTime_ * shakeFrequency_ * 2.0f;
+	float angleY = shakeTime_ * shakeFrequency_ * 2.5f;
+	float angleZ = shakeTime_ * shakeFrequency_ * 3.0f;
+
+	// 三角関数を組み合わせて滑らかな揺れを生成
+	float offsetX = std::sin(angleX) * std::cos(angleY * 0.5f) * currentMagnitude;
+	float offsetY = std::cos(angleY) * std::sin(angleZ * 0.3f) * currentMagnitude;
+	float offsetZ = std::sin(angleZ) * std::cos(angleX * 0.7f) * currentMagnitude * 0.5f;
+
+	// ランダムなノイズを少し加える
+	offsetX += random.GetFloat(-1.0f, 1.0f) * currentMagnitude * 0.1f;
+	offsetY += random.GetFloat(-1.0f, 1.0f) * currentMagnitude * 0.1f;
+	offsetZ += random.GetFloat(-1.0f, 1.0f) * currentMagnitude * 0.05f;
+
+	return { offsetX, offsetY, offsetZ };
 }
 
 void CameraController::SetTargets(GameObject* object1, GameObject* object2)
@@ -265,12 +373,76 @@ void CameraController::DrawImGui()
 
 		ImGui::Separator();
 
+		// カメラシェイク設定
+		if (ImGui::CollapsingHeader("Camera Shake")) {
+			ImGui::Text("状態: %s", IsShaking() ? "シェイク中" : "停止中");
+
+			if (IsShaking()) {
+				float progress = shakeTimer_.GetProgress();
+				ImGui::ProgressBar(progress, ImVec2(-1, 0), "進行度");
+				ImGui::Text("残り時間: %.2f秒", shakeTimer_.GetRemainingTime());
+			}
+
+			ImGui::Separator();
+			ImGui::Text("プリセット版:");
+			ImGui::TextWrapped("ボタンをクリックするだけでシェイクが開始されます");
+
+			if (ImGui::Button("小シェイク (0.3秒)", ImVec2(150, 0))) {
+				StartShake(ShakeIntensity::Small);
+			}
+			ImGui::SameLine();
+			ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "軽い衝撃用");
+
+			if (ImGui::Button("中シェイク (0.5秒)", ImVec2(150, 0))) {
+				StartShake(ShakeIntensity::Medium);
+			}
+			ImGui::SameLine();
+			ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "通常攻撃用");
+
+			if (ImGui::Button("大シェイク (0.8秒)", ImVec2(150, 0))) {
+				StartShake(ShakeIntensity::Large);
+			}
+			ImGui::SameLine();
+			ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "強力攻撃用");
+
+			ImGui::Separator();
+			ImGui::Text("カスタム版:");
+
+			static float customDuration = 1.0f;
+			static float customMagnitude = 0.3f;
+			static float customFrequency = 20.0f;
+			static float customDamping = 0.8f;
+
+			ImGui::DragFloat("継続時間", &customDuration, 0.1f, 0.1f, 5.0f);
+			ImGui::DragFloat("揺れの大きさ", &customMagnitude, 0.01f, 0.0f, 2.0f);
+			ImGui::DragFloat("周波数", &customFrequency, 1.0f, 1.0f, 60.0f);
+			ImGui::SliderFloat("減衰率", &customDamping, 0.0f, 1.0f);
+
+			if (ImGui::Button("カスタムシェイク開始", ImVec2(200, 0))) {
+				StartShake(customDuration, customMagnitude, customFrequency, customDamping);
+			}
+
+			ImGui::Separator();
+
+			if (ImGui::Button("シェイク停止", ImVec2(100, 0))) {
+				StopShake();
+			}
+		}
+
+		ImGui::Separator();
+
 		// 現在の状態表示
 		ImGui::Text("=== Current Status ===");
 		ImGui::Text("Target Position: (%.2f, %.2f, %.2f)",
 			targetPosition_.x, targetPosition_.y, targetPosition_.z);
 		ImGui::Text("Camera Position: (%.2f, %.2f, %.2f)",
 			currentCameraPos_.x, currentCameraPos_.y, currentCameraPos_.z);
+		
+		if (IsShaking()) {
+			ImGui::Text("Shake Offset: (%.3f, %.3f, %.3f)",
+				shakeOffset_.x, shakeOffset_.y, shakeOffset_.z);
+		}
+
 		ImGui::Text("Current Distance: %.2f", currentDistance_);
 
 		if (object1_ && object2_) {
