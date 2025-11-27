@@ -107,6 +107,7 @@ public:
 	}
 
 	void SetModelResource(ModelResource* resource);
+
 private:
 	// 参照するModelResource
 	ModelResource* resource_ = nullptr;

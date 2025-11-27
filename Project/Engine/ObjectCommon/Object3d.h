@@ -10,6 +10,7 @@
 #include "Graphics/LineRenderer.h"
 #include "Graphics/Model/Model.h"
 #include "WorldTransfom/WorldTransform.h"
+#include "Engine/Collider/Collider.h"
 
 // 前方宣言
 class ICamera;
@@ -71,7 +72,7 @@ public:
    /// @brief このオブジェクトの描画タイプを取得
    /// @return 描画タイプ（モデルがない場合はNormal）
    Model::RenderType GetRenderType() const {
-	  return model_ ? model_->GetRenderType() : Model::RenderType::Normal;
+      return model_ ? model_->GetRenderType() : Model::RenderType::Normal;
    }
 
    /// @brief このオブジェクトの描画パスタイプを取得
@@ -86,6 +87,28 @@ public:
    /// @param blendMode 設定するブレンドモード
    void SetBlendMode(BlendMode blendMode) override { blendMode_ = blendMode; }
 
+   /// @brief コライダーを取得
+   /// @return コライダーポインタ（未設定の場合nullptr）
+   Collider* GetCollider() const { return collider_.get(); }
+
+   /// @brief コライダーを登録
+   /// @param collider 登録するコライダー
+   void AttachCollider(std::unique_ptr<Collider> collider) {
+      collider_ = std::move(collider);
+   }
+
+   /// @brief 衝突時のコールバック（派生クラスでオーバーライド可能）
+   /// @param other 衝突相手のオブジェクト
+   virtual void OnCollisionEnter(Object3d* other) { (void)other; }
+
+   /// @brief 衝突中のコールバック（派生クラスでオーバーライド可能）
+   /// @param other 衝突相手のオブジェクト
+   virtual void OnCollisionStay(Object3d* other) { (void)other; }
+
+   /// @brief 衝突終了時のコールバック（派生クラスでオーバーライド可能）
+   /// @param other 衝突相手のオブジェクト
+   virtual void OnCollisionExit(Object3d* other) { (void)other; }
+
 protected:
    /// @brief モデルインスタンス
    std::unique_ptr<Model> model_;
@@ -98,4 +121,7 @@ protected:
 
    /// @brief ブレンドモード
    BlendMode blendMode_ = BlendMode::kBlendModeNone;
+
+   /// @brief コライダー
+   std::unique_ptr<Collider> collider_;
 };
