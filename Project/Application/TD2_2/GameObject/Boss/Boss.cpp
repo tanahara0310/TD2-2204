@@ -1,4 +1,6 @@
 #include "Boss.h"
+#include "Application/TD2_2/GameObject/Player/Player.h"
+#include <cmath>
 
 #ifdef _DEBUG
 #include <imgui.h>
@@ -15,7 +17,12 @@ void Boss::Initialize(std::unique_ptr<Model> model, TextureManager::LoadedTextur
 }
 
 void Boss::Update() {
-  // Move();
+   // ビヘイビアツリーの実行
+   if (behaviorTree_) {
+      behaviorTree_->Tick();
+   }
+   
+   // 移動処理
    UpdateMovement();
 }
 
@@ -45,6 +52,20 @@ bool Boss::DrawImGui() {
       ImGui::Text("速度: (%.2f, %.2f)", velocity_.x, velocity_.y);
       ImGui::Text("加速度: (%.2f, %.2f)", acceleration_.x, acceleration_.y);
       ImGui::Text("最大速度: %.2f", maxSpeed_);
+      
+      // ビヘイビアツリー情報
+      if (behaviorTree_) {
+         ImGui::Separator();
+         ImGui::Text("ビヘイビアツリー: %s", behaviorTree_->GetName().c_str());
+         ImGui::Text("実行回数: %u", behaviorTree_->GetTickCount());
+      }
+      
+      // プレイヤー関連情報
+      if (player_) {
+         ImGui::Separator();
+         ImGui::Text("プレイヤーへの距離: %.2f", GetDistanceToPlayer());
+         ImGui::Text("プレイヤーへの角度: %.2f°", GetAngleToPlayer());
+      }
       
       // 移動パラメータ
       if (ImGui::TreeNode("移動パラメータ")) {
@@ -88,6 +109,64 @@ void Boss::OnCollisionStay(GameObject* other) {
 
 void Boss::OnCollisionExit(GameObject* other) {
    (void)other;
+}
+
+void Boss::SetBehaviorTree(std::unique_ptr<BehaviorTree> tree) {
+   behaviorTree_ = std::move(tree);
+}
+
+void Boss::AddAcceleration(const Vector2& accel) {
+   acceleration_.x += accel.x;
+   acceleration_.y += accel.y;
+}
+
+void Boss::SetVelocity(const Vector2& vel) {
+   velocity_ = vel;
+}
+
+void Boss::SetMaxSpeed(float maxSpeed) {
+   maxSpeed_ = maxSpeed;
+}
+
+void Boss::SetDamping(float damping) {
+   dampingPerSecond_ = damping;
+}
+
+void Boss::ResetMovementParameters() {
+   maxSpeed_ = 20.0f;
+   dampingPerSecond_ = 0.8f;
+}
+
+float Boss::GetDistanceToPlayer() const {
+   if (!player_) return 0.0f;
+   
+   Vector3 diff = player_->GetWorldPosition() - GetWorldPosition();
+   return std::sqrt(diff.x * diff.x + diff.y * diff.y + diff.z * diff.z);
+}
+
+Vector3 Boss::GetDirectionToPlayer() const {
+   if (!player_) return {0.0f, 0.0f, 0.0f};
+   
+   Vector3 diff = player_->GetWorldPosition() - GetWorldPosition();
+   float length = std::sqrt(diff.x * diff.x + diff.y * diff.y + diff.z * diff.z);
+   
+   if (length > 0.0001f) {
+      return {diff.x / length, diff.y / length, diff.z / length};
+   }
+   
+   return {0.0f, 0.0f, 0.0f};
+}
+
+float Boss::GetAngleToPlayer() const {
+   if (!player_) return 0.0f;
+   
+   Vector3 direction = GetDirectionToPlayer();
+   
+   // XZ平面上の角度を計算（Y軸まわりの回転）
+   float angle = std::atan2(direction.x, direction.z);
+   
+   // ラジアンから度数法に変換
+   return angle * 180.0f / 3.14159265f;
 }
 
 void Boss::InitializeCollider() {

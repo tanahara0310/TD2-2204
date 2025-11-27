@@ -258,6 +258,14 @@
     <ClCompile Include="Engine\Graphics\Render\Particle\ModelParticleRenderer.cpp" />
     <ClCompile Include="Engine\Graphics\Render\Particle\BaseParticleRenderer.cpp" />
     <ClCompile Include="Engine\Scene\SceneTransition.cpp" />
+    <ClCompile Include="Application\TD2_2\AI\Node\CompositeNode.cpp" />
+    <ClCompile Include="Application\TD2_2\AI\Node\Evaluator.cpp" />
+    <ClCompile Include="Application\TD2_2\AI\Node\LeafNode.cpp" />
+    <ClCompile Include="Application\TD2_2\AI\Node\DecoratorNode.cpp" />
+    <ClCompile Include="Application\TD2_2\AI\BehaviorTree\BehaviorTreeBuilder.cpp" />
+    <ClCompile Include="Application\TD2_2\GameObject\Boss\ActionNode\ActionNode.cpp" />
+    <ClCompile Include="Application\TD2_2\GameObject\Boss\ActionNode\ChargeToPlayerAction.cpp" />
+    <ClCompile Include="Application\TD2_2\AI\BehaviorTree\BehaviorTree.cpp" />
     <ClCompile Include="Application\TD2_2\UI\GaugeUI.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -676,6 +684,17 @@
     <ClInclude Include="Engine\Graphics\Render\Particle\ModelParticleRenderer.h" />
     <ClInclude Include="Engine\Graphics\Render\Particle\BaseParticleRenderer.h" />
     <ClInclude Include="Engine\Scene\SceneTransition.h" />
+    <ClInclude Include="Application\TD2_2\AI\Node\BaseNode.h" />
+    <ClInclude Include="Application\TD2_2\AI\Node\CompositeNode.h" />
+    <ClInclude Include="Application\TD2_2\AI\Node\Evaluator.h" />
+    <ClInclude Include="Application\TD2_2\AI\Node\LeafNode.h" />
+    <ClInclude Include="Application\TD2_2\AI\Node\DecoratorNode.h" />
+    <ClInclude Include="Application\TD2_2\AI\BehaviorTree\BehaviorTreeBuilder.h" />
+    <ClInclude Include="Application\TD2_2\AI\Node\BossAIExamples.h" />
+    <ClInclude Include="Application\TD2_2\AI\BehaviorTree\BehaviorTree.h" />
+    <ClInclude Include="Application\TD2_2\GameObject\Boss\ActionNode\ActionNode.h" />
+    <ClInclude Include="Application\TD2_2\GameObject\Boss\ActionNode\ChargeToPlayerAction.h" />
+    <ClInclude Include="Application\TD2_2\GameObject\Boss\ActionNode\UsageExample.h" />
     <ClInclude Include="Application\TD2_2\UI\GaugeUI.h" />
   </ItemGroup>
   <ItemGroup>
@@ -688,6 +707,11 @@
     <None Include="docs\Logger_Usage.md" />
     <None Include="docs\RenderingFlow.md" />
     <None Include="Docs\ModelParticle_Implementation_Guide.md" />
+    <None Include="Application\TD2_2\AI\Node\BehaviorTreeUsageExamples.md" />
+    <None Include="Application\TD2_2\AI\Node\README.md" />
+    <None Include="Application\TD2_2\GameObject\Boss\ActionNode\README.md" />
+    <None Include="Application\TD2_2\AI\BehaviorTree\README.md" />
+    <None Include="Application\TD2_2\GameObject\Boss\ARCHITECTURE.md" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Source Files">
