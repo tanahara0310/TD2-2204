@@ -177,6 +177,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="Application\TD2_2\AI\Node\DecoratorNode.cpp" />
     <ClCompile Include="Application\TD2_2\AI\Node\Evaluator.cpp" />
     <ClCompile Include="Application\TD2_2\AI\Node\LeafNode.cpp" />
+    <ClCompile Include="Application\TD2_2\UI\GaugeUI.cpp" />
     <ClCompile Include="Application\TD2_2\Utility\StateMachine.cpp" />
     <ClCompile Include="Application\TD2_2\GameObject\Title\Sphere.cpp" />
     <ClCompile Include="Application\TD2_2\Scene\Game\GameScene.cpp" />
@@ -350,6 +351,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="Application\TD2_2\AI\Node\DecoratorNode.h" />
     <ClInclude Include="Application\TD2_2\AI\Node\Evaluator.h" />
     <ClInclude Include="Application\TD2_2\AI\Node\LeafNode.h" />
+    <ClInclude Include="Application\TD2_2\UI\GaugeUI.h" />
     <ClInclude Include="Application\TD2_2\Utility\StateMachine.h" />
     <ClInclude Include="Application\TD2_2\GameObject\Title\Sphere.h" />
     <ClInclude Include="Application\TD2_2\Scene\Game\GameScene.h" />
