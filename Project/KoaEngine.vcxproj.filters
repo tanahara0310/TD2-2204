@@ -254,6 +254,7 @@
     <ClCompile Include="Application\TD2_2\Utility\StateMachine.cpp" />
     <ClCompile Include="Engine\ObjectCommon\SpriteObject.cpp" />
     <ClCompile Include="Engine\Camera\Camera2D.cpp" />
+    <ClCompile Include="Application\TD2_2\Camera\CameraController.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Engine\WinApp\WinApp.h">
@@ -667,6 +668,7 @@
     <ClInclude Include="Application\TD2_2\Utility\StateMachine.h" />
     <ClInclude Include="Engine\ObjectCommon\SpriteObject.h" />
     <ClInclude Include="Engine\Camera\Camera2D.h" />
+    <ClInclude Include="Application\TD2_2\Camera\CameraController.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Engine\Particle\README.md">
