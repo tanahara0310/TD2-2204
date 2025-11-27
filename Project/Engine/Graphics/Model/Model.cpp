@@ -215,3 +215,8 @@ float Model::GetAnimationTime() const {
 bool Model::IsAnimationFinished() const {
 	return animationController_ ? animationController_->IsFinished() : true;
 }
+
+void Model::SetModelResource(ModelResource* resource)
+{
+	resource_ = resource;
+}
