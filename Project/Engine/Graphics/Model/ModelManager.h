@@ -72,6 +72,11 @@ public:
 	/// @return ModelResourceのポインタ（見つからない場合はnullptr）
 	ModelResource* GetModelResource(const std::string& filePath);
 
+	/// @brief モデルリソースを事前読み込み（シーンで使用）
+	/// @param directoryPath ディレクトリパス
+	/// @param filename ファイル名
+	void LoadModelResource(const std::string& directoryPath, const std::string& filename);
+
 private:
 	// DirectXCommon
 	DirectXCommon* dxCommon_ = nullptr;
@@ -86,7 +91,7 @@ private:
 	/// @param directoryPath ディレクトリパス
 	/// @param filename ファイル名
 	/// @return ModelResourceのポインタ
-	ModelResource* LoadModelResource(const std::string& directoryPath, const std::string& filename);
+	ModelResource* LoadModelResourceInternal(const std::string& directoryPath, const std::string& filename);
 
 	/// @brief ファイルパスを正規化（キャッシュキー用）
 	/// @param directoryPath ディレクトリパス

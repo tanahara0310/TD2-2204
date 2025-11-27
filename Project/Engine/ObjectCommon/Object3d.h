@@ -64,6 +64,10 @@ public:
    /// @return モデルポインタ
    const Model* GetModel() const { return model_.get(); }
 
+   /// @brief モデルリソースを変更（既存のModelインスタンスを再初期化）
+   /// @param resource 新しいModelResourceのポインタ
+   void ChangeModelResource(ModelResource* resource);
+
    /// @brief このオブジェクトの描画タイプを取得
    /// @return 描画タイプ（モデルがない場合はNormal）
    Model::RenderType GetRenderType() const {
