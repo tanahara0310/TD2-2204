@@ -25,7 +25,7 @@ std::unique_ptr<Model> ModelManager::CreateStaticModel(const std::string& filePa
 	SplitPath(filePath, directoryPath, filename);
 
 	// リソースを取得または読み込み
-	ModelResource* resource = LoadModelResource(directoryPath, filename);
+	ModelResource* resource = LoadModelResourceInternal(directoryPath, filename);
 	assert(resource && resource->IsLoaded());
 
 	// アニメーションコントローラーなしでインスタンスを作成
@@ -47,7 +47,7 @@ std::unique_ptr<Model> ModelManager::CreateKeyframeModel(
 	SplitPath(filePath, directoryPath, filename);
 
 	// リソースを取得または読み込み
-	ModelResource* resource = LoadModelResource(directoryPath, filename);
+	ModelResource* resource = LoadModelResourceInternal(directoryPath, filename);
 	assert(resource && resource->IsLoaded());
 
 	// アニメーションを取得
@@ -91,7 +91,7 @@ std::unique_ptr<Model> ModelManager::CreateSkeletonModel(
 	SplitPath(filePath, directoryPath, filename);
 
 	// リソースを取得または読み込み
-	ModelResource* resource = LoadModelResource(directoryPath, filename);
+	ModelResource* resource = LoadModelResourceInternal(directoryPath, filename);
 	assert(resource && resource->IsLoaded());
 
 	// スケルトンがない場合はキーフレームモデルとして作成
@@ -138,7 +138,7 @@ bool ModelManager::LoadAnimation(const AnimationLoadInfo& loadInfo)
 	auto it = resourceCache_.find(normalizedModelPath);
 	if (it == resourceCache_.end()) {
 		// モデルがキャッシュにない場合は読み込む
-		LoadModelResource(loadInfo.directory, loadInfo.modelFilename);
+		LoadModelResourceInternal(loadInfo.directory, loadInfo.modelFilename);
 		it = resourceCache_.find(normalizedModelPath);
 
 		if (it == resourceCache_.end()) {
@@ -170,7 +170,12 @@ void ModelManager::ClearCache()
 	resourceCache_.clear();
 }
 
-ModelResource* ModelManager::LoadModelResource(const std::string& directoryPath, const std::string& filename)
+void ModelManager::LoadModelResource(const std::string& directoryPath, const std::string& filename)
+{
+	LoadModelResourceInternal(directoryPath, filename);
+}
+
+ModelResource* ModelManager::LoadModelResourceInternal(const std::string& directoryPath, const std::string& filename)
 {
 	assert(IsInitialized());
 

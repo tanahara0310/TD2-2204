@@ -16,6 +16,22 @@ void Object3d::Draw(const ICamera* camera) {
    (void)camera;
 }
 
+void Object3d::ChangeModelResource(ModelResource* resource) {
+   if (!model_ || !resource) {
+      return;
+   }
+
+   // アニメーションコントローラーを保持している場合は維持
+   if (model_->HasAnimationController()) {
+      // アニメーションコントローラーは移動できないため、新規作成が必要
+      // ここでは単純に再初期化（アニメーションはリセットされる）
+      model_->Initialize(resource);
+   } else {
+      // 通常のモデルとして再初期化
+      model_->Initialize(resource);
+   }
+}
+
 void Object3d::DrawDebug(std::vector<LineRenderer::Line>& outLines) {
    // デフォルト実装は空（派生クラスでオーバーライドすることを想定）
    (void)outLines;
