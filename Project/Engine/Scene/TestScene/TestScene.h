@@ -19,6 +19,8 @@
 #include "Utility/Logger/Logger.h"
 #include "Graphics/TextureManager.h"
 #include "Engine/Graphics/Light/LightData.h"
+#include "Engine/Graphics/Model/ModelManager.h"
+#include "Engine/Graphics/Model/Model.h"
 
 // シーン関連
 #include "Scene/BaseScene.h"
@@ -34,13 +36,12 @@
 #include "TestGameObject/WalkModelObject.h"
 #include "TestGameObject/SneakWalkModelObject.h"
 #include "TestGameObject/SkyBoxObject.h"
-#include "TestGameObject/SpriteObject.h"
+#include "ObjectCommon/SpriteObject.h"
 
 // パーティクルシステム
 #include "Engine/Particle/ParticleSystem.h"
 
 using namespace Microsoft::WRL;
-
 
 /// @brief テストシーンクラス
 class TestScene : public BaseScene {
@@ -63,6 +64,8 @@ private: // メンバ変数
 
 	// ===== パーティクルシステム =====
 	ParticleSystem* particleSystem_;  // パーティクルシステム
+	ParticleSystem* modelParticleSystem_;  // モデルパーティクルシステム
+	std::unique_ptr<Model> sphereModelForParticle_;  // パーティクル用sphereモデル
 
 	// ===== テクスチャ =====
 	TextureManager::LoadedTexture textureChecker_;

@@ -255,6 +255,9 @@
     <ClCompile Include="Engine\ObjectCommon\SpriteObject.cpp" />
     <ClCompile Include="Engine\Camera\Camera2D.cpp" />
     <ClCompile Include="Application\TD2_2\Camera\CameraController.cpp" />
+    <ClCompile Include="Engine\Graphics\Render\Particle\ModelParticleRenderer.cpp" />
+    <ClCompile Include="Engine\Graphics\Render\Particle\BaseParticleRenderer.cpp" />
+    <ClCompile Include="Engine\Scene\SceneTransition.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Engine\WinApp\WinApp.h">
@@ -669,6 +672,9 @@
     <ClInclude Include="Engine\ObjectCommon\SpriteObject.h" />
     <ClInclude Include="Engine\Camera\Camera2D.h" />
     <ClInclude Include="Application\TD2_2\Camera\CameraController.h" />
+    <ClInclude Include="Engine\Graphics\Render\Particle\ModelParticleRenderer.h" />
+    <ClInclude Include="Engine\Graphics\Render\Particle\BaseParticleRenderer.h" />
+    <ClInclude Include="Engine\Scene\SceneTransition.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Engine\Particle\README.md">
@@ -679,6 +685,7 @@
     </None>
     <None Include="docs\Logger_Usage.md" />
     <None Include="docs\RenderingFlow.md" />
+    <None Include="Docs\ModelParticle_Implementation_Guide.md" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Source Files">

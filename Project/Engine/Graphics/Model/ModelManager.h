@@ -67,6 +67,11 @@ public:
 	/// @return 初期化済みならtrue
 	bool IsInitialized() const { return dxCommon_ != nullptr; }
 
+	/// @brief ModelResourceを取得（既に読み込まれている場合のみ）
+	/// @param filePath ファイルパス
+	/// @return ModelResourceのポインタ（見つからない場合はnullptr）
+	ModelResource* GetModelResource(const std::string& filePath);
+
 private:
 	// DirectXCommon
 	DirectXCommon* dxCommon_ = nullptr;

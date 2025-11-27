@@ -190,6 +190,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="Engine\Graphics\PostEffect\PostEffectPresetManager.cpp" />
     <ClCompile Include="Engine\Graphics\Render\Model\ModelRenderer.cpp" />
     <ClCompile Include="Engine\Graphics\Render\Model\SkinnedModelRenderer.cpp" />
+    <ClCompile Include="Engine\Graphics\Render\Particle\BaseParticleRenderer.cpp" />
+    <ClCompile Include="Engine\Graphics\Render\Particle\ModelParticleRenderer.cpp" />
     <ClCompile Include="Engine\Graphics\Render\Particle\ParticleRenderer.cpp" />
     <ClCompile Include="Engine\Graphics\Render\RenderManager.cpp" />
     <ClCompile Include="Engine\Graphics\Render\SkyBox\SkyBoxRenderer.cpp" />
@@ -206,6 +208,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="Engine\Graphics\PostEffect\Effect\RasterScroll.cpp" />
     <ClCompile Include="Engine\Graphics\PostEffect\Effect\Sepia.cpp" />
     <ClCompile Include="Engine\ObjectCommon\SpriteObject.cpp" />
+    <ClCompile Include="Engine\Scene\SceneTransition.cpp" />
     <ClCompile Include="Engine\Utility\Collision\CollisionUtils.cpp" />
     <ClCompile Include="Engine\Utility\Debug\ConsoleUI.cpp" />
     <ClCompile Include="Engine\Utility\Debug\ImGui\SceneManagerTab.cpp" />
@@ -359,6 +362,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="Engine\Graphics\Render\IRenderer.h" />
     <ClInclude Include="Engine\Graphics\Render\Model\ModelRenderer.h" />
     <ClInclude Include="Engine\Graphics\Render\Model\SkinnedModelRenderer.h" />
+    <ClInclude Include="Engine\Graphics\Render\Particle\BaseParticleRenderer.h" />
+    <ClInclude Include="Engine\Graphics\Render\Particle\ModelParticleRenderer.h" />
     <ClInclude Include="Engine\Graphics\Render\Particle\ParticleRenderer.h" />
     <ClInclude Include="Engine\Graphics\Render\RenderManager.h" />
     <ClInclude Include="Engine\Graphics\Render\RenderPassType.h" />
@@ -385,6 +390,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="Engine\Math\BoundingBox.h" />
     <ClInclude Include="Engine\Math\Quaternion\Quaternion.h" />
     <ClInclude Include="Engine\ObjectCommon\SpriteObject.h" />
+    <ClInclude Include="Engine\Scene\SceneTransition.h" />
     <ClInclude Include="Engine\Utility\Collision\CollisionUtils.h" />
     <ClInclude Include="Engine\Utility\Debug\ConsoleUI.h" />
     <ClInclude Include="Engine\Utility\Debug\ImGui\SceneManagerTab.h" />
@@ -581,6 +587,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
   </ItemGroup>
   <ItemGroup>
     <None Include="docs\Logger_Usage.md" />
+    <None Include="Docs\ModelParticle_Implementation_Guide.md" />
     <None Include="docs\RenderingFlow.md" />
     <None Include="Engine\Particle\README.md" />
     <None Include="Engine\Utility\Debug\ImGui\README.md" />

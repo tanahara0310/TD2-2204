@@ -41,6 +41,10 @@ public:
 	/// @return ブレンドモード（デフォルトはkBlendModeNone）
 	virtual BlendMode GetBlendMode() const { return BlendMode::kBlendModeNone; }
 
+	/// @brief ブレンドモードを設定
+	/// @param blendMode 設定するブレンドモード
+	virtual void SetBlendMode(BlendMode blendMode) { (void)blendMode; }
+
 	/// @brief エンジンシステムを取得
 	/// @return 
 	EngineSystem* GetEngineSystem() const;

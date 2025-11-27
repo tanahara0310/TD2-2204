@@ -40,6 +40,10 @@ public:
    /// @return ImGuiで変更があった場合true
    bool DrawImGui() override;
 
+   /// @brief ImGui拡張UI描画（派生クラスでオーバーライドして特殊機能を追加）
+   /// @return ImGuiで変更があった場合true
+   virtual bool DrawImGuiExtended();
+
    /// @brief オブジェクト名を取得（派生クラスでオーバーライド推奨）
    /// @return オブジェクト名
    const char* GetObjectName() const override { return "Object3D"; }
@@ -70,6 +74,14 @@ public:
    /// @return 描画パスタイプ
    RenderPassType GetRenderPassType() const override;
 
+   /// @brief ブレンドモードを取得
+   /// @return ブレンドモード
+   BlendMode GetBlendMode() const override { return blendMode_; }
+
+   /// @brief ブレンドモードを設定
+   /// @param blendMode 設定するブレンドモード
+   void SetBlendMode(BlendMode blendMode) override { blendMode_ = blendMode; }
+
 protected:
    /// @brief モデルインスタンス
    std::unique_ptr<Model> model_;
@@ -79,4 +91,7 @@ protected:
 
    /// @brief テクスチャハンドル（派生クラスで使用可能）
    TextureManager::LoadedTexture texture_;
+
+   /// @brief ブレンドモード
+   BlendMode blendMode_ = BlendMode::kBlendModeNone;
 };

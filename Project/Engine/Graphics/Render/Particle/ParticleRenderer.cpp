@@ -5,94 +5,31 @@
 #include <cassert>
 
 void ParticleRenderer::Initialize(ID3D12Device* device) {
-    device_ = device;
+    // 基底クラスの初期化（共通処理）
+    BaseParticleRenderer::Initialize(device);
 
-    // リソースファクトリが設定されているか確認
-    assert(resourceFactory_ != nullptr && "ResourceFactory must be set before initialization");
-
-    // パイプラインとシェーダーマネージャーの初期化
-    pipelineMg_ = std::make_unique<PipelineStateManager>();
-    rootSignatureMg_ = std::make_unique<RootSignatureManager>();
-    shaderCompiler_ = std::make_unique<ShaderCompiler>();
-
-    // シェーダーコンパイラの初期化
-    shaderCompiler_->Initialize();
-
-    // ルートシグネチャとPSOの作成
-    CreateRootSignature();
-    CreatePSO();
-
-    // 共有頂点バッファの作成
+    // ビルボード専用の頂点バッファを作成
     CreateSharedVertexBuffer();
 }
 
-void ParticleRenderer::BeginPass(ID3D12GraphicsCommandList* cmdList, BlendMode blendMode) {
-    cmdList_ = cmdList;
-
-    // ルートシグネチャとパイプラインステートを設定
-    cmdList_->SetGraphicsRootSignature(rootSignatureMg_->GetRootSignature());
-    cmdList_->SetPipelineState(pipelineMg_->GetPipelineState(blendMode));
-
-    // プリミティブトポロジを設定
-    cmdList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
+void ParticleRenderer::OnBeginPass() {
     // 共有頂点バッファを設定
     cmdList_->IASetVertexBuffers(0, 1, &vertexBufferView_);
 }
 
-void ParticleRenderer::EndPass() {
-    cmdList_ = nullptr;
-}
-
-void ParticleRenderer::SetCamera(const ICamera* camera) {
-    camera_ = camera;
-}
-
 void ParticleRenderer::Draw(ParticleSystem* particle) {
-    if (!cmdList_ || !particle || !particle->IsActive()) {
+    // 基本的な検証
+    if (!ValidateDrawCall(particle)) {
         return;
     }
 
     uint32_t instanceCount = particle->GetInstanceCount();
-    if (instanceCount == 0) {
-        return;
-    }
 
-    // インスタンシングリソースを設定
-    cmdList_->SetGraphicsRootDescriptorTable(0, particle->GetInstancingSrvHandleGPU());
-    cmdList_->SetGraphicsRootConstantBufferView(1, particle->GetMaterialGPUAddress());
-    cmdList_->SetGraphicsRootDescriptorTable(2, particle->GetTextureHandle());
+    // 共通リソースを設定
+    SetupCommonResources(particle, particle->GetTextureHandle());
 
-    // 描画コマンドを発行
+    // ビルボード描画コマンドを発行
     cmdList_->DrawInstanced(6, instanceCount, 0, 0);
-}
-
-void ParticleRenderer::CreateRootSignature() {
-    // Root Parameter 0: インスタンシング用SRV (t0, Vertex Shader)
-    RootSignatureManager::DescriptorRangeConfig instanceRange;
-    instanceRange.type = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-    instanceRange.numDescriptors = 1;
-    instanceRange.baseShaderRegister = 0;  // t0
-    rootSignatureMg_->AddDescriptorTable({ instanceRange }, D3D12_SHADER_VISIBILITY_VERTEX);
-
-    // Root Parameter 1: マテリアル用CBV (b0, Pixel Shader)
-    RootSignatureManager::RootDescriptorConfig materialCBV;
-    materialCBV.shaderRegister = 0;
-    materialCBV.visibility = D3D12_SHADER_VISIBILITY_PIXEL;
-    rootSignatureMg_->AddRootCBV(materialCBV);
-
-    // Root Parameter 2: テクスチャ用ディスクリプタテーブル (t0, Pixel Shader)
-    RootSignatureManager::DescriptorRangeConfig textureRange;
-    textureRange.type = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-    textureRange.numDescriptors = 1;
-    textureRange.baseShaderRegister = 0;  // t0
-    rootSignatureMg_->AddDescriptorTable({ textureRange }, D3D12_SHADER_VISIBILITY_PIXEL);
-
-    // Static Sampler (s0, Pixel Shader)
-    rootSignatureMg_->AddDefaultLinearSampler(0, D3D12_SHADER_VISIBILITY_PIXEL);
-
-    // RootSignature の作成
-    rootSignatureMg_->Create(device_);
 }
 
 void ParticleRenderer::CreatePSO() {
@@ -109,7 +46,7 @@ void ParticleRenderer::CreatePSO() {
         .AddInputElement("TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, D3D12_APPEND_ALIGNED_ELEMENT)
         .AddInputElement("NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, D3D12_APPEND_ALIGNED_ELEMENT)
         .SetRasterizer(D3D12_CULL_MODE_BACK, D3D12_FILL_MODE_SOLID)
-        .SetDepthStencil(false, true)
+        .SetDepthStencil(false, false)
         .SetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE)
         .BuildAllBlendModes(device_, vertexShaderBlob, pixelShaderBlob, rootSignatureMg_->GetRootSignature());
 

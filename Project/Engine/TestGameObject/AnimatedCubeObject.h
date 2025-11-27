@@ -13,9 +13,9 @@ public:
     /// @brief 更新処理
     void Update() override;
 
-    /// @brief ImGuiデバッグUI描画
+    /// @brief ImGui拡張UI描画（アニメーション制御を追加）
     /// @return ImGuiで変更があった場合true
-    bool DrawImGui() override;
+    bool DrawImGuiExtended() override;
 
     /// @brief オブジェクト名を取得
     /// @return オブジェクト名

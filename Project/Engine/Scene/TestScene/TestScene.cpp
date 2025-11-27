@@ -76,6 +76,7 @@ void TestScene::Initialize(EngineSystem* engine)
 	// SkyBoxの初期化（gameObjects_に追加）
 	auto skyBox = std::make_unique<SkyBoxObject>();
 	skyBox->Initialize();
+	skyBox->SetActive(false);
 	gameObjects_.push_back(std::move(skyBox));
 
 	// スプライトオブジェクトの初期化（複数作成）
@@ -84,6 +85,7 @@ void TestScene::Initialize(EngineSystem* engine)
 	sprite1->Initialize("Resources/SampleResources/uvChecker.png");
 	sprite1->GetTransform().translate = { -200.0f, 100.0f, 0.0f };  // 左上付近
 	sprite1->GetTransform().scale = { 0.5f, 0.5f, 1.0f };
+	sprite1->SetActive(false);
 	gameObjects_.push_back(std::move(sprite1));
 
 	// スプライト2: circle（画面中央）
@@ -91,6 +93,7 @@ void TestScene::Initialize(EngineSystem* engine)
 	sprite2->Initialize("Resources/SampleResources/circle.png");
 	sprite2->GetTransform().translate = { 0.0f, 0.0f, 0.0f };  // 画面中央
 	sprite2->GetTransform().scale = { 1.0f, 1.0f, 1.0f };
+	sprite2->SetActive(false);
 	gameObjects_.push_back(std::move(sprite2));
 
 	// スプライト3: 別のuvChecker（右下）
@@ -98,6 +101,7 @@ void TestScene::Initialize(EngineSystem* engine)
 	sprite3->Initialize("Resources/SampleResources/uvChecker.png");
 	sprite3->GetTransform().translate = { 200.0f, -100.0f, 0.0f };  // 右下付近
 	sprite3->GetTransform().scale = { 0.8f, 0.8f, 1.0f };
+	sprite3->SetActive(false);
 	gameObjects_.push_back(std::move(sprite3));
 
 	// ===== パーティクルシステムの初期化 =====
@@ -105,7 +109,6 @@ void TestScene::Initialize(EngineSystem* engine)
 	particleSystem->Initialize(dxCommon, engine_->GetComponent<ResourceFactory>());
 
 	// パーティクルシステムの設定
-	particleSystem ->SetTexture("Resources/SampleResources/circle.png");
 	particleSystem->SetEmitterPosition({ 0.0f, 2.0f, 0.0f });
 	particleSystem->SetBlendMode(BlendMode::kBlendModeAdd);  // 加算合成
 	particleSystem->SetBillboardType(BillboardType::ViewFacing);
@@ -165,6 +168,94 @@ void TestScene::Initialize(EngineSystem* engine)
 
 	// パーティクルシステムを再生開始
 	particleSystem_->Play();
+
+	// ===== モデルパーティクルシステムの初期化 =====
+	auto modelParticleSystem = std::make_unique<ParticleSystem>();
+	modelParticleSystem->Initialize(dxCommon, engine_->GetComponent<ResourceFactory>());
+
+	// sphereモデルを読み込む
+	sphereModelForParticle_ = modelManager->CreateStaticModel("Resources/sphere.obj");
+	
+	// ModelResourceを取得してParticleSystemに設定
+	auto* sphereModelResource = modelManager->GetModelResource("Resources/sphere.obj");
+	if (sphereModelResource) {
+		modelParticleSystem->SetModelResource(sphereModelResource);
+	}
+	
+	// モデルパーティクルのテクスチャを設定（オプション）
+	// 設定しない場合はモデルのデフォルトテクスチャが使用されます
+	// 設定した場合はこちらが優先されます
+	modelParticleSystem->SetTexture("Resources/SampleResources/uvChecker.png");
+	
+	// モデルパーティクルシステムの設定
+	modelParticleSystem->SetEmitterPosition({ 3.0f, 2.0f, 0.0f });
+	modelParticleSystem->SetBlendMode(BlendMode::kBlendModeNormal);  // 通常合成
+	modelParticleSystem_ = modelParticleSystem.get();
+
+	gameObjects_.push_back(std::move(modelParticleSystem));
+
+	// エミッションモジュールの設定（モデルパーティクル用）
+	{
+		auto& emissionModule = modelParticleSystem_->GetEmissionModule();
+		auto emissionData = emissionModule.GetEmissionData();
+		emissionData.rateOverTime = 10;  // 1秒に10個のパーティクルを放出
+		emissionData.shapeType = EmissionModule::ShapeType::Box;
+		emissionData.scale = { 1.0f, 0.1f, 1.0f };  // 箱型の放出形状
+		emissionData.emitFromSurface = false;
+		emissionModule.SetEmissionData(emissionData);
+	}
+
+	// 速度モジュールの設定（モデルパーティクル用）
+	{
+		auto& velocityModule = modelParticleSystem_->GetVelocityModule();
+		auto velocityData = velocityModule.GetVelocityData();
+		velocityData.startSpeed = { 0.0f, 2.0f, 0.0f };  // 上方向に放出
+		velocityData.randomSpeedRange = { 0.5f, 0.5f, 0.5f };
+		velocityData.useRandomDirection = false;
+		velocityModule.SetVelocityData(velocityData);
+	}
+
+	// 色モジュールの設定（モデルパーティクル用）
+	{
+		auto& colorModule = modelParticleSystem_->GetColorModule();
+		auto colorData = colorModule.GetColorData();
+		colorData.useGradient = true;
+		colorData.startColor = { 0.2f, 0.8f, 1.0f, 1.0f };  // 水色
+		colorData.endColor = { 1.0f, 1.0f, 1.0f, 0.0f };    // 白でフェードアウト
+		colorModule.SetColorData(colorData);
+	}
+
+	// ライフタイムモジュールの設定（モデルパーティクル用）
+	{
+		auto& lifetimeModule = modelParticleSystem_->GetLifetimeModule();
+		auto lifetimeData = lifetimeModule.GetLifetimeData();
+		lifetimeData.startLifetime = 3.0f;
+		lifetimeData.lifetimeRandomness = 0.5f;
+		lifetimeModule.SetLifetimeData(lifetimeData);
+	}
+
+	// サイズモジュールの設定（モデルパーティクル用）
+	{
+		auto& sizeModule = modelParticleSystem_->GetSizeModule();
+		auto sizeData = sizeModule.GetSizeData();
+		sizeData.startSize = 0.2f;
+		sizeData.endSize = 0.05f;
+		sizeData.sizeOverLifetime = true;
+		sizeModule.SetSizeData(sizeData);
+	}
+
+	// 回転モジュールの設定（モデルパーティクル用）
+	{
+		auto& rotationModule = modelParticleSystem_->GetRotationModule();
+		auto rotationData = rotationModule.GetRotationData();
+		rotationData.use2DRotation = false;  // 3D回転を使用
+		rotationData.rotationSpeed = { 0.0f, 3.0f, 0.0f };  // Y軸回転
+		rotationData.rotationSpeedRandomness = { 1.0f, 1.0f, 1.0f };
+		rotationModule.SetRotationData(rotationData);
+	}
+
+	// モデルパーティクルシステムを再生開始
+	modelParticleSystem_->Play();
 
 	// テクスチャの読み込み
 	auto& textureManager = TextureManager::GetInstance();

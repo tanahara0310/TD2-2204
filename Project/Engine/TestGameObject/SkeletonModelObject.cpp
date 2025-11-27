@@ -98,76 +98,20 @@ void SkeletonModelObject::DrawDebug(std::vector<LineRenderer::Line>& outLines) {
    );
 }
 
-bool SkeletonModelObject::DrawImGui() {
+bool SkeletonModelObject::DrawImGuiExtended() {
    bool changed = false;
 
-   // オブジェクト名をCollapsingHeaderとして表示（タブ）
-   if (ImGui::CollapsingHeader(GetObjectName())) {
-	  ImGui::PushID(GetObjectName());
-
-	  // トランスフォーム制御（TreeNode）
-	  if (ImGui::TreeNode("トランスフォーム")) {
-		 Vector3& scale = transform_.scale;
-		 Vector3& rotate = transform_.rotate;
-		 Vector3& translate = transform_.translate;
-
-		 if (ImGui::DragFloat3("スケール", &scale.x, 0.01f)) {
-			changed = true;
-		 }
-
-		 if (ImGui::DragFloat3("回転", &rotate.x, 0.01f)) {
-			changed = true;
-		 }
-
-		 if (ImGui::DragFloat3("位置", &translate.x, 0.1f)) {
-			changed = true;
-		 }
-
-		 if (ImGui::Button("トランスフォームをリセット")) {
-			transform_.scale = { 1.0f, 1.0f, 1.0f };
-			transform_.rotate = { 0.0f, 0.0f, 0.0f };
-			changed = true;
-		 }
-
-		 ImGui::TreePop();
-	  }
-
-	  // マテリアル制御（TreeNode）
-	  if (model_) {
-		 MaterialManager* mat = model_->GetMaterialManager();
-		 if (mat && ImGui::TreeNode("マテリアル")) {
-			Vector4& colorVec = mat->GetMaterialData()->color;
-			float col[4] = { colorVec.x, colorVec.y, colorVec.z, colorVec.w };
-			if (ImGui::ColorEdit4("色", col)) {
-			   mat->SetColor({ col[0], col[1], col[2], col[3] });
-			   changed = true;
-			}
-
-			static const char* shadingItems[] = { "なし", "ランバート", "ハーフランバート", "トゥーン" };
-			int currentShadingMode = mat->GetMaterialData()->shadingMode;
-			if (ImGui::Combo("シェーディングモード", &currentShadingMode, shadingItems, IM_ARRAYSIZE(shadingItems))) {
-			   mat->GetMaterialData()->shadingMode = currentShadingMode;
-			   changed = true;
-			}
-
-			ImGui::TreePop();
-		 }
-	  }
-
-	  // Skeleton制御（共通実装を使用）
-	  if (model_) {
-		 const auto& skeletonOpt = model_->GetSkeleton();
-		 if (skeletonOpt.has_value()) {
-			changed |= SkeletonDebugRenderer::DrawSkeletonImGui(
-			   &skeletonOpt.value(),
-			   drawSkeleton_,
-			   jointRadius_,
-			   GetObjectName()
-			);
-		 }
-	  }
-
-	  ImGui::PopID();
+   // Skeleton制御（特殊機能）
+   if (model_) {
+      const auto& skeletonOpt = model_->GetSkeleton();
+      if (skeletonOpt.has_value()) {
+         changed |= SkeletonDebugRenderer::DrawSkeletonImGui(
+            &skeletonOpt.value(),
+            drawSkeleton_,
+            jointRadius_,
+            GetObjectName()
+         );
+      }
    }
 
    return changed;

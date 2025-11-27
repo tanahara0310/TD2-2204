@@ -3,6 +3,7 @@
 #include "Engine/Camera/ICamera.h"
 #include "Engine/Camera/CameraManager.h"
 #include "Engine/EngineSystem/EngineSystem.h"
+#include "Engine/Graphics/Model/ModelResource.h"
 #include <iostream>
 #ifdef _DEBUG
 #include "Engine/Utility/Debug/ImGui/ImguiManager.h"
@@ -34,9 +35,6 @@ void ParticleSystem::Initialize(DirectXCommon* dxCommon, ResourceFactory* resour
         { 0.0f, 0.0f, 0.0f }, // 回転
         { 0.0f, 0.0f, 0.0f }  // 平行移動
     };
-
-    // マテリアルクラスの初期化
-    materialManager_->Initialize(dxCommon->GetDevice(), resourceFactory);
 
     // インスタンシング用のリソースを作成
     ResourceCreate();
@@ -132,7 +130,7 @@ void ParticleSystem::Draw(const ICamera* camera)
     Matrix4x4 projectionMatrix = camera->GetProjectionMatrix();
     Matrix4x4 viewProjectionMatrix = Matrix::Multiply(viewMatrix, projectionMatrix);
 
-    // ビルボード行列を作成
+    // ビルボード行列を作成（モデルパーティクルの場合はBillboardType::Noneで単位行列）
     Matrix4x4 billboardMatrix = CreateBillboardMatrix(viewMatrix);
 
     // GPU用データの更新
@@ -145,7 +143,7 @@ void ParticleSystem::Draw(const ICamera* camera)
             particle.transform.rotate,
             particle.transform.translate);
 
-        // ビルボードに変換を適用
+        // ビルボード変換を適用（モデルパーティクルの場合は単位行列なので影響なし）
         worldMatrix = Matrix::Multiply(worldMatrix, billboardMatrix);
 
         // ワールド行列とビュー投影行列を掛け合わせてWVPを計算
@@ -183,6 +181,18 @@ void ParticleSystem::Clear()
 void ParticleSystem::SetTexture(const std::string& texturePath)
 {
     texture_ = TextureManager::GetInstance().Load(texturePath);
+}
+
+void ParticleSystem::SetModelResource(ModelResource* modelResource)
+{
+    modelResource_ = modelResource;
+    if (modelResource_) {
+        renderMode_ = ParticleRenderMode::Model;
+        // モデルパーティクルではビルボードを無効化
+        billboardType_ = BillboardType::None;
+    } else {
+        renderMode_ = ParticleRenderMode::Billboard;
+    }
 }
 
 bool ParticleSystem::DrawImGui()
@@ -352,7 +362,11 @@ Matrix4x4 ParticleSystem::CreateBillboardMatrix(const Matrix4x4& viewMatrix)
 void ParticleSystem::ShowImGui()
 {
 #ifdef _DEBUG
+    // ユニークIDを生成（thisポインタを使用）
+    ImGui::PushID(this);
+    
     if (!ImGui::CollapsingHeader("Particle System")) {
+        ImGui::PopID();
         return;
     }
 
@@ -391,12 +405,40 @@ void ParticleSystem::ShowImGui()
     if (ImGui::CollapsingHeader("エミッター設定")) {
         ImGui::DragFloat3("位置", &emitterTransform_.translate.x, 0.01f);
         
-        static const char* billboardTypeNames[] = {
-            "なし", "カメラ向き", "Y軸固定", "スクリーン平行"
-        };
-        int currentBillboardType = static_cast<int>(billboardType_);
-        if (ImGui::Combo("ビルボードタイプ", &currentBillboardType, billboardTypeNames, IM_ARRAYSIZE(billboardTypeNames))) {
-            billboardType_ = static_cast<BillboardType>(currentBillboardType);
+        // 描画モード選択
+        ImGui::Separator();
+        ImGui::Text("描画モード:");
+        int currentRenderMode = static_cast<int>(renderMode_);
+        const char* renderModeNames[] = { "ビルボード", "3Dモデル" };
+        if (ImGui::Combo("モード", &currentRenderMode, renderModeNames, IM_ARRAYSIZE(renderModeNames))) {
+            renderMode_ = static_cast<ParticleRenderMode>(currentRenderMode);
+            // モデルモードに切り替えた場合はビルボードを無効化
+            if (renderMode_ == ParticleRenderMode::Model) {
+                billboardType_ = BillboardType::None;
+            }
+        }
+        
+        // モデルパーティクルの情報表示
+        if (renderMode_ == ParticleRenderMode::Model) {
+            if (modelResource_) {
+                ImGui::Text("モデル: %s", modelResource_->GetFilePath().c_str());
+                ImGui::Text("頂点数: %u", modelResource_->GetVertexCount());
+            } else {
+                ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.0f, 1.0f), "警告: モデルが設定されていません");
+            }
+        }
+        
+        ImGui::Separator();
+        
+        // ビルボードモードの場合のみビルボードタイプを表示
+        if (renderMode_ == ParticleRenderMode::Billboard) {
+            static const char* billboardTypeNames[] = {
+                "なし", "カメラ向き", "Y軸固定", "スクリーン平行"
+            };
+            int currentBillboardType = static_cast<int>(billboardType_);
+            if (ImGui::Combo("ビルボードタイプ", &currentBillboardType, billboardTypeNames, IM_ARRAYSIZE(billboardTypeNames))) {
+                billboardType_ = static_cast<BillboardType>(currentBillboardType);
+            }
         }
         
         static const char* blendModeNames[] = {
@@ -449,6 +491,7 @@ void ParticleSystem::ShowImGui()
     }
 
     ImGui::Unindent();
+    ImGui::PopID();
 #endif
 }
 

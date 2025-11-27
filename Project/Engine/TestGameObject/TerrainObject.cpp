@@ -3,6 +3,7 @@
 #include "Engine/Graphics/Model/ModelManager.h"
 #include "Engine/Graphics/Common/DirectXCommon.h"
 #include "Engine/Graphics/TextureManager.h"
+#include "Engine/Camera/ICamera.h"
 #include <numbers>
 
 void TerrainObject::Initialize() {
@@ -27,4 +28,23 @@ void TerrainObject::Initialize() {
    // テクスチャの読み込み
    auto& textureManager = TextureManager::GetInstance();
    texture_ = textureManager.Load("Resources/SampleResources/terrain/grass.png");
+
+   // アクティブ状態に設定
+   SetActive(true);
+}
+
+void TerrainObject::Update() {
+   if (!IsActive() || !model_) {
+      return;
+   }
+
+   // トランスフォームの更新
+   transform_.TransferMatrix();
+}
+
+void TerrainObject::Draw(const ICamera* camera) {
+   if (!model_ || !camera) return;
+
+   // モデルの描画
+   model_->Draw(transform_, camera, texture_.gpuHandle);
 }

@@ -222,3 +222,18 @@ void ModelManager::SplitPath(const std::string& filePath, std::string& outDirect
 	outDirectory = path.parent_path().string();
 	outFilename = path.filename().string();
 }
+
+ModelResource* ModelManager::GetModelResource(const std::string& filePath)
+{
+	std::string directoryPath, filename;
+	SplitPath(filePath, directoryPath, filename);
+	
+	std::string normalizedPath = MakeNormalizedPath(directoryPath, filename);
+	
+	auto it = resourceCache_.find(normalizedPath);
+	if (it != resourceCache_.end()) {
+		return it->second.get();
+	}
+	
+	return nullptr;
+}

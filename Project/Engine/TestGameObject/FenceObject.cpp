@@ -1,5 +1,6 @@
 #include "FenceObject.h"
 #include <EngineSystem.h>
+#include "Engine/Camera/ICamera.h"
 
 void FenceObject::Initialize() {
    auto engine = GetEngineSystem();
@@ -20,4 +21,23 @@ void FenceObject::Initialize() {
    // テクスチャの読み込み
    auto& textureManager = TextureManager::GetInstance();
    texture_ = textureManager.Load("Resources/SampleResources/fence/fence.png");
+
+   // アクティブ状態に設定
+   SetActive(true);
+}
+
+void FenceObject::Update() {
+   if (!IsActive() || !model_) {
+      return;
+   }
+
+   // トランスフォームの更新
+   transform_.TransferMatrix();
+}
+
+void FenceObject::Draw(const ICamera* camera) {
+   if (!model_ || !camera) return;
+
+   // モデルの描画
+   model_->Draw(transform_, camera, texture_.gpuHandle);
 }
