@@ -25,6 +25,7 @@ void GameScene::Initialize(EngineSystem* engine) {
 
    // プレイヤーの生成と初期化
    {
+	  modelManager->LoadModelResource("Resources/Models/Player/Damage", "PlayerDamage.obj");
 	  auto playerModel = modelManager->CreateStaticModel("Resources/Models/Player/Player.obj");
 	  auto playerTexture = textureManager.Load("Resources/Textures/Player.png");
 	  auto player = std::make_unique<Player>();

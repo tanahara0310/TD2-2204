@@ -25,10 +25,10 @@ void Object3d::ChangeModelResource(ModelResource* resource) {
    if (model_->HasAnimationController()) {
       // アニメーションコントローラーは移動できないため、新規作成が必要
       // ここでは単純に再初期化（アニメーションはリセットされる）
-      model_->Initialize(resource);
+      model_->SetModelResource(resource);
    } else {
       // 通常のモデルとして再初期化
-      model_->Initialize(resource);
+      model_->SetModelResource(resource);
    }
 }
 

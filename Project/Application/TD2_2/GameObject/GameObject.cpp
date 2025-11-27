@@ -173,3 +173,12 @@ bool GameObject::UpdateShake() {
 
    return true;
 }
+
+void GameObject::ChangeModelResource(const std::string& path) {
+   auto engine = GetEngineSystem();
+   auto modelManager = engine->GetComponent<ModelManager>();
+   ModelResource* newResource = modelManager->GetModelResource(path);
+   if (newResource) {
+	  Object3d::ChangeModelResource(newResource);
+   }
+}

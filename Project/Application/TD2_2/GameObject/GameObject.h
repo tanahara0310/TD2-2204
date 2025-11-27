@@ -1,6 +1,7 @@
 #pragma once
 #include <memory>
 #include <vector>
+#include <string>
 #include "MathCore.h"
 #include "Object3D.h"
 #include "../Collider/Collider.h"
@@ -80,6 +81,8 @@ protected:
    void StartShake(float intensity, float duration);
 
    bool UpdateShake();
+
+   void ChangeModelResource(const std::string& path);
 
 private:
    std::unique_ptr<GameTimer> rotationTimer_;

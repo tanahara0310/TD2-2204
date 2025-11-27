@@ -106,6 +106,7 @@ public:
 		return HasSkinCluster() ? RenderType::Skinning : RenderType::Normal; 
 	}
 
+	void SetModelResource(ModelResource* resource);
 private:
 	// 参照するModelResource
 	ModelResource* resource_ = nullptr;
