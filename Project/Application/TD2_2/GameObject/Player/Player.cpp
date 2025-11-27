@@ -188,10 +188,10 @@ void Player::Damage() {
 	  damageFunction_();
    }
 
-   if (!GameObject::UpdateShake()) {
-	  stateMachine_->RequestState("Move", 0);
-   }
+   if (GameObject::UpdateShake()) return;
 
+   GameObject::ChangeModelResource("Resources/Models/Player/Player.obj");
+   stateMachine_->RequestState("Move", 0);
 }
 
 void Player::InitializeCharge() {
@@ -220,11 +220,13 @@ void Player::InitializeStun() {
 }
 
 void Player::InitializeDamage() {
-   /*  if (startDamageFunction_) {
-		startDamageFunction_();
-	 }*/
+   if (startDamageFunction_) {
+	  startDamageFunction_();
+   }
 
-   GameObject::StartShake(0.5f, 0.7f);
+   GameObject::StartShake(0.15f, 1.0f);
 
    velocity_ = { 0.0f, 0.0f };
+
+   GameObject::ChangeModelResource("Resources/Models/Player/Damage/PlayerDamage.obj");
 }
