@@ -1,6 +1,8 @@
 #include "Boss.h"
 #include "Application/TD2_2/GameObject/Player/Player.h"
 #include <cmath>
+#include "Application/TD2_2/AI/BehaviorTree/BehaviorTree.h"
+#include <algorithm>
 
 #ifdef _DEBUG
 #include <imgui.h>
@@ -21,9 +23,12 @@ void Boss::Update() {
    if (behaviorTree_) {
       behaviorTree_->Tick();
    }
-   
-   // 移動処理
+
+   UpdateRotation();
+
    UpdateMovement();
+
+   transform_.TransferMatrix();
 }
 
 void Boss::Draw(const ICamera* camera) {
@@ -36,75 +41,76 @@ void Boss::Draw(const ICamera* camera) {
 }
 
 bool Boss::DrawImGui() {
-#ifdef _DEBUG
-   bool changed = false;
-   
-   if (ImGui::TreeNode(GetObjectName())) {
-      // アクティブ状態
-      bool active = IsActive();
-      if (ImGui::Checkbox("アクティブ", &active)) {
-         SetActive(active);
-         changed = true;
-      }
-      
-      // 速度情報
-      ImGui::Separator();
-      ImGui::Text("速度: (%.2f, %.2f)", velocity_.x, velocity_.y);
-      ImGui::Text("加速度: (%.2f, %.2f)", acceleration_.x, acceleration_.y);
-      ImGui::Text("最大速度: %.2f", maxSpeed_);
-      
-      // ビヘイビアツリー情報
-      if (behaviorTree_) {
-         ImGui::Separator();
-         ImGui::Text("ビヘイビアツリー: %s", behaviorTree_->GetName().c_str());
-         ImGui::Text("実行回数: %u", behaviorTree_->GetTickCount());
-      }
-      
-      // プレイヤー関連情報
-      if (player_) {
-         ImGui::Separator();
-         ImGui::Text("プレイヤーへの距離: %.2f", GetDistanceToPlayer());
-         ImGui::Text("プレイヤーへの角度: %.2f°", GetAngleToPlayer());
-      }
-      
-      // 移動パラメータ
-      if (ImGui::TreeNode("移動パラメータ")) {
-         ImGui::DragFloat("移動速度", &moveSpeed_, 0.1f, 0.0f, 10.0f);
-         ImGui::DragFloat("移動減衰率", &moveDamping_, 0.01f, 0.0f, 1.0f);
-         ImGui::DragFloat("移動最大速度", &moveMaxSpeed_, 0.1f, 0.0f, 50.0f);
-         ImGui::TreePop();
-      }
-      
-      // 突進パラメータ
-      if (ImGui::TreeNode("突進パラメータ")) {
-         ImGui::DragFloat("突進速度", &chargeSpeed_, 100.0f, 0.0f, 100000.0f);
-         ImGui::DragFloat("突進減衰率", &chargeDamping_, 0.001f, 0.0f, 1.0f);
-         ImGui::DragFloat("突進持続時間", &chargeDuration_, 0.01f, 0.0f, 2.0f);
-         ImGui::DragFloat("突進最大速度", &chargeMaxSpeed_, 0.1f, 0.0f, 100.0f);
-         ImGui::TreePop();
-      }
-      
-      // トランスフォーム
-      if (transform_.DrawImGui(GetObjectName())) {
-         transform_.TransferMatrix();
-         changed = true;
-      }
-      
-      ImGui::TreePop();
-   }
-   
-   return changed;
-#else
    return false;
-#endif
 }
 
 void Boss::OnCollisionEnter(GameObject* other) {
-   (void)other;
+   // プレイヤーと衝突したら反発する
+   if (auto p = dynamic_cast<Player*>(other)) {
+      Vector3 toOther = p->GetWorldPosition() - GetWorldPosition();
+      Vector2 normal = Vector2{ toOther.x, toOther.y }.Normalize();
+
+      Vector2 relativeVel = velocity_ - p->GetVelocity();
+      float speed = relativeVel.Length();
+      float response = stunPower_ + speed * collisionResponseScale_;
+
+      // 突進中かつプレイヤーに向かって突進している場合は反発を弱める
+      if (isCharging_) {
+         Vector2 chargeDir = direction_.Normalize();
+         if (chargeDir.Length() > 0.0f) {
+            float dot = chargeDir.x * normal.x + chargeDir.y * normal.y;
+            if (dot > 0.7f) {
+               response *= 0.3f; // 例: 30% に低減
+            }
+         }
+      }
+
+      response = (std::min)(response, maxCollisionResponse_);
+
+      acceleration_ -= normal * response;
+
+      // 速度反射
+      float dot = velocity_.x * normal.x + velocity_.y * normal.y;
+      velocity_ = velocity_ - normal * (dot * 1.5f);
+      velocity_ *= 0.5f;
+
+      // プレイヤーに突進されて吹き飛ばされた場合は中心バイアスを強める
+      // プレイヤーが突進中かどうか判定し、かつプレイヤーの突進方向がボスに向かっているなら発動
+      if (p->IsCharging()) {
+         Vector2 playerDir = (p->GetVelocity().Length() > 0.0f) ? p->GetVelocity().Normalize() : Vector2{0.0f,0.0f};
+         Vector2 towardBoss = Vector2{ GetWorldPosition().x - p->GetWorldPosition().x, GetWorldPosition().y - p->GetWorldPosition().y }.Normalize();
+         float dotPB = playerDir.x * towardBoss.x + playerDir.y * towardBoss.y;
+         if (dotPB > 0.7f) {
+            // 例: 2秒間、中心バイアスを 0.5 にする（通常 1.0 -> 小さいほど強いバイアス）
+            StartKnockbackBias(2.0f, 0.5f);
+         }
+      }
+   }
 }
 
 void Boss::OnCollisionStay(GameObject* other) {
-   (void)other;
+   if (auto p = dynamic_cast<Player*>(other)) {
+      Vector3 toOther = p->GetWorldPosition() - GetWorldPosition();
+      Vector2 normal = Vector2{ toOther.x, toOther.y }.Normalize();
+
+      Vector2 relativeVel = velocity_ - p->GetVelocity();
+      float speed = relativeVel.Length();
+      float response = stunPower_ + speed * collisionResponseScale_;
+
+      if (isCharging_) {
+         Vector2 chargeDir = direction_.Normalize();
+         if (chargeDir.Length() > 0.0f) {
+            float dot = chargeDir.x * normal.x + chargeDir.y * normal.y;
+            if (dot > 0.7f) {
+               response *= 0.3f;
+            }
+         }
+      }
+
+      response = (std::min)(response, maxCollisionResponse_);
+
+      acceleration_ -= normal * response;
+   }
 }
 
 void Boss::OnCollisionExit(GameObject* other) {
@@ -115,66 +121,21 @@ void Boss::SetBehaviorTree(std::unique_ptr<BehaviorTree> tree) {
    behaviorTree_ = std::move(tree);
 }
 
-void Boss::AddAcceleration(const Vector2& accel) {
-   acceleration_.x += accel.x;
-   acceleration_.y += accel.y;
-}
-
-void Boss::SetVelocity(const Vector2& vel) {
-   velocity_ = vel;
-}
-
-void Boss::SetMaxSpeed(float maxSpeed) {
-   maxSpeed_ = maxSpeed;
-}
-
-void Boss::SetDamping(float damping) {
-   dampingPerSecond_ = damping;
-}
-
-void Boss::ResetMovementParameters() {
-   maxSpeed_ = 20.0f;
-   dampingPerSecond_ = 0.8f;
-}
-
-float Boss::GetDistanceToPlayer() const {
-   if (!player_) return 0.0f;
-   
-   Vector3 diff = player_->GetWorldPosition() - GetWorldPosition();
-   return std::sqrt(diff.x * diff.x + diff.y * diff.y + diff.z * diff.z);
-}
-
-Vector3 Boss::GetDirectionToPlayer() const {
-   if (!player_) return {0.0f, 0.0f, 0.0f};
-   
-   Vector3 diff = player_->GetWorldPosition() - GetWorldPosition();
-   float length = std::sqrt(diff.x * diff.x + diff.y * diff.y + diff.z * diff.z);
-   
-   if (length > 0.0001f) {
-      return {diff.x / length, diff.y / length, diff.z / length};
-   }
-   
-   return {0.0f, 0.0f, 0.0f};
-}
-
-float Boss::GetAngleToPlayer() const {
-   if (!player_) return 0.0f;
-   
-   Vector3 direction = GetDirectionToPlayer();
-   
-   // XZ平面上の角度を計算（Y軸まわりの回転）
-   float angle = std::atan2(direction.x, direction.z);
-   
-   // ラジアンから度数法に変換
-   return angle * 180.0f / 3.14159265f;
-}
-
 void Boss::InitializeCollider() {
-   AttachCollider(std::make_unique<SphereCollider>(this, 0.6f));
+   AttachCollider(std::make_unique<SphereCollider>(this, 0.9f));
    collider_->SetLayer(CollisionLayer::Boss);
 }
 
 void Boss::UpdateMovement() {
+   // knockback bias timer update
+   knockbackBiasTimer_.Update(GameUtils::GetDeltaTime());
+   if (!knockbackBiasTimer_.IsFinished()) {
+      // timer running - keep multiplier
+   } else {
+      // expired -> reset
+      knockbackBiasMultiplier_ = 1.0f;
+   }
+
    // velocity 更新
    velocity_.x += acceleration_.x * GameUtils::GetDeltaTime();
    velocity_.y += acceleration_.y * GameUtils::GetDeltaTime();
@@ -190,11 +151,29 @@ void Boss::UpdateMovement() {
    transform_.translate.x += velocity_.x * GameUtils::GetDeltaTime();
    transform_.translate.y += velocity_.y * GameUtils::GetDeltaTime();
 
-   acceleration_ = { 0.0f, 0.0f };
+   transform_.translate.z = 0.0f; // Z座標は固定
 
-   transform_.TransferMatrix();
+   transform_.translate.x = std::clamp(transform_.translate.x, -moveableAreaRadius_, moveableAreaRadius_);
+   transform_.translate.y = std::clamp(transform_.translate.y, -moveableAreaRadius_, moveableAreaRadius_);
+
+   acceleration_ = { 0.0f, 0.0f };
 }
 
-void Boss::Move() {
-   acceleration_ = Vector2(1.0f, 1.0f).Normalize() * moveSpeed_;
+void Boss::StartKnockbackBias(float duration, float multiplier) {
+   knockbackBiasMultiplier_ = multiplier;
+   knockbackBiasTimer_.Start(duration, false);
+}
+
+void Boss::UpdateRotation() {
+   direction_.x = std::clamp(direction_.x, -1.0f, 1.0f);
+   direction_.y = std::clamp(direction_.y, -1.0f, 1.0f);
+
+   if (direction_.Length() == 0.0f) {
+      direction_ = velocity_.Normalize();
+      direction_.x = std::clamp(direction_.x, -0.2f, 0.2f);
+      direction_.y = std::clamp(direction_.y, -0.2f, 0.2f);
+   }
+
+   GameObject::TiltByVelocity(direction_);
+   GameObject::UpdateRotation();
 }

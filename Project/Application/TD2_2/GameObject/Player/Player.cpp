@@ -1,4 +1,14 @@
 #include "Player.h"
+#include "Application/TD2_2/GameObject/Boss/Boss.h"
+#include <algorithm>
+
+// Avoid Windows min/max macro collisions
+#ifdef min
+#undef min
+#endif
+#ifdef max
+#undef max
+#endif
 
 #ifdef _DEBUG
 #include <imgui.h>
@@ -23,13 +33,13 @@ void Player::Initialize(std::unique_ptr<Model> model, TextureManager::LoadedText
 
 void Player::Update() {
    if (keyConfig_->Get<bool>("Charge")) {
-	  if (GetMoveDirection().Length() > 0.0f) {
-		 stateMachine_->RequestState("Charge", 0);
-	  }
+      if (GetMoveDirection().Length() > 0.0f) {
+         stateMachine_->RequestState("Charge", 0);
+      }
    }
 
    if (keyConfig_->Get<bool>("Damage")) {
-	  stateMachine_->RequestState("Damage", 1);
+      stateMachine_->RequestState("Damage", 1);
    }
 
    stateMachine_->Update();
@@ -43,7 +53,7 @@ void Player::Update() {
 
 void Player::Draw(const ICamera* camera) {
    if (!model_ || !camera) {
-	  return;
+      return;
    }
 
    // モデルの描画
@@ -52,22 +62,84 @@ void Player::Draw(const ICamera* camera) {
 
 void Player::OnCollisionEnter(GameObject* other) {
    // 反発
-   Vector3 toOther = other->GetWorldPosition() - GetWorldPosition();
+   Vector3 toOther3 = other->GetWorldPosition() - GetWorldPosition();
+
+   Vector2 toOther = Vector2{ toOther3.x, toOther3.y };
+   Vector2 normal = toOther.Normalize();
+
+   // 速度に応じて反発力を増減させる。両者の速度差を使う。
+   Vector2 otherVel = { 0.0f, 0.0f };
+   // other が Boss か Player かを判別して速度を取得
+   if (auto p = dynamic_cast<Player*>(other)) {
+      otherVel = p->GetVelocity();
+   } else if (auto b = dynamic_cast<Boss*>(other)) {
+      otherVel = b->GetVelocity();
+   }
+
+   Vector2 relativeVel = velocity_ - otherVel;
+   float speed = relativeVel.Length();
+
+   float response = stunPower_ + speed * collisionResponseScale_;
+
+   // 突進中かつ相手に向かって突進している場合は反発を弱める
+   if (isCharging_) {
+      Vector2 chargeDir = direction_.Normalize();
+      if (chargeDir.Length() > 0.0f) {
+         float dot = chargeDir.x * normal.x + chargeDir.y * normal.y; // cos(theta)
+         // dot が大きいほど相手方向に突進している
+         if (dot > 0.7f) {
+            response *= 0.3f; // 例: 30% に低減
+         }
+      }
+   }
+
+   // clamp to max
+   if (response > maxCollisionResponse_) response = maxCollisionResponse_;
 
    // 反対方向に加速度を与える
-   acceleration_ -= Vector2{ toOther.x, toOther.y }.Normalize() * stunPower_;
+   acceleration_ -= normal * response;
 
-   velocity_ *= 0.5f; // 衝突時の速度を半減
+   // 衝突時の速度の反射/減衰
+   float dotv = velocity_.x * normal.x + velocity_.y * normal.y;
+   velocity_ = velocity_ - normal * (dotv * 1.5f);
+   velocity_ *= 0.5f; // 全体の速度を半減
 
    stateMachine_->RequestState("Stun", 0);
 }
 
 void Player::OnCollisionStay(GameObject* other) {
    // 反発
-   Vector3 toOther = other->GetWorldPosition() - GetWorldPosition();
+   Vector3 toOther3 = other->GetWorldPosition() - GetWorldPosition();
+
+   Vector2 toOther = Vector2{ toOther3.x, toOther3.y };
+   Vector2 normal = toOther.Normalize();
+
+   Vector2 otherVel = { 0.0f, 0.0f };
+   if (auto p = dynamic_cast<Player*>(other)) {
+      otherVel = p->GetVelocity();
+   } else if (auto b = dynamic_cast<Boss*>(other)) {
+      otherVel = b->GetVelocity();
+   }
+
+   Vector2 relativeVel = velocity_ - otherVel;
+   float speed = relativeVel.Length();
+
+   float response = stunPower_ + speed * collisionResponseScale_;
+
+   if (isCharging_) {
+      Vector2 chargeDir = direction_.Normalize();
+      if (chargeDir.Length() > 0.0f) {
+         float dot = chargeDir.x * normal.x + chargeDir.y * normal.y;
+         if (dot > 0.7f) {
+            response *= 0.3f;
+         }
+      }
+   }
+
+   if (response > maxCollisionResponse_) response = maxCollisionResponse_;
 
    // 反対方向に加速度を与える
-   acceleration_ -= Vector2{ toOther.x, toOther.y }.Normalize() * stunPower_;
+   acceleration_ -= normal * response;
 
    stateMachine_->RequestState("Stun", 0);
 }
@@ -83,18 +155,18 @@ void Player::InitializeKeyConfig() {
    // Moveアクションの追加とバインド設定
    keyConfig_->AddAction("Move", ActionType::Vector2);
    ActionBuilder(keyConfig_->GetAction("Move"))
-	  .BindKeyboardWASD(DIK_W, DIK_S, DIK_A, DIK_D)
-	  .BindGamepadLeftStick();
+      .BindKeyboardWASD(DIK_W, DIK_S, DIK_A, DIK_D)
+      .BindGamepadLeftStick();
 
    // Chargeアクションの追加とバインド設定
    keyConfig_->AddAction("Charge", ActionType::Bool);
    ActionBuilder(keyConfig_->GetAction("Charge"))
-	  .BindKey(DIK_SPACE)
-	  .BindGamepadButton(GamepadButton::A);
+      .BindKey(DIK_SPACE)
+      .BindGamepadButton(GamepadButton::A);
 
    keyConfig_->AddAction("Damage", ActionType::Bool);
    ActionBuilder(keyConfig_->GetAction("Damage"))
-	  .BindKey(DIK_0);
+      .BindKey(DIK_0);
 }
 
 void Player::InitializeStateMachine() {
@@ -113,7 +185,7 @@ void Player::InitializeStateMachine() {
 }
 
 void Player::InitializeCollider() {
-   AttachCollider(std::make_unique<SphereCollider>(this, 0.6f));
+   AttachCollider(std::make_unique<SphereCollider>(this, 0.7f));
    collider_->SetLayer(CollisionLayer::Player);
 }
 
@@ -152,9 +224,9 @@ void Player::UpdateRotation() {
    direction_.y = std::clamp(direction_.y, -1.0f, 1.0f);
 
    if (direction_.Length() == 0.0f) {
-	  direction_ = velocity_.Normalize();
-	  direction_.x = std::clamp(direction_.x, -0.2f, 0.2f);
-	  direction_.y = std::clamp(direction_.y, -0.2f, 0.2f);
+      direction_ = velocity_.Normalize();
+      direction_.x = std::clamp(direction_.x, -0.2f, 0.2f);
+      direction_.y = std::clamp(direction_.y, -0.2f, 0.2f);
    }
 
    GameObject::TiltByVelocity(direction_);
@@ -171,7 +243,7 @@ void Player::Charge() {
 
    chargeTimer_.Update(GameUtils::GetDeltaTime());
    if (chargeTimer_.IsFinished()) {
-	  stateMachine_->RequestState("Move", 0);
+      stateMachine_->RequestState("Move", 0);
    }
 }
 
@@ -179,13 +251,15 @@ void Player::Stun() {
 
    stunTimer_.Update(GameUtils::GetDeltaTime());
    if (stunTimer_.IsFinished()) {
-	  stateMachine_->RequestState("Move", 0);
+      stateMachine_->RequestState("Move", 0);
+      GameObject::ChangeModelResource("Resources/Models/Player/Player.obj");
+      stateMachine_->RequestState("Move", 0);
    }
 }
 
 void Player::Damage() {
    if (damageFunction_) {
-	  damageFunction_();
+      damageFunction_();
    }
 
    if (GameObject::UpdateShake()) return;
@@ -205,11 +279,15 @@ void Player::InitializeCharge() {
    StartRotateAroundAxis(chargeDuration_, 3.0f);
 
    direction_ = GetMoveDirection() * chargeSpeed_;
+
+   isCharging_ = true;
 }
 
 void Player::InitializeMove() {
    dampingPerSecond_ = moveDamping_;
    maxSpeed_ = moveMaxSpeed_;
+
+   isCharging_ = false;
 }
 
 void Player::InitializeStun() {
@@ -217,11 +295,14 @@ void Player::InitializeStun() {
    maxSpeed_ = stunMaxSpeed_;
 
    stunTimer_.Start(stunDuration_, false);
+   GameObject::ChangeModelResource("Resources/Models/Player/Damage/PlayerDamage.obj");
+
+   isCharging_ = false;
 }
 
 void Player::InitializeDamage() {
    if (startDamageFunction_) {
-	  startDamageFunction_();
+      startDamageFunction_();
    }
 
    GameObject::StartShake(0.15f, 1.0f);
@@ -229,4 +310,6 @@ void Player::InitializeDamage() {
    velocity_ = { 0.0f, 0.0f };
 
    GameObject::ChangeModelResource("Resources/Models/Player/Damage/PlayerDamage.obj");
+
+   isCharging_ = false;
 }

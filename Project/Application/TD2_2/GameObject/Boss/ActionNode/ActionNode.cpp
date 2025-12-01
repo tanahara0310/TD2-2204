@@ -3,7 +3,7 @@
 #include "Application/TD2_2/Utility/StateMachine.h"
 
 BossActionNode::BossActionNode(Boss* boss, const std::string& actionName)
-   : ActionNode(nullptr), boss_(boss), currentState_(ActionState::Idle), actionName_(actionName) {
+   : boss_(boss), actionName_(actionName) {
    
    // ステートマシンの初期化
    stateMachine_ = std::make_unique<StateMachine>();
@@ -12,38 +12,26 @@ BossActionNode::BossActionNode(Boss* boss, const std::string& actionName)
 
 NodeState BossActionNode::Tick() {
    UpdateState();
-   
-   switch (currentState_) {
-      case ActionState::Idle:
-         // まだ開始していない
-         return NodeState::Running;
-         
-      case ActionState::Enter:
-         // 開始処理を実行
-         return NodeState::Running;
-         
-      case ActionState::Execute:
-         // 実行中の処理を呼び出し
-         return OnExecute();
-         
-      case ActionState::Exit:
-         // 終了処理中
-         return NodeState::Running;
-         
-      case ActionState::Completed:
-         // 完了
-         return NodeState::Success;
-         
-      default:
-         return NodeState::Failure;
+
+   if(!stateMachine_) {
+      return NodeState::Failure;
+   }
+
+   const std::string& currentState = stateMachine_->GetCurrentState();
+
+   if (currentState == "Completed") {
+      return NodeState::Success;
+   } else {
+      return NodeState::Running;
    }
 }
 
 void BossActionNode::Reset() {
-   currentState_ = ActionState::Idle;
    if (stateMachine_) {
       stateMachine_->Clear();
    }
+
+   SetupStateMachine();
 }
 
 void BossActionNode::SetupStateMachine() {
@@ -103,7 +91,7 @@ void BossActionNode::SetupStateMachine() {
          // 完了時の処理
       },
       [this]() {
-         // 何もしない（終了状態）
+         stateMachine_->RequestState("Idle", 1);
       }
    );
 
@@ -113,21 +101,5 @@ void BossActionNode::SetupStateMachine() {
 
 void BossActionNode::UpdateState() {
    if (!stateMachine_) return;
-   
    stateMachine_->Update();
-   
-   // ステートマシンの状態をActionStateに同期
-   const std::string& currentStateName = stateMachine_->GetCurrentState();
-   
-   if (currentStateName == "Idle") {
-      currentState_ = ActionState::Idle;
-   } else if (currentStateName == "Enter") {
-      currentState_ = ActionState::Enter;
-   } else if (currentStateName == "Execute") {
-      currentState_ = ActionState::Execute;
-   } else if (currentStateName == "Exit") {
-      currentState_ = ActionState::Exit;
-   } else if (currentStateName == "Completed") {
-      currentState_ = ActionState::Completed;
-   }
 }

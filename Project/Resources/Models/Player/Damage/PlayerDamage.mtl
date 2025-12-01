@@ -1,4 +1,4 @@
-# Blender 5.0.0 MTL File: 'None'
+# Blender 5.0.0 MTL File: 'HiyokoEye.blend'
 # www.blender.org
 
 newmtl palette
@@ -9,4 +9,4 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.500000
 d 1.000000
 illum 1
-map_Kd HiyokoDamage.png
+map_Kd C:/Users/yuuta/Downloads/MagicaVoxel-0.99.7.2-win64/MagicaVoxel-0.99.7.2-win64/export/HiyokoEye.png

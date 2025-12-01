@@ -13,8 +13,8 @@ public:
    /// @param chargeSpeed 突進速度
    /// @param chargeDuration 突進持続時間（秒）
    ChargeToPlayerAction(Boss* boss, Player* player, 
-                        float chargeSpeed = 50000.0f, 
-                        float chargeDuration = 0.5f);
+                        float chargeSpeed = 5000.0f, 
+                        float chargeDuration = 0.3f);
 
    ~ChargeToPlayerAction() override = default;
 
@@ -43,20 +43,10 @@ private:
    
    GameTimer chargeTimer_;       // 突進タイマー
    Vector3 chargeDirection_;     // 突進方向
-   
-   bool isPreparationComplete_;  // 準備完了フラグ
-   float preparationTime_;       // 準備時間
-   GameTimer preparationTimer_;  // 準備タイマー
 
    /// @brief プレイヤーへの方向ベクトルを計算
    Vector3 CalculateDirectionToPlayer() const;
 
-   /// @brief 突進の準備処理
-   void PrepareCharge();
-
    /// @brief 突進の実行処理
    void ExecuteCharge();
-
-   /// @brief 突進後の処理
-   void CompleteCharge();
 };

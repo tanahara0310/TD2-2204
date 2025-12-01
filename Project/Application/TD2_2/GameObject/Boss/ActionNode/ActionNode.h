@@ -10,46 +10,30 @@ class Boss;
 
 /// @brief ボスのアクションノード基底クラス
 /// ビヘイビアツリーのリーフノードとして機能し、内部でステートマシンを持つ
-class BossActionNode : public ActionNode {
+class BossActionNode : public LeafNode {
 public:
-   /// @brief アクション状態
-   enum class ActionState {
-      Idle,       // 待機（未実行）
-      Enter,      // 開始処理
-      Execute,    // 実行中
-      Exit,       // 終了処理
-      Completed   // 完了
-   };
 
    /// @brief コンストラクタ
    /// @param boss ボスへの参照
    /// @param actionName アクション名（デバッグ用）
    explicit BossActionNode(Boss* boss, const std::string& actionName = "UnnamedAction");
-   
+
    virtual ~BossActionNode() = default;
 
    /// @brief ビヘイビアツリーから呼び出されるTick
    /// @return ノードの実行結果
-   NodeState Tick() override final;
+   NodeState Tick() override;
 
    /// @brief アクションをリセット（再実行可能にする）
    virtual void Reset();
 
-   /// @brief 現在のアクション状態を取得
-   ActionState GetActionState() const { return currentState_; }
+   const std::string& GetActionStateName() const { return stateMachine_ ? stateMachine_->GetCurrentState() : "NoStateMachine"; }
 
    /// @brief アクション名を取得
    const std::string& GetActionName() const { return actionName_; }
 
-   /// @brief アクションが完了したか
-   bool IsCompleted() const { return currentState_ == ActionState::Completed; }
-
-   /// @brief アクションが実行中か
-   bool IsExecuting() const { return currentState_ == ActionState::Execute; }
-
 protected:
    Boss* boss_;                          // ボスへの参照
-   ActionState currentState_;            // 現在の状態
    std::string actionName_;              // アクション名
    std::unique_ptr<StateMachine> stateMachine_;  // 内部ステートマシン
 
@@ -73,12 +57,12 @@ private:
 
 /// @brief アクション実行結果のヘルパー関数
 namespace BossActionHelper {
-   /// @brief 成功を返す
-   inline NodeState Success() { return NodeState::Success; }
-   
-   /// @brief 失敗を返す
-   inline NodeState Failure() { return NodeState::Failure; }
-   
-   /// @brief 実行中を返す
-   inline NodeState Running() { return NodeState::Running; }
+/// @brief 成功を返す
+inline NodeState Success() { return NodeState::Success; }
+
+/// @brief 失敗を返す
+inline NodeState Failure() { return NodeState::Failure; }
+
+/// @brief 実行中を返す
+inline NodeState Running() { return NodeState::Running; }
 }
