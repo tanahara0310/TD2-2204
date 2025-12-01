@@ -14,511 +14,234 @@ using namespace MathCore;
 // 初期化関数
 void ParticleSystem::Initialize(DirectXCommon* dxCommon, ResourceFactory* resourceFactory)
 {
-    dxCommon_ = dxCommon;
-    resourceFactory_ = resourceFactory;
+	dxCommon_ = dxCommon;
+	resourceFactory_ = resourceFactory;
 
-    // 統一乱数エンジンの初期化
-    RandomGenerator::GetInstance().Initialize();
+	// 統一乱数エンジンの初期化
+	RandomGenerator::GetInstance().Initialize();
 
-    // モジュールの初期化
-    emissionModule_ = std::make_unique<EmissionModule>();
-    velocityModule_ = std::make_unique<VelocityModule>();
-    colorModule_ = std::make_unique<ColorModule>();
-    lifetimeModule_ = std::make_unique<LifetimeModule>();
-    forceModule_ = std::make_unique<ForceModule>();
-    sizeModule_ = std::make_unique<SizeModule>();
-    rotationModule_ = std::make_unique<RotationModule>();
+	// モジュールの初期化
+	mainModule_ = std::make_unique<MainModule>();
+	emissionModule_ = std::make_unique<EmissionModule>();
+	shapeModule_ = std::make_unique<ShapeModule>();
+	velocityModule_ = std::make_unique<VelocityModule>();
+	colorModule_ = std::make_unique<ColorModule>();
+	forceModule_ = std::make_unique<ForceModule>();
+	sizeModule_ = std::make_unique<SizeModule>();
+	rotationModule_ = std::make_unique<RotationModule>();
+	noiseModule_ = std::make_unique<NoiseModule>();
 
-    // エミッタートランスフォームの初期化
-    emitterTransform_ = {
-        { 1.0f, 1.0f, 1.0f }, // スケール
-        { 0.0f, 0.0f, 0.0f }, // 回転
-        { 0.0f, 0.0f, 0.0f }  // 平行移動
-    };
+	// リソースマネージャーの初期化
+	resourceManager_ = std::make_unique<ParticleResourceManager>();
+	resourceManager_->Initialize(dxCommon, resourceFactory, kNumMaxInstance);
 
-    // インスタンシング用のリソースを作成
-    ResourceCreate();
+	// インスタンシングデータのポインタを取得
+	instancingData_ = resourceManager_->GetInstancingData();
 
-    // SRVの作成
-    CreateSRV();
+	// 描画データビルダーの初期化
+	renderDataBuilder_ = std::make_unique<ParticleRenderDataBuilder>();
 
-    // デフォルトテクスチャを設定（存在するパスに変更）
-    SetTexture("Resources/SampleResources/circle.png");
+	// パーティクル更新処理の初期化
+	particleUpdater_ = std::make_unique<ParticleUpdater>();
+	particleUpdater_->Initialize(
+		forceModule_.get(),
+		colorModule_.get(),
+		sizeModule_.get(),
+		rotationModule_.get(),
+		noiseModule_.get()
+	);
+
+	// パーティクル放出処理の初期化
+	particleEmitter_ = std::make_unique<ParticleEmitter>();
+	particleEmitter_->Initialize(
+		mainModule_.get(),
+		emissionModule_.get(),
+		shapeModule_.get(),
+		velocityModule_.get(),
+		rotationModule_.get()
+	);
+
+	// エミッタートランスフォームの初期化
+	emitterTransform_ = {
+		{ 1.0f, 1.0f, 1.0f }, // スケール
+		{ 0.0f, 0.0f, 0.0f }, // 回転
+		{ 0.0f, 0.0f, 0.0f }  // 平行移動
+	};
+
+	// デフォルトテクスチャを設定（存在するパスに変更）
+	SetTexture("Resources/SampleResources/circle.png");
 }
 
 // 更新処理関数（他のオブジェクトと統一）
 void ParticleSystem::Update()
 {
-    const float kDeltaTime = 1.0f / 60.0f;
+	const float kDeltaTime = 1.0f / 60.0f;
 
-    // 統計情報の更新
-    statistics_.systemRuntime += kDeltaTime;
-    deltaTimeAccumulator_ += kDeltaTime;
+	// 統計情報の更新
+	statistics_.systemRuntime += kDeltaTime;
+	deltaTimeAccumulator_ += kDeltaTime;
 
-    // エミッションモジュールの更新
-    emissionModule_->UpdateTime(kDeltaTime);
-    uint32_t emissionCount = emissionModule_->CalculateEmissionCount(kDeltaTime);
-    
-    if (emissionCount > 0) {
-        EmitParticles(emissionCount);
-        statistics_.totalParticlesCreated += emissionCount;
-    }
+	// MainModuleの時間更新
+	mainModule_->UpdateTime(kDeltaTime);
 
-    // パーティクルの更新前の数を記録
-    uint32_t particleCountBefore = GetParticleCount();
+	// MainModuleの時間とループ設定を取得
+	float elapsedTime = mainModule_->GetElapsedTime();
+	float duration = mainModule_->GetMainData().duration;
+	bool looping = mainModule_->GetMainData().looping;
 
-    // パーティクルの更新（カメラ行列は描画時に使用するためここでは基本的な更新のみ）
-    for (auto particleIterator = particles_.begin(); particleIterator != particles_.end();) {
-        // ライフタイムチェック
-        if (!lifetimeModule_->UpdateLifetime(*particleIterator, kDeltaTime)) {
-            particleIterator = particles_.erase(particleIterator);
-            continue;
-        }
+	// EmissionModuleの時間更新（バースト用）
+	emissionModule_->UpdateTime(kDeltaTime);
 
-        // 力の適用
-        forceModule_->ApplyForces(*particleIterator, kDeltaTime);
+	// MainModuleがループでリセットされた場合、EmissionModuleもリセット
+	if (looping && elapsedTime < lastElapsedTime_) {
+		// ループがリセットされた
+		emissionModule_->Play();  // EmissionModuleを再開
+	}
+	lastElapsedTime_ = elapsedTime;
 
-        // 速度の更新
-        velocityModule_->UpdateVelocity(*particleIterator, kDeltaTime);
+	// ループしない場合、duration超過でEmissionを停止
+	bool shouldEmit = emissionModule_->IsPlaying();
+	if (!looping && elapsedTime >= duration) {
+		// バーストがまだ発生していない場合は、バーストを発生させてから停止
+		const auto& emissionData = emissionModule_->GetEmissionData();
+		if (emissionData.burstCount > 0 && emissionData.burstTime >= duration) {
+			// バーストタイミングがduration以降の場合、duration到達時に強制発生
+			uint32_t burstCount = emissionModule_->CalculateEmissionCount(kDeltaTime);
+			if (burstCount > 0) {
+				uint32_t emittedCount = particleEmitter_->EmitParticles(
+					burstCount,
+					emitterTransform_,
+					GetMaxParticleCount(),
+					particles_
+				);
+				statistics_.totalParticlesCreated += emittedCount;
+			}
+		}
+		shouldEmit = false;
+		emissionModule_->Stop();  // Emissionを明示的に停止
+	} else if (looping && !shouldEmit) {
+		// ループ中でEmissionが停止している場合は再開
+		emissionModule_->Play();
+	}
 
-        // 位置の更新
-        particleIterator->transform.translate.x += particleIterator->velocity.x * kDeltaTime;
-        particleIterator->transform.translate.y += particleIterator->velocity.y * kDeltaTime;
-        particleIterator->transform.translate.z += particleIterator->velocity.z * kDeltaTime;
+	// 放出処理
+	uint32_t emissionCount = 0;
+	if (shouldEmit) {
+		emissionCount = emissionModule_->CalculateEmissionCount(kDeltaTime);
+		if (emissionCount > 0) {
+			uint32_t emittedCount = particleEmitter_->EmitParticles(
+				emissionCount,
+				emitterTransform_,
+				GetMaxParticleCount(),
+				particles_
+			);
+			statistics_.totalParticlesCreated += emittedCount;
+		}
+	}
 
-        // 色の更新
-        colorModule_->UpdateColor(*particleIterator);
+	// MainModuleからgravityModifierを取得
+	float gravityModifier = mainModule_->GetMainData().gravityModifier;
 
-        // サイズの更新
-        sizeModule_->UpdateSize(*particleIterator);
+	// パーティクルの更新（ParticleUpdaterに委譲）
+	uint32_t destroyedCountFromUpdate = particleUpdater_->UpdateParticles(particles_, kDeltaTime, gravityModifier);
 
-        // 回転の更新
-        rotationModule_->UpdateRotation(*particleIterator, kDeltaTime);
+	// パーティクルの更新後の統計情報を更新
+	uint32_t currentParticleCount = GetParticleCount();
+	if (currentParticleCount > statistics_.peakParticleCount) {
+		statistics_.peakParticleCount = currentParticleCount;
+	}
 
-        ++particleIterator;
-    }
+	// 破棄されたパーティクル数を統計に反映
+	statistics_.totalParticlesDestroyed += destroyedCountFromUpdate;
 
-    // パーティクルの更新後の統計情報を更新
-    uint32_t currentParticleCount = GetParticleCount();
-    if (currentParticleCount > statistics_.peakParticleCount) {
-        statistics_.peakParticleCount = currentParticleCount;
-    }
-
-    // 破棄されたパーティクル数を計算
-    if (particleCountBefore + emissionCount > currentParticleCount) {
-        uint32_t destroyedCount = (particleCountBefore + emissionCount) - currentParticleCount;
-        statistics_.totalParticlesDestroyed += destroyedCount;
-    }
-
-    // 平均ライフタイムの計算（1秒ごとに更新）
-    if (deltaTimeAccumulator_ >= 1.0f) {
-        if (statistics_.totalParticlesDestroyed > 0) {
-            auto lifetimeData = lifetimeModule_->GetLifetimeData();
-            statistics_.averageLifetime = lifetimeData.startLifetime;
-        }
-        deltaTimeAccumulator_ = 0.0f;
-    }
+	// 平均ライフタイムの計算（1秒ごとに更新）
+	if (deltaTimeAccumulator_ >= 1.0f) {
+		if (statistics_.totalParticlesDestroyed > 0) {
+			// MainModuleから平均寿命を取得
+			statistics_.averageLifetime = mainModule_->GetMainData().startLifetime;
+		}
+		deltaTimeAccumulator_ = 0.0f;
+	}
 }
 
 // 描画関数（Object3dと同じインターフェース）
 void ParticleSystem::Draw(const ICamera* camera)
 {
-    if (!camera) return;
+	if (!camera) return;
 
-    // カメラから行列を取得してGPUデータを更新
-    Matrix4x4 viewMatrix = camera->GetViewMatrix();
-    Matrix4x4 projectionMatrix = camera->GetProjectionMatrix();
-    Matrix4x4 viewProjectionMatrix = Matrix::Multiply(viewMatrix, projectionMatrix);
-
-    // ビルボード行列を作成（モデルパーティクルの場合はBillboardType::Noneで単位行列）
-    Matrix4x4 billboardMatrix = CreateBillboardMatrix(viewMatrix);
-
-    // GPU用データの更新
-    instanceCount_ = 0;
-    for (auto& particle : particles_) {
-        if (instanceCount_ >= kNumMaxInstance) break;
-
-        Matrix4x4 worldMatrix = Matrix::MakeAffine(
-            particle.transform.scale,
-            particle.transform.rotate,
-            particle.transform.translate);
-
-        // ビルボード変換を適用（モデルパーティクルの場合は単位行列なので影響なし）
-        worldMatrix = Matrix::Multiply(worldMatrix, billboardMatrix);
-
-        // ワールド行列とビュー投影行列を掛け合わせてWVPを計算
-        Matrix4x4 worldViewProjection = Matrix::Multiply(worldMatrix, viewProjectionMatrix);
-
-        instancingData_[instanceCount_].WVP = worldViewProjection;
-        instancingData_[instanceCount_].World = worldMatrix;
-        instancingData_[instanceCount_].color = particle.color;
-
-        ++instanceCount_;
-    }
+	// 描画データを準備（ビルボード計算などを担当）
+	instanceCount_ = renderDataBuilder_->BuildRenderData(
+		particles_,
+		camera,
+		billboardType_,
+		renderMode_,
+		instancingData_,
+		kNumMaxInstance
+	);
 }
 
 void ParticleSystem::Play()
 {
-    emissionModule_->Play();
+	mainModule_->Play();
+	emissionModule_->Play();
 }
 
 void ParticleSystem::Stop()
 {
-    emissionModule_->Stop();
+	mainModule_->Stop();
+	emissionModule_->Stop();
 }
 
 bool ParticleSystem::IsPlaying() const
 {
-    return emissionModule_->IsPlaying();
+	return mainModule_->IsPlaying() && emissionModule_->IsPlaying();
 }
 
 void ParticleSystem::Clear()
 {
-    particles_.clear();
-    instanceCount_ = 0;
+	particles_.clear();
+	instanceCount_ = 0;
+}
+
+bool ParticleSystem::IsFinished() const
+{
+	// 再生が停止していて、かつパーティクルが0個の場合は終了
+	return !emissionModule_->IsPlaying() && particles_.empty();
+}
+
+bool ParticleSystem::CanBeDeleted() const
+{
+	// ワンショット（ループなし）の場合、終了したら削除可能
+	const auto& mainData = mainModule_->GetMainData();
+	if (!mainData.looping) {
+		return IsFinished();
+	}
+	// ループする場合は手動で削除する必要がある
+	return false;
 }
 
 void ParticleSystem::SetTexture(const std::string& texturePath)
 {
-    texture_ = TextureManager::GetInstance().Load(texturePath);
+	texture_ = TextureManager::GetInstance().Load(texturePath);
 }
 
 void ParticleSystem::SetModelResource(ModelResource* modelResource)
 {
-    modelResource_ = modelResource;
-    if (modelResource_) {
-        renderMode_ = ParticleRenderMode::Model;
-        // モデルパーティクルではビルボードを無効化
-        billboardType_ = BillboardType::None;
-    } else {
-        renderMode_ = ParticleRenderMode::Billboard;
-    }
+	modelResource_ = modelResource;
+	if (modelResource_) {
+		renderMode_ = ParticleRenderMode::Model;
+		// モデルパーティクルではビルボードを無効化
+		billboardType_ = BillboardType::None;
+	} else {
+		renderMode_ = ParticleRenderMode::Billboard;
+	}
 }
 
 bool ParticleSystem::DrawImGui()
 {
-    ShowImGui();
-    return true;
-}
-
-void ParticleSystem::EmitParticles(uint32_t count)
-{
-    for (uint32_t i = 0; i < count && particles_.size() < kNumMaxInstance; ++i) {
-        Particle newParticle = CreateNewParticle();
-        particles_.push_back(newParticle);
-    }
-}
-
-Particle ParticleSystem::CreateNewParticle()
-{
-    Particle particle;
-
-    particle.transform.scale = { 1.0f, 1.0f, 1.0f };
-    particle.transform.rotate = { 0.0f, 0.0f, 0.0f };
-
-    // エミッションモジュールから位置を生成
-    particle.transform.translate = emissionModule_->GenerateEmissionPosition(emitterTransform_.translate);
-
-    // その他のモジュールを適用
-    velocityModule_->ApplyInitialVelocity(particle);
-    colorModule_->ApplyInitialColor(particle);
-    lifetimeModule_->ApplyInitialLifetime(particle);
-    sizeModule_->ApplyInitialSize(particle);
-    rotationModule_->ApplyInitialRotation(particle);
-
-    return particle;
-}
-
-void ParticleSystem::UpdateParticles(float deltaTime, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& billboardMatrix)
-{
-    instanceCount_ = 0;
-
-    for (auto particleIterator = particles_.begin(); particleIterator != particles_.end();) {
-        // ライフタイムチェック
-        if (!lifetimeModule_->UpdateLifetime(*particleIterator, deltaTime)) {
-            particleIterator = particles_.erase(particleIterator);
-            continue;
-        }
-
-        // 力の適用
-        forceModule_->ApplyForces(*particleIterator, deltaTime);
-
-        // 速度の更新
-        velocityModule_->UpdateVelocity(*particleIterator, deltaTime);
-
-        // 位置の更新
-        particleIterator->transform.translate.x += particleIterator->velocity.x * deltaTime;
-        particleIterator->transform.translate.y += particleIterator->velocity.y * deltaTime;
-        particleIterator->transform.translate.z += particleIterator->velocity.z * deltaTime;
-
-        // 色の更新
-        colorModule_->UpdateColor(*particleIterator);
-
-        // サイズの更新
-        sizeModule_->UpdateSize(*particleIterator);
-
-        // 回転の更新
-        rotationModule_->UpdateRotation(*particleIterator, deltaTime);
-
-        // GPU用データの設定
-        if (instanceCount_ < kNumMaxInstance) {
-            Matrix4x4 worldMatrix = Matrix::MakeAffine(
-                particleIterator->transform.scale,
-                particleIterator->transform.rotate,
-                particleIterator->transform.translate);
-
-            // ビルボードに変換を適用
-            worldMatrix = Matrix::Multiply(worldMatrix, billboardMatrix);
-
-            // ワールド行列とビュー投影行列を掛け合わせてWVPを計算
-            Matrix4x4 worldViewProjection = Matrix::Multiply(worldMatrix, viewProjectionMatrix);
-
-            instancingData_[instanceCount_].WVP = worldViewProjection;
-            instancingData_[instanceCount_].World = worldMatrix;
-            instancingData_[instanceCount_].color = particleIterator->color;
-
-            ++instanceCount_;
-        }
-
-        ++particleIterator;
-    }
-}
-
-Matrix4x4 ParticleSystem::CreateBillboardMatrix(const Matrix4x4& viewMatrix)
-{
-    switch (billboardType_) {
-        case BillboardType::ViewFacing:
-        {
-            Matrix4x4 billboardMatrix = Matrix::Inverse(viewMatrix);
-            billboardMatrix.m[3][0] = 0.0f;
-            billboardMatrix.m[3][1] = 0.0f;
-            billboardMatrix.m[3][2] = 0.0f;
-            return billboardMatrix;
-        }
-        
-        case BillboardType::YAxisOnly:
-        {
-            Matrix4x4 billboardMatrix = Matrix::Identity();
-            Matrix4x4 invView = Matrix::Inverse(viewMatrix);
-            Vector3 cameraPos = { invView.m[3][0], invView.m[3][1], invView.m[3][2] };
-            Vector3 horizontalDirection = { cameraPos.x, 0.0f, cameraPos.z };
-            float horizontalLength = sqrt(horizontalDirection.x * horizontalDirection.x + 
-                                         horizontalDirection.z * horizontalDirection.z);
-            
-            Vector3 forward, right;
-            if (horizontalLength < 0.0001f) {
-                forward = { 0.0f, 0.0f, 1.0f };
-                right = { 1.0f, 0.0f, 0.0f };
-            } else {
-                forward = { 
-                    horizontalDirection.x / horizontalLength, 
-                    0.0f, 
-                    horizontalDirection.z / horizontalLength 
-                };
-                right = { -forward.z, 0.0f, forward.x };
-            }
-            
-            Vector3 up = { 0.0f, 1.0f, 0.0f };
-            billboardMatrix.m[0][0] = right.x;
-            billboardMatrix.m[0][1] = right.y;
-            billboardMatrix.m[0][2] = right.z;
-            billboardMatrix.m[1][0] = up.x;
-            billboardMatrix.m[1][1] = up.y;
-            billboardMatrix.m[1][2] = up.z;
-            billboardMatrix.m[2][0] = forward.x;
-            billboardMatrix.m[2][1] = forward.y;
-            billboardMatrix.m[2][2] = forward.z;
-            
-            return billboardMatrix;
-        }
-        
-        case BillboardType::ScreenAligned:
-        {
-            Matrix4x4 billboardMatrix = Matrix::Identity();
-            Matrix4x4 invView = Matrix::Inverse(viewMatrix);
-            Vector3 right = { invView.m[0][0], invView.m[0][1], invView.m[0][2] };
-            Vector3 up = { invView.m[1][0], invView.m[1][1], invView.m[1][2] };
-            Vector3 forward = { invView.m[2][0], invView.m[2][1], invView.m[2][2] };
-            
-            billboardMatrix.m[0][0] = right.x;
-            billboardMatrix.m[0][1] = right.y;
-            billboardMatrix.m[0][2] = right.z;
-            billboardMatrix.m[1][0] = up.x;
-            billboardMatrix.m[1][1] = up.y;
-            billboardMatrix.m[1][2] = up.z;
-            billboardMatrix.m[2][0] = forward.x;
-            billboardMatrix.m[2][1] = forward.y;
-            billboardMatrix.m[2][2] = forward.z;
-            
-            return billboardMatrix;
-        }
-        
-        case BillboardType::None:
-        default:
-            return Matrix::Identity();
-    }
-}
-
-void ParticleSystem::ShowImGui()
-{
 #ifdef _DEBUG
-    // ユニークIDを生成（thisポインタを使用）
-    ImGui::PushID(this);
-    
-    if (!ImGui::CollapsingHeader("Particle System")) {
-        ImGui::PopID();
-        return;
-    }
-
-    ImGui::Indent();
-    
-    ImGui::Text("=== パーティクルシステム ===");
-    
-    uint32_t currentCount = GetParticleCount();
-    float usageRatio = static_cast<float>(currentCount) / static_cast<float>(kNumMaxInstance);
-    
-    ImGui::Text("状態: %s | パーティクル数: %u/%u (%.0f%%)", 
-        IsPlaying() ? "動作中" : "停止中", 
-        currentCount, 
-        kNumMaxInstance, 
-        usageRatio * 100.0f);
-    
-    if (usageRatio > 0.8f) {
-        ImGui::SameLine();
-        if (usageRatio > 0.95f) {
-            ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "[危険]");
-        } else {
-            ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.0f, 1.0f), "[警告]");
-        }
-    }
-    
-    if (ImGui::Button("再生")) { Play(); }
-    ImGui::SameLine();
-    if (ImGui::Button("停止")) { Stop(); }
-    ImGui::SameLine();
-    if (ImGui::Button("クリア")) { Clear(); }
-    
-    ImGui::Separator();
-
-    presetManager_->ShowImGui(this);
-
-    if (ImGui::CollapsingHeader("エミッター設定")) {
-        ImGui::DragFloat3("位置", &emitterTransform_.translate.x, 0.01f);
-        
-        // 描画モード選択
-        ImGui::Separator();
-        ImGui::Text("描画モード:");
-        int currentRenderMode = static_cast<int>(renderMode_);
-        const char* renderModeNames[] = { "ビルボード", "3Dモデル" };
-        if (ImGui::Combo("モード", &currentRenderMode, renderModeNames, IM_ARRAYSIZE(renderModeNames))) {
-            renderMode_ = static_cast<ParticleRenderMode>(currentRenderMode);
-            // モデルモードに切り替えた場合はビルボードを無効化
-            if (renderMode_ == ParticleRenderMode::Model) {
-                billboardType_ = BillboardType::None;
-            }
-        }
-        
-        // モデルパーティクルの情報表示
-        if (renderMode_ == ParticleRenderMode::Model) {
-            if (modelResource_) {
-                ImGui::Text("モデル: %s", modelResource_->GetFilePath().c_str());
-                ImGui::Text("頂点数: %u", modelResource_->GetVertexCount());
-            } else {
-                ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.0f, 1.0f), "警告: モデルが設定されていません");
-            }
-        }
-        
-        ImGui::Separator();
-        
-        // ビルボードモードの場合のみビルボードタイプを表示
-        if (renderMode_ == ParticleRenderMode::Billboard) {
-            static const char* billboardTypeNames[] = {
-                "なし", "カメラ向き", "Y軸固定", "スクリーン平行"
-            };
-            int currentBillboardType = static_cast<int>(billboardType_);
-            if (ImGui::Combo("ビルボードタイプ", &currentBillboardType, billboardTypeNames, IM_ARRAYSIZE(billboardTypeNames))) {
-                billboardType_ = static_cast<BillboardType>(currentBillboardType);
-            }
-        }
-        
-        static const char* blendModeNames[] = {
-            "なし", "通常", "加算", "減算", "乗算", "スクリーン"
-        };
-        int currentBlendMode = static_cast<int>(blendMode_);
-        if (ImGui::Combo("ブレンドモード", &currentBlendMode, blendModeNames, IM_ARRAYSIZE(blendModeNames))) {
-            blendMode_ = static_cast<BlendMode>(currentBlendMode);
-        }
-    }
-
-    if (ImGui::CollapsingHeader("放出モジュール")) {
-        emissionModule_->ShowImGui();
-    }
-
-    if (ImGui::CollapsingHeader("速度モジュール")) {
-        velocityModule_->ShowImGui();
-    }
-
-    if (ImGui::CollapsingHeader("色モジュール")) {
-        colorModule_->ShowImGui();
-    }
-
-    if (ImGui::CollapsingHeader("寿命モジュール")) {
-        lifetimeModule_->ShowImGui();
-    }
-
-    if (ImGui::CollapsingHeader("力場モジュール")) {
-        forceModule_->ShowImGui();
-    }
-
-    if (ImGui::CollapsingHeader("サイズモジュール")) {
-        sizeModule_->ShowImGui();
-    }
-
-    if (ImGui::CollapsingHeader("回転モジュール")) {
-        rotationModule_->ShowImGui();
-    }
-
-    if (ImGui::CollapsingHeader("統計情報")) {
-        ImGui::Text("作成されたパーティクル数: %u", statistics_.totalParticlesCreated);
-        ImGui::Text("破棄されたパーティクル数: %u", statistics_.totalParticlesDestroyed);
-        ImGui::Text("最大同時パーティクル数: %u", statistics_.peakParticleCount);
-        ImGui::Text("平均ライフタイム: %.2f秒", statistics_.averageLifetime);
-        ImGui::Text("システム稼働時間: %.2f秒", statistics_.systemRuntime);
-        
-        if (ImGui::Button("統計リセット")) {
-            ResetStatistics();
-        }
-    }
-
-    ImGui::Unindent();
-    ImGui::PopID();
+	return ParticleSystemDebugUI::ShowImGui(this);
+#else
+	return false;
 #endif
-}
-
-void ParticleSystem::ResourceCreate()
-{
-    // インスタンシング用のリソースを作成
-    instancingResource_ = resourceFactory_->CreateBufferResource(
-        dxCommon_->GetDevice(), sizeof(ParticleForGPU) * kNumMaxInstance);
-    instancingResource_->Map(0, nullptr, reinterpret_cast<void**>(&instancingData_));
-}
-
-void ParticleSystem::CreateSRV()
-{
-    // インスタンシング用のSRVを設定
-    D3D12_SHADER_RESOURCE_VIEW_DESC instancingSrvDesc{};
-    instancingSrvDesc.Format = DXGI_FORMAT_UNKNOWN;
-    instancingSrvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-    instancingSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
-    instancingSrvDesc.Buffer.FirstElement = 0;
-    instancingSrvDesc.Buffer.NumElements = kNumMaxInstance;
-    instancingSrvDesc.Buffer.StructureByteStride = sizeof(ParticleForGPU);
-
-    dxCommon_->GetDescriptorManager()->CreateSRV(
-        instancingResource_.Get(),
-        instancingSrvDesc,
-        instancingSrvHandleCPU_,
-        instancingSrvHandleGPU_,
-        "ParticleInstancingSRV"
-    );
 }

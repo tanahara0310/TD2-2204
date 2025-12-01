@@ -86,7 +86,25 @@ public:
    /// @param blendMode 設定するブレンドモード
    void SetBlendMode(BlendMode blendMode) override { blendMode_ = blendMode; }
 
+   /// @brief 削除可能かどうか（GPU使用完了を考慮）
+   /// @return 削除可能ならtrue（デフォルトは非アクティブなら削除可能）
+   virtual bool CanBeDeleted() const { return !IsActive(); }
 
+   /// @brief 子オブジェクトを追加
+   /// @param child 追加する子オブジェクト
+   void AddChild(std::unique_ptr<IDrawable> child) {
+      if (child) {
+         children_.push_back(std::move(child));
+      }
+   }
+
+   /// @brief 子オブジェクトのリストを取得
+   /// @return 子オブジェクトのリスト
+   const std::vector<std::unique_ptr<IDrawable>>& GetChildren() const { return children_; }
+
+   /// @brief 子オブジェクトのリストを取得（非const版）
+   /// @return 子オブジェクトのリスト
+   std::vector<std::unique_ptr<IDrawable>>& GetChildren() { return children_; }
 
 protected:
    /// @brief モデルインスタンス
@@ -101,4 +119,6 @@ protected:
    /// @brief ブレンドモード
    BlendMode blendMode_ = BlendMode::kBlendModeNone;
 
+   /// @brief 子オブジェクトのリスト
+   std::vector<std::unique_ptr<IDrawable>> children_;
 };

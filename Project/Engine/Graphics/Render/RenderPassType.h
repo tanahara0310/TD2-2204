@@ -9,4 +9,5 @@ enum class RenderPassType {
     Particle,            // パーティクル（ビルボード）
     ModelParticle,       // モデルパーティクル（3D）
     Sprite,              // スプライト（最前面）
+    Line,                // ライン描画（デバッグ用）
 };

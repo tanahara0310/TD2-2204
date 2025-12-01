@@ -6,16 +6,22 @@
 struct Particle;
 
 /// @brief パーティクルの速度モジュール
+/// 注意: 初期速度の大きさはMainModuleで設定します
+/// このモジュールは速度の方向のみを決定します
 class VelocityModule : public ParticleModule {
 public:
     struct VelocityData {
-        Vector3 startSpeed = { 0.0f, 1.0f, 0.0f };  // 初期速度
-        float startSpeedMultiplier = 1.0f;           // 速度の倍率
-        Vector3 randomSpeedRange = { 1.0f, 1.0f, 1.0f }; // ランダム速度の範囲
-        bool useRandomDirection = true;              // ランダム方向を使用するか
+        // 速度の方向（自動的に正規化されます）
+        Vector3 startSpeed = { 0.0f, 1.0f, 0.0f };
+        
+        // 方向のランダム範囲（正規化後に適用）
+        Vector3 randomSpeedRange = { 1.0f, 1.0f, 1.0f };
+        
+        // 完全ランダム方向を使用するか
+        bool useRandomDirection = true;
     };
 
-    VelocityModule() = default;
+    VelocityModule();
     ~VelocityModule() = default;
 
     /// @brief 速度データを設定
@@ -29,11 +35,6 @@ public:
     /// @brief パーティクルに初期速度を適用
     /// @param particle 対象のパーティクル
     void ApplyInitialVelocity(Particle& particle);
-
-    /// @brief パーティクルの速度を更新
-    /// @param particle 対象のパーティクル
-    /// @param deltaTime フレーム時間
-    void UpdateVelocity(Particle& particle, float deltaTime);
 
 #ifdef _DEBUG
     /// @brief ImGuiデバッグ表示

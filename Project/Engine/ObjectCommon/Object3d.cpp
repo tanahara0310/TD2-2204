@@ -2,18 +2,46 @@
 #include "Camera/ICamera.h"
 #include "Graphics/LineRenderer.h"
 #include "Graphics/Material/MaterialManager.h"
+#include <algorithm>
 
 #ifdef _DEBUG
 #include <imgui.h>
 #endif
 
 void Object3d::Update() {
-	// デフォルト実装は空（派生クラスでオーバーライドすることを想定）
+	// デフォルト実装：空（派生クラスでオーバーライドすることを想定）
+	
+	// 子オブジェクトを更新
+	for (auto& child : children_) {
+		if (child) {
+			child->Update();
+		}
+	}
+	
+	// 削除可能な子オブジェクトを削除
+	children_.erase(
+		std::remove_if(children_.begin(), children_.end(),
+			[](const std::unique_ptr<IDrawable>& child) {
+				if (!child) return true;
+				
+				// IDrawable::CanBeDeleted()をチェック
+				// Object3d、ParticleSystem、その他すべてのIDrawableに対応
+				return child->CanBeDeleted();
+			}),
+		children_.end()
+	);
 }
 
 void Object3d::Draw(const ICamera* camera) {
 	// デフォルト実装は空（派生クラスでオーバーライドすることを想定）
 	(void)camera;
+	
+	// 子オブジェクトを描画
+	for (const auto& child : children_) {
+		if (child && child->IsActive()) {
+			child->Draw(camera);
+		}
+	}
 }
 
 void Object3d::ChangeModelResource(ModelResource* resource) {

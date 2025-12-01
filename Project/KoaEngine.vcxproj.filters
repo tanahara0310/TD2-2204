@@ -273,6 +273,15 @@
     <ClCompile Include="Application\TD2_2\GameObject\Boss\ActionNode\FleeFromPlayerAction.cpp" />
     <ClCompile Include="Application\TD2_2\GameObject\Boss\ActionNode\MoveToPlayerAction.cpp" />
     <ClCompile Include="Application\TD2_2\GameObject\Boss\ActionNode\ShootEightWayAction.cpp" />
+    <ClCompile Include="Engine\Particle\Core\ParticleEmitter.cpp" />
+    <ClCompile Include="Engine\Particle\Core\ParticleRenderDataBuilder.cpp" />
+    <ClCompile Include="Engine\Particle\Core\ParticleResourceManager.cpp" />
+    <ClCompile Include="Engine\Particle\Core\ParticleUpdater.cpp" />
+    <ClCompile Include="Engine\Particle\Debug\ParticleSystemDebugUI.cpp" />
+    <ClCompile Include="Engine\Particle\Modules\MainModule.cpp" />
+    <ClCompile Include="Engine\Particle\Modules\NoiseModule.cpp" />
+    <ClCompile Include="Engine\Particle\Modules\ShapeModule.cpp" />
+    <ClCompile Include="Engine\Graphics\Render\Line\LineRendererPipeline.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Engine\WinApp\WinApp.h">
@@ -707,6 +716,15 @@
     <ClInclude Include="Application\TD2_2\GameObject\Boss\ActionNode\FleeFromPlayerAction.h" />
     <ClInclude Include="Application\TD2_2\GameObject\Boss\ActionNode\MoveToPlayerAction.h" />
     <ClInclude Include="Application\TD2_2\GameObject\Boss\ActionNode\ShootEightWayAction.h" />
+    <ClInclude Include="Engine\Particle\Core\ParticleEmitter.h" />
+    <ClInclude Include="Engine\Particle\Core\ParticleRenderDataBuilder.h" />
+    <ClInclude Include="Engine\Particle\Core\ParticleResourceManager.h" />
+    <ClInclude Include="Engine\Particle\Core\ParticleUpdater.h" />
+    <ClInclude Include="Engine\Particle\Debug\ParticleSystemDebugUI.h" />
+    <ClInclude Include="Engine\Particle\Modules\MainModule.h" />
+    <ClInclude Include="Engine\Particle\Modules\NoiseModule.h" />
+    <ClInclude Include="Engine\Particle\Modules\ShapeModule.h" />
+    <ClInclude Include="Engine\Graphics\Render\Line\LineRendererPipeline.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Engine\Particle\README.md">

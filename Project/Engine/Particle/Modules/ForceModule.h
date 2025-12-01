@@ -20,7 +20,7 @@ public:
         bool useAccelerationField = false;
     };
 
-    ForceModule() = default;
+    ForceModule();
     ~ForceModule() = default;
 
     /// @brief 力データを設定
@@ -31,10 +31,11 @@ public:
     /// @return 力データの参照
     const ForceData& GetForceData() const { return forceData_; }
 
-    /// @brief パーティクルに力を適用
+    /// @brief パーティクルに力を適用（gravityModifier対応）
     /// @param particle 対象のパーティクル
     /// @param deltaTime フレーム時間
-    void ApplyForces(Particle& particle, float deltaTime);
+    /// @param gravityModifier 重力倍率（MainModuleから取得）
+    void ApplyForces(Particle& particle, float deltaTime, float gravityModifier);
 
 #ifdef _DEBUG
     /// @brief ImGuiデバッグ表示

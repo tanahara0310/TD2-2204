@@ -45,6 +45,10 @@ public:
 	/// @param blendMode 設定するブレンドモード
 	virtual void SetBlendMode(BlendMode blendMode) { (void)blendMode; }
 
+	/// @brief 削除可能かどうかを取得（自動削除用）
+	/// @return 削除可能な場合true（デフォルトはfalse）
+	virtual bool CanBeDeleted() const { return false; }
+
 	/// @brief エンジンシステムを取得
 	/// @return 
 	EngineSystem* GetEngineSystem() const;

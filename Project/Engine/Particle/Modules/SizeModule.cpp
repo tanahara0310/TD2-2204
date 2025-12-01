@@ -2,43 +2,15 @@
 #include "../ParticleSystem.h"
 #include <algorithm>
 
-void SizeModule::ApplyInitialSize(Particle& particle)
-{
-    if (!enabled_) {
-        return;
-    }
-
-    if (sizeData_.use3DSize) {
-        // 3Dサイズを使用
-        Vector3 initialSize = sizeData_.startSize3D;
-        
-        // ランダム性を適用
-        if (sizeData_.sizeRandomness > 0.0f) {
-            initialSize.x = ApplyRandomness(initialSize.x, sizeData_.sizeRandomness);
-            if (sizeData_.uniformScaling) {
-                // 均等スケーリングの場合、X軸のランダム性を他の軸にも適用
-                float randomFactor = initialSize.x / sizeData_.startSize3D.x;
-                initialSize.y = sizeData_.startSize3D.y * randomFactor;
-                initialSize.z = sizeData_.startSize3D.z * randomFactor;
-            } else {
-                // 非均等スケーリングの場合、各軸に個別にランダム性を適用
-                initialSize.y = ApplyRandomness(initialSize.y, sizeData_.sizeRandomness);
-                initialSize.z = ApplyRandomness(initialSize.z, sizeData_.sizeRandomness);
-            }
-        }
-        
-        // サイズ制限を適用
-        initialSize.x = std::clamp(initialSize.x, sizeData_.minSize, sizeData_.maxSize);
-        initialSize.y = std::clamp(initialSize.y, sizeData_.minSize, sizeData_.maxSize);
-        initialSize.z = std::clamp(initialSize.z, sizeData_.minSize, sizeData_.maxSize);
-        
-        particle.transform.scale = initialSize;
-    } else {
-        // 1Dサイズを使用（均等スケーリング）
-        float initialSize = ApplyRandomness(sizeData_.startSize, sizeData_.sizeRandomness);
-        initialSize = std::clamp(initialSize, sizeData_.minSize, sizeData_.maxSize);
-        particle.transform.scale = {initialSize, initialSize, initialSize};
-    }
+// コンストラクタでデフォルトパラメータを設定
+SizeModule::SizeModule() {
+    sizeData_.endSize = 0.0f;
+    sizeData_.sizeOverLifetime = true;
+    sizeData_.use3DSize = false;
+    sizeData_.endSize3D = { 0.0f, 0.0f, 0.0f };
+    sizeData_.uniformScaling = true;
+    sizeData_.minSize = 0.0f;
+    sizeData_.maxSize = 100.0f;
 }
 
 void SizeModule::UpdateSize(Particle& particle)
@@ -48,25 +20,29 @@ void SizeModule::UpdateSize(Particle& particle)
     }
 
     // ライフタイム係数を取得
-    float lifetimeRatio = GetLifetimeRatio(particle);
+  float lifetimeRatio = GetLifetimeRatio(particle);
     
     // カーブを適用
     float curveValue = ApplyCurve(lifetimeRatio, sizeData_.sizeCurve);
 
     if (sizeData_.use3DSize) {
         // 3Dサイズでの補間
-        Vector3 currentSize = LerpVector3(sizeData_.startSize3D, sizeData_.endSize3D, curveValue);
+        // MainModuleで設定された初期サイズを使用
+        Vector3 startSize = particle.initialScale;
+        Vector3 currentSize = LerpVector3(startSize, sizeData_.endSize3D, curveValue);
         
-        // サイズ制限を適用
+      // サイズ制限を適用
         currentSize.x = std::clamp(currentSize.x, sizeData_.minSize, sizeData_.maxSize);
         currentSize.y = std::clamp(currentSize.y, sizeData_.minSize, sizeData_.maxSize);
-        currentSize.z = std::clamp(currentSize.z, sizeData_.minSize, sizeData_.maxSize);
+      currentSize.z = std::clamp(currentSize.z, sizeData_.minSize, sizeData_.maxSize);
         
         particle.transform.scale = currentSize;
     } else {
         // 1Dサイズでの補間（線形補間）
-        float currentSize = sizeData_.startSize + (sizeData_.endSize - sizeData_.startSize) * curveValue;
-        currentSize = std::clamp(currentSize, sizeData_.minSize, sizeData_.maxSize);
+        // MainModuleで設定された初期サイズを使用（均等スケーリング想定）
+        float startSize = particle.initialScale.x;
+   float currentSize = startSize + (sizeData_.endSize - startSize) * curveValue;
+      currentSize = std::clamp(currentSize, sizeData_.minSize, sizeData_.maxSize);
         particle.transform.scale = {currentSize, currentSize, currentSize};
     }
 }
@@ -84,22 +60,22 @@ bool SizeModule::ShowImGui() {
         ImGui::BeginDisabled();
     }
 
+    ImGui::TextDisabled("注意: 初期サイズはMainModuleで設定してください");
+    ImGui::Separator();
+
     // 3Dサイズ設定
     changed |= ImGui::Checkbox("3Dサイズ使用", &sizeData_.use3DSize);
     
     if (sizeData_.use3DSize) {
-        changed |= ImGui::DragFloat3("開始サイズ3D", &sizeData_.startSize3D.x, 0.01f, 0.01f, 10.0f);
-        changed |= ImGui::DragFloat3("終了サイズ3D", &sizeData_.endSize3D.x, 0.01f, 0.0f, 10.0f);
-        changed |= ImGui::Checkbox("均等スケーリング", &sizeData_.uniformScaling);
+     changed |= ImGui::DragFloat3("終了サイズ3D", &sizeData_.endSize3D.x, 0.01f, 0.0f, 10.0f);
+  changed |= ImGui::Checkbox("均等スケーリング", &sizeData_.uniformScaling);
     } else {
-        changed |= ImGui::DragFloat("開始サイズ", &sizeData_.startSize, 0.01f, 0.01f, 10.0f);
         changed |= ImGui::DragFloat("終了サイズ", &sizeData_.endSize, 0.01f, 0.0f, 10.0f);
     }
     
     changed |= ImGui::Checkbox("寿命に応じたサイズ変化", &sizeData_.sizeOverLifetime);
-    changed |= ImGui::DragFloat("サイズランダム性", &sizeData_.sizeRandomness, 0.01f, 0.0f, 1.0f);
 
-    // サイズカーブ設定
+  // サイズカーブ設定
     static const char* sizeCurveNames[] = {
         "線形", "イーズイン", "イーズアウト", "イーズインアウト", "一定"
     };
@@ -111,11 +87,11 @@ bool SizeModule::ShowImGui() {
 
     // サイズ制限
     changed |= ImGui::DragFloat("最小サイズ", &sizeData_.minSize, 0.01f, 0.01f, 1.0f);
-    changed |= ImGui::DragFloat("最大サイズ", &sizeData_.maxSize, 0.1f, 1.0f, 50.0f);
+ changed |= ImGui::DragFloat("最大サイズ", &sizeData_.maxSize, 0.1f, 1.0f, 50.0f);
 
     if (!enabled_) {
-        ImGui::EndDisabled();
-    }
+     ImGui::EndDisabled();
+  }
 
     return changed;
 }

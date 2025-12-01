@@ -3,56 +3,51 @@
 #include "ParticleModule.h"
 #include "MathCore.h"
 /// @brief パーティクルのサイズ制御モジュール
+/// 注意: 初期サイズの設定はMainModuleで行います
+/// このモジュールはサイズの変化（Over Lifetime）のみを担当します
 class SizeModule : public ParticleModule {
 public:
     struct SizeData {
-        float startSize = 1.0f;                    // 開始サイズ
-        float endSize = 0.0f;                      // 終了サイズ（ライフタイムで線形補間）
-        bool sizeOverLifetime = true;              // ライフタイムでサイズ変化させるか
-        float sizeRandomness = 0.0f;               // サイズのランダム性（0.0f-1.0f）
-        Vector3 startSize3D = {1.0f, 1.0f, 1.0f}; // 3Dサイズ（X, Y, Z軸別）
+   float endSize = 0.0f;  // 終了サイズ（ライフタイムで線形補間）
+        bool sizeOverLifetime = true;      // ライフタイムでサイズ変化させるか
         Vector3 endSize3D = {0.0f, 0.0f, 0.0f};   // 3D終了サイズ
-        bool use3DSize = false;                    // 3Dサイズを使用するか
-        
+        bool use3DSize = false;    // 3Dサイズを使用するか
+      
         // サイズカーブ（線形補間のバリエーション）
         enum class SizeCurve {
-            Linear,      // 線形変化
-            EaseIn,      // 加速（最初ゆっくり、後半速く）
-            EaseOut,     // 減速（最初速く、後半ゆっくり）
+  Linear,      // 線形変化
+  EaseIn,      // 加速（最初ゆっくり、後半速く）
+        EaseOut,     // 減速（最初速く、後半ゆっくり）
             EaseInOut,   // S字カーブ（最初と最後がゆっくり）
-            Constant     // 一定（サイズ変化なし）
-        };
-        SizeCurve sizeCurve = SizeCurve::Linear;
+          Constant     // 一定（サイズ変化なし）
+  };
+      SizeCurve sizeCurve = SizeCurve::Linear;
         
         // 追加パラメータ
-        float minSize = 0.01f;                     // 最小サイズ制限
-        float maxSize = 10.0f;                     // 最大サイズ制限
-        bool uniformScaling = true;                // 均等スケーリング（3D使用時）
+        float minSize = 0.01f;          // 最小サイズ制限
+        float maxSize = 10.0f; // 最大サイズ制限
+        bool uniformScaling = true;    // 均等スケーリング（3D使用時）
     };
 
-    SizeModule() = default;
+    SizeModule();
     ~SizeModule() = default;
 
     /// @brief サイズデータを設定
-    /// @param data サイズデータ
+/// @param data サイズデータ
     void SetSizeData(const SizeData& data) { sizeData_ = data; }
 
     /// @brief サイズデータを取得
     /// @return サイズデータの参照
     const SizeData& GetSizeData() const { return sizeData_; }
 
-    /// @brief パーティクルに初期サイズを適用
-    /// @param particle 対象のパーティクル
-    void ApplyInitialSize(Particle& particle);
-
     /// @brief パーティクルのサイズを更新
-    /// @param particle 対象のパーティクル
+  /// @param particle 対象のパーティクル
     void UpdateSize(Particle& particle);
 
 #ifdef _DEBUG
     /// @brief ImGuiデバッグ表示
     /// @return UIに変更があった場合true
-    bool ShowImGui() override;
+bool ShowImGui() override;
 #endif
 
 private:
