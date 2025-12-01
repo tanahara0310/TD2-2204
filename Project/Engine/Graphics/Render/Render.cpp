@@ -73,9 +73,8 @@ void Render::OffscreenPreDrawCommon(ID3D12Resource* resource, const D3D12_CPU_DE
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dxCommon_->GetDSVHandle();
 	cmdList->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
 
-	// 指定した色で画面全体をクリアする
-	const float clearColor[4] = {0.0f,0.0f,0.0f,1.0f }; // 黒（RGBA）
-	cmdList->ClearRenderTargetView(rtvHandle, clearColor,0, nullptr);
+	// 統一クリアカラーを使用
+	cmdList->ClearRenderTargetView(rtvHandle, kClearColor, 0, nullptr);
 
 	// 深度バッファをクリアする
 	cmdList->ClearDepthStencilView(
@@ -115,9 +114,8 @@ void Render::BackBufferPreDraw()
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dxCommon_->GetDSVHandle();
 
 	cmdList->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
-	// 指定した色で画面全体をクリアする
-	const float clearColor[4] = {0.0f,0.0f,0.0f,1.0f }; //<黒>
-	cmdList->ClearRenderTargetView(rtvHandle, clearColor,0, nullptr);
+	// 指定した色で画面全体をクリアする（統一クリアカラーを使用）
+	cmdList->ClearRenderTargetView(rtvHandle, kClearColor, 0, nullptr);
 	// 深度バッファをクリアする
 	cmdList->ClearDepthStencilView(
 		dsvHandle, // DSVのハンドル

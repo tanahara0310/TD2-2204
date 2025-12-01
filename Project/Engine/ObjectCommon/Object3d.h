@@ -10,7 +10,6 @@
 #include "Graphics/LineRenderer.h"
 #include "Graphics/Model/Model.h"
 #include "WorldTransfom/WorldTransform.h"
-#include "Engine/Collider/Collider.h"
 
 // 前方宣言
 class ICamera;
@@ -87,28 +86,6 @@ public:
    /// @param blendMode 設定するブレンドモード
    void SetBlendMode(BlendMode blendMode) override { blendMode_ = blendMode; }
 
-   /// @brief コライダーを取得
-   /// @return コライダーポインタ（未設定の場合nullptr）
-   Collider* GetCollider() const { return collider_.get(); }
-
-   /// @brief コライダーを登録
-   /// @param collider 登録するコライダー
-   void AttachCollider(std::unique_ptr<Collider> collider) {
-      collider_ = std::move(collider);
-   }
-
-   /// @brief 衝突時のコールバック（派生クラスでオーバーライド可能）
-   /// @param other 衝突相手のオブジェクト
-   virtual void OnCollisionEnter(Object3d* other) { (void)other; }
-
-   /// @brief 衝突中のコールバック（派生クラスでオーバーライド可能）
-   /// @param other 衝突相手のオブジェクト
-   virtual void OnCollisionStay(Object3d* other) { (void)other; }
-
-   /// @brief 衝突終了時のコールバック（派生クラスでオーバーライド可能）
-   /// @param other 衝突相手のオブジェクト
-   virtual void OnCollisionExit(Object3d* other) { (void)other; }
-
    /// @brief 削除可能かどうか（GPU使用完了を考慮）
    /// @return 削除可能ならtrue（デフォルトは非アクティブなら削除可能）
    virtual bool CanBeDeleted() const { return !IsActive(); }
@@ -141,9 +118,6 @@ protected:
 
    /// @brief ブレンドモード
    BlendMode blendMode_ = BlendMode::kBlendModeNone;
-
-   /// @brief コライダー
-   std::unique_ptr<Collider> collider_;
 
    /// @brief 子オブジェクトのリスト
    std::vector<std::unique_ptr<IDrawable>> children_;
