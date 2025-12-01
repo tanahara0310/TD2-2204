@@ -87,8 +87,8 @@ void Player::OnCollisionEnter(GameObject* other) {
       if (chargeDir.Length() > 0.0f) {
          float dot = chargeDir.x * normal.x + chargeDir.y * normal.y; // cos(theta)
          // dot が大きいほど相手方向に突進している
-         if (dot > 0.7f) {
-            response *= 0.3f; // 例: 30% に低減
+         if (dot > 0.0f) {
+            response *= 0.1f; 
          }
       }
    }
@@ -99,10 +99,7 @@ void Player::OnCollisionEnter(GameObject* other) {
    // 反対方向に加速度を与える
    acceleration_ -= normal * response;
 
-   // 衝突時の速度の反射/減衰
-   float dotv = velocity_.x * normal.x + velocity_.y * normal.y;
-   velocity_ = velocity_ - normal * (dotv * 1.5f);
-   velocity_ *= 0.5f; // 全体の速度を半減
+   velocity_ *= 0.1f; // 衝突時に速度を半減
 
    stateMachine_->RequestState("Stun", 0);
 }
@@ -130,8 +127,8 @@ void Player::OnCollisionStay(GameObject* other) {
       Vector2 chargeDir = direction_.Normalize();
       if (chargeDir.Length() > 0.0f) {
          float dot = chargeDir.x * normal.x + chargeDir.y * normal.y;
-         if (dot > 0.7f) {
-            response *= 0.3f;
+         if (dot > 0.0f) {
+            response *= 0.1f;
          }
       }
    }
@@ -185,7 +182,7 @@ void Player::InitializeStateMachine() {
 }
 
 void Player::InitializeCollider() {
-   AttachCollider(std::make_unique<SphereCollider>(this, 0.7f));
+   AttachCollider(std::make_unique<SphereCollider>(this, 1.0f));
    collider_->SetLayer(CollisionLayer::Player);
 }
 

@@ -13,6 +13,9 @@
 #include "Application/TD2_2/Utility/GameUtils.h"
 #include "../../GameObject/Boss/ActionNode/ChargeToPlayerAction.h"
 #include "../../GameObject/Boss/ActionNode/MoveAction.h"
+#include "../../GameObject/Boss/ActionNode/MoveToCenterAction.h"
+#include "../../GameObject/Boss/ActionNode/FleeFromPlayerAction.h"
+#include "../../GameObject/Bullet/Bullet.h"
 
 void GameScene::Initialize(EngineSystem* engine) {
    // 基底クラスの初期化
@@ -59,7 +62,9 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  collisionConfig_ = std::make_unique<CollisionConfig>();
 	  collisionConfig_->SetCollisionEnabled(CollisionLayer::Player, CollisionLayer::Boss, true);
 	  collisionConfig_->SetCollisionEnabled(CollisionLayer::Player, CollisionLayer::BossBullet, true);
+	  collisionConfig_->SetCollisionEnabled(CollisionLayer::Player, CollisionLayer::ElasticSphere, true);
 	  collisionConfig_->SetCollisionEnabled(CollisionLayer::Boss, CollisionLayer::BossBullet, false);
+	  collisionConfig_->SetCollisionEnabled(CollisionLayer::Boss, CollisionLayer::ElasticSphere, false);
 	  collisionManager_ = std::make_unique<CollisionManager>(collisionConfig_.get());
    }
 
@@ -112,6 +117,13 @@ void GameScene::RegisterAllColliders() {
    collisionManager_->Clear();
    collisionManager_->RegisterCollider(player_->GetCollider());
    collisionManager_->RegisterCollider(boss_->GetCollider());
+
+   // 弾のコライダーを登録
+   for (auto* bullet : bullets_) {
+	  if (bullet && bullet->IsActive() && bullet->GetCollider()) {
+		 collisionManager_->RegisterCollider(bullet->GetCollider());
+	  }
+   }
 }
 
 void GameScene::CheckCollisions() {
@@ -122,9 +134,33 @@ std::unique_ptr<BehaviorTree> GameScene::CreateBossBehaviorTree() {
    return BehaviorTreeFactory::Create(
 	  [this](BehaviorTreeBuilder& builder) {
 		 builder.Selector()
-			.Action<MoveAction>(boss_)
+			.Sequence()
+			.Action<FleeFromPlayerAction>(boss_, player_)
+			.Action<ChargeToPlayerAction>(boss_, player_)
+			.End()
 			.End();
 	  },
 	  "BossMainAI"
    );
+}
+
+Bullet* GameScene::CreateBullet(const Vector3& position, const Vector3& direction, float speed) {
+   auto modelManager = engine_->GetComponent<ModelManager>();
+   auto& textureManager = TextureManager::GetInstance();
+
+   // 弾のモデルとテクスチャを読み込み
+   auto bulletModel = modelManager->CreateStaticModel("Resources/Models/Bullet/Bullet.obj");
+   auto bulletTexture = textureManager.Load("Resources/Textures/Bullet.png");
+
+   // 弾を生成
+   auto bullet = std::make_unique<Bullet>();
+   bullet->Initialize(std::move(bulletModel), bulletTexture, direction);
+   bullet->SetWorldPosition(position);
+   bullet->SetSpeed(speed);
+
+   Bullet* bulletPtr = bullet.get();
+   bullets_.push_back(bulletPtr);
+   gameObjects_.push_back(std::move(bullet));
+
+   return bulletPtr;
 }

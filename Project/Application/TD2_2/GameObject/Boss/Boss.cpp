@@ -12,6 +12,12 @@ void Boss::Initialize(std::unique_ptr<Model> model, TextureManager::LoadedTextur
    // 基底クラスの初期化を呼び出す
    GameObject::Initialize(std::move(model), texture);
 
+   // ステートマシンの初期化
+   InitializeStateMachine();
+
+   // 初期状態をNormalに設定
+   stateMachine_->RequestState("Normal", 0);
+
    // コライダーの初期化
    InitializeCollider();
 
@@ -19,8 +25,11 @@ void Boss::Initialize(std::unique_ptr<Model> model, TextureManager::LoadedTextur
 }
 
 void Boss::Update() {
-   // ビヘイビアツリーの実行
-   if (behaviorTree_) {
+   // ステートマシンの更新
+   stateMachine_->Update();
+
+   // ビヘイビアツリーの実行（Normal状態のみ）
+   if (stateMachine_->GetCurrentState() == "Normal" && behaviorTree_) {
       behaviorTree_->Tick();
    }
 
@@ -59,8 +68,8 @@ void Boss::OnCollisionEnter(GameObject* other) {
          Vector2 chargeDir = direction_.Normalize();
          if (chargeDir.Length() > 0.0f) {
             float dot = chargeDir.x * normal.x + chargeDir.y * normal.y;
-            if (dot > 0.7f) {
-               response *= 0.3f; // 例: 30% に低減
+            if (dot > 0.0f) {
+               response *= 0.1f;
             }
          }
       }
@@ -75,16 +84,17 @@ void Boss::OnCollisionEnter(GameObject* other) {
       velocity_ *= 0.5f;
 
       // プレイヤーに突進されて吹き飛ばされた場合は中心バイアスを強める
-      // プレイヤーが突進中かどうか判定し、かつプレイヤーの突進方向がボスに向かっているなら発動
       if (p->IsCharging()) {
          Vector2 playerDir = (p->GetVelocity().Length() > 0.0f) ? p->GetVelocity().Normalize() : Vector2{0.0f,0.0f};
          Vector2 towardBoss = Vector2{ GetWorldPosition().x - p->GetWorldPosition().x, GetWorldPosition().y - p->GetWorldPosition().y }.Normalize();
          float dotPB = playerDir.x * towardBoss.x + playerDir.y * towardBoss.y;
          if (dotPB > 0.7f) {
-            // 例: 2秒間、中心バイアスを 0.5 にする（通常 1.0 -> 小さいほど強いバイアス）
             StartKnockbackBias(2.0f, 0.5f);
          }
       }
+
+      // スタン状態に遷移
+      stateMachine_->RequestState("Stun", 0);
    }
 }
 
@@ -101,8 +111,8 @@ void Boss::OnCollisionStay(GameObject* other) {
          Vector2 chargeDir = direction_.Normalize();
          if (chargeDir.Length() > 0.0f) {
             float dot = chargeDir.x * normal.x + chargeDir.y * normal.y;
-            if (dot > 0.7f) {
-               response *= 0.3f;
+            if (dot > 0.0f) {
+               response *= 0.1f;
             }
          }
       }
@@ -110,6 +120,9 @@ void Boss::OnCollisionStay(GameObject* other) {
       response = (std::min)(response, maxCollisionResponse_);
 
       acceleration_ -= normal * response;
+
+      // スタン状態に遷移
+      stateMachine_->RequestState("Stun", 0);
    }
 }
 
@@ -122,8 +135,27 @@ void Boss::SetBehaviorTree(std::unique_ptr<BehaviorTree> tree) {
 }
 
 void Boss::InitializeCollider() {
-   AttachCollider(std::make_unique<SphereCollider>(this, 0.9f));
+   AttachCollider(std::make_unique<SphereCollider>(this, 1.2f));
    collider_->SetLayer(CollisionLayer::Boss);
+}
+
+void Boss::InitializeStateMachine() {
+   // ステートマシンの取り付け
+   GameObject::AttachStateMachine();
+
+   // 通常状態
+   stateMachine_->AddState("Normal", 
+      std::bind(&Boss::InitializeNormal, this), 
+      std::bind(&Boss::Normal, this));
+
+   // スタン状態
+   stateMachine_->AddState("Stun", 
+      std::bind(&Boss::InitializeStun, this), 
+      std::bind(&Boss::Stun, this));
+
+   // 状態遷移ルール
+   stateMachine_->AddTransitionRule("Normal", { "Stun" });
+   stateMachine_->AddTransitionRule("Stun", { "Normal" });
 }
 
 void Boss::UpdateMovement() {
@@ -176,4 +208,42 @@ void Boss::UpdateRotation() {
 
    GameObject::TiltByVelocity(direction_);
    GameObject::UpdateRotation();
+}
+
+void Boss::InitializeNormal() {
+   // 通常の減衰率と速度に戻す
+   dampingPerSecond_ = 0.8f;
+   maxSpeed_ = 20.0f;
+
+   // 突進フラグをリセット
+   isCharging_ = false;
+}
+
+void Boss::Normal() {
+   // 通常状態では特に処理なし
+   // ビヘイビアツリーがUpdate()で実行される
+}
+
+void Boss::InitializeStun() {
+   // スタン用の減衰率と速度を設定
+   dampingPerSecond_ = stunDamping_;
+   maxSpeed_ = stunMaxSpeed_;
+
+   // スタンタイマーを開始
+   stunTimer_.Start(stunDuration_, false);
+
+   // モデルを変更（ダメージ表現）
+   //GameObject::ChangeModelResource("Resources/Models/Player/Damage/PlayerDamage.obj");
+
+   // 突進フラグをリセット
+   isCharging_ = false;
+}
+
+void Boss::Stun() {
+   stunTimer_.Update(GameUtils::GetDeltaTime());
+   
+   if (stunTimer_.IsFinished()) {
+      // スタン終了、通常状態に戻る
+      stateMachine_->RequestState("Normal", 0);
+   }
 }

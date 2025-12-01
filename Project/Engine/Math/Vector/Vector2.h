@@ -57,6 +57,10 @@ struct Vector2 {
     float Length() const {
         return std::sqrtf(x * x + y * y);
     }
+
+    float Dot(const Vector2& v) const {
+        return x * v.x + y * v.y;
+	}
 };
 
 // スカラーとベクトルの乗算 (float * Vector2)
