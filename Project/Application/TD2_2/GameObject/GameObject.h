@@ -42,6 +42,19 @@ public:
    /// @return コライダーポインタ
    Collider* GetCollider() const { return collider_.get(); }
 
+   /// @brief 方向に応じて軸を傾ける（滑らかに補間）
+   /// @param dir 方向ベクトル（x: 左右, y: 前後）
+   void TiltByVelocity(const Vector2& dir);
+
+   /// @brief 現在の軸を中心に回転を開始
+   /// @param duration 回転にかける時間（秒）
+   /// @param rotationCount 回転回数（デフォルト: 2.0）
+   void StartRotateAroundAxis(float duration, float rotationCount = 2.0f);
+
+   void StartShake(float intensity, float duration);
+
+   void ChangeModelResource(const std::string& path);
+
 protected:
 
    std::unique_ptr<Collider> collider_;
@@ -61,28 +74,15 @@ protected:
    /// @brief ステートマシンを取り付ける
    void AttachStateMachine();
 
-   /// @brief 方向に応じて軸を傾ける（滑らかに補間）
-   /// @param dir 方向ベクトル（x: 左右, y: 前後）
-   void TiltByVelocity(const Vector2& dir);
-
    /// @brief ベース回転を計算（傾き＋左右回転）
    /// @param dir 方向ベクトル（x: 左右, y: 前後）
    /// @return ベース回転のクォータニオン
    Quaternion CalculateBaseRotation(const Vector2& dir);
 
-   /// @brief 現在の軸を中心に回転を開始
-   /// @param duration 回転にかける時間（秒）
-   /// @param rotationCount 回転回数（デフォルト: 2.0）
-   void StartRotateAroundAxis(float duration, float rotationCount = 2.0f);
-
    /// @brief 回転の更新処理（Updateから呼び出す）
    virtual void UpdateRotation();
 
-   void StartShake(float intensity, float duration);
-
    bool UpdateShake();
-
-   void ChangeModelResource(const std::string& path);
 
 private:
    std::unique_ptr<GameTimer> rotationTimer_;

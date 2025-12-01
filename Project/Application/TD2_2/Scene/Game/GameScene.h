@@ -10,6 +10,7 @@
 #include "../../Collider/CollisionManager.h"
 #include "../../Collider/CollisionConfig.h"
 #include "../../Camera/CameraController.h"
+#include "../../AI/BehaviorTree/BehaviorTree.h"
 
 class EngineSystem;
 class CameraManager;
@@ -37,6 +38,8 @@ private:
    std::unique_ptr<CollisionManager> collisionManager_;
    std::unique_ptr<CollisionConfig> collisionConfig_;
 
+   std::unique_ptr<BehaviorTree> bossBehaviorTree_;
+
    // カメラコントローラー
    std::unique_ptr<CameraController> cameraController_;
 
@@ -44,4 +47,6 @@ private:
    void RegisterAllColliders();
 
    void CheckCollisions();
+
+   std::unique_ptr<BehaviorTree> CreateBossBehaviorTree();
 };

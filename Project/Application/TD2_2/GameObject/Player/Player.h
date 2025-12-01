@@ -16,12 +16,21 @@ public:
    const char* GetObjectName() const override { return "Player"; }
 
    void SetStartDamageFunction(const std::function<void()>& func) {
-	  startDamageFunction_ = func;
+      startDamageFunction_ = func;
    }
 
    void SetDamageFunction(const std::function<void()>& func) {
-	  damageFunction_ = func;
+      damageFunction_ = func;
    }
+
+   // 速度取得
+   Vector2 GetVelocity() const { return velocity_; }
+
+   bool IsCharging() const { return isCharging_; }
+
+   // 衝突反発の最大値設定
+   void SetMaxCollisionResponse(float v) { maxCollisionResponse_ = v; }
+   float GetMaxCollisionResponse() const { return maxCollisionResponse_; }
 private:
 
    Vector2 acceleration_ = { 0.0f, 0.0f }; // 加速度ベクトル
@@ -43,11 +52,17 @@ private:
    GameTimer chargeTimer_;
 
    // スタン
-   float stunPower_ = 2000.0f; // スタン反発力
+   float stunPower_ = 2000.0f; // スタン反発力 (基礎)
    float stunDuration_ = 0.3f; // スタン持続時間（秒）
    float stunDamping_ = 0.02f;  // スタン減衰率
    float stunMaxSpeed_ = 35.0f; // スタン最大速度
    GameTimer stunTimer_;
+
+   // 衝突反発の速度依存スケール
+   float collisionResponseScale_ = 50.0f; // 速度に応じて反発力がどれだけ増えるかの係数
+
+   // 衝突反発の最大値
+   float maxCollisionResponse_ = 5000.0f;
 
    Vector2 direction_ = {};
 
@@ -56,6 +71,9 @@ private:
    std::function<void()> startDamageFunction_;
 
    std::function<void()> damageFunction_;
+
+   // 突進中フラグ
+   bool isCharging_ = false;
 private:
    /// @brief キーコンフィグの初期化
    void InitializeKeyConfig();

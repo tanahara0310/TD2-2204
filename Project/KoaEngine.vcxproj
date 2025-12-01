@@ -169,6 +169,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="Application\TD2_2\GameObject\Boss\ActionNode\ActionNode.cpp" />
     <ClCompile Include="Application\TD2_2\GameObject\Boss\ActionNode\ChargeToPlayerAction.cpp" />
     <ClCompile Include="Application\TD2_2\AI\BehaviorTree\BehaviorTree.cpp" />
+    <ClCompile Include="Application\TD2_2\GameObject\Boss\ActionNode\MoveAction.cpp" />
     <ClCompile Include="Application\TD2_2\GameObject\Boss\Boss.cpp" />
     <ClCompile Include="Application\TD2_2\GameObject\GameObject.cpp" />
     <ClCompile Include="Application\TD2_2\GameObject\Player\Player.cpp" />
@@ -340,6 +341,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="Application\TD2_2\Collider\SphereCollider.h" />
     <ClInclude Include="Application\TD2_2\GameObject\Boss\ActionNode\ActionNode.h" />
     <ClInclude Include="Application\TD2_2\GameObject\Boss\ActionNode\ChargeToPlayerAction.h" />
+    <ClInclude Include="Application\TD2_2\GameObject\Boss\ActionNode\MoveAction.h" />
     <ClInclude Include="Application\TD2_2\GameObject\Boss\ActionNode\UsageExample.h" />
     <ClInclude Include="Application\TD2_2\AI\BehaviorTree\BehaviorTree.h" />
     <ClInclude Include="Application\TD2_2\GameObject\Boss\Boss.h" />

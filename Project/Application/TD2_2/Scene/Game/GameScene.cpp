@@ -11,6 +11,8 @@
 #include "Engine/Graphics/Light/LightData.h"
 #include "MathCore.h"
 #include "Application/TD2_2/Utility/GameUtils.h"
+#include "../../GameObject/Boss/ActionNode/ChargeToPlayerAction.h"
+#include "../../GameObject/Boss/ActionNode/MoveAction.h"
 
 void GameScene::Initialize(EngineSystem* engine) {
    // 基底クラスの初期化
@@ -45,8 +47,10 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  auto bossModel = modelManager->CreateStaticModel("Resources/Models/Boss/Boss.obj");
 	  auto bossTexture = textureManager.Load("Resources/Textures/Boss.png");
 	  auto boss = std::make_unique<Boss>();
-	  boss->Initialize(std::move(bossModel), bossTexture);
 	  boss_ = boss.get();
+	  bossBehaviorTree_ = CreateBossBehaviorTree();
+	  boss->Initialize(std::move(bossModel), bossTexture);
+	  boss->SetBehaviorTree(std::move(bossBehaviorTree_));
 	  gameObjects_.push_back(std::move(boss));
    }
 
@@ -64,7 +68,7 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  cameraController_ = std::make_unique<CameraController>();
 	  auto* releaseCamera = static_cast<Camera*>(cameraManager_->GetCamera("Release"));
 	  cameraController_->Initialize(releaseCamera, player_, boss_);
-	  
+
 	  // カメラパラメータの調整（オプション）
 	  cameraController_->SetMinDistance(20.0f);
 	  cameraController_->SetMaxDistance(100.0f);
@@ -104,12 +108,23 @@ void GameScene::Draw() {
 
 void GameScene::Finalize() {}
 
-void GameScene::RegisterAllColliders(){
+void GameScene::RegisterAllColliders() {
    collisionManager_->Clear();
    collisionManager_->RegisterCollider(player_->GetCollider());
    collisionManager_->RegisterCollider(boss_->GetCollider());
 }
 
-void GameScene::CheckCollisions(){
+void GameScene::CheckCollisions() {
    collisionManager_->CheckAllCollisions();
+}
+
+std::unique_ptr<BehaviorTree> GameScene::CreateBossBehaviorTree() {
+   return BehaviorTreeFactory::Create(
+	  [this](BehaviorTreeBuilder& builder) {
+		 builder.Selector()
+			.Action<MoveAction>(boss_)
+			.End();
+	  },
+	  "BossMainAI"
+   );
 }
