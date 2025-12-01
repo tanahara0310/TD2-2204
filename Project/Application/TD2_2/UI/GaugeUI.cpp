@@ -2,19 +2,19 @@
 #include "GaugeUI.h"
 #include "Application/TD2_2/GameObject/GameObject.h"
 #include "Application/TD2_2/Utility/GameUtils.h"
+#include "Application/TD2_2/Utility/KeyConfig.h"
 #include "Engine/Camera/CameraManager.h"
 #include "Engine/Camera/ICamera.h"
 #include "Engine/Graphics/Render/Sprite/SpriteRenderer.h"
 #include "Engine/Graphics/TextureManager.h"
 #include "Engine/WinApp/WinApp.h"
 #include "MathCore.h"
-#include "Application/TD2_2/Utility/KeyConfig.h"
 #include <cassert>
 #include <cmath>
 
 using namespace MathCore;
 
-void GaugeUI::Initialize(Sprite* fill, Sprite* bg, Sprite* segment, CameraManager* cameraManager, int divisions) {
+void GaugeUI::Initialize(Sprite* fill, Sprite* bg, Sprite* segment, CameraManager* cameraManager) {
 	assert(cameraManager != nullptr);
 
 	cameraManager_ = cameraManager;
@@ -22,57 +22,50 @@ void GaugeUI::Initialize(Sprite* fill, Sprite* bg, Sprite* segment, CameraManage
 	// 各スプライト作成
 	spriteBG_ = bg;
 	handleBG_ = TextureManager::GetInstance().Load("Resources/Textures/white.png");
-
 	spriteFill_ = fill;
 	handleFill_ = TextureManager::GetInstance().Load("Resources/Textures/white.png");
-
 	spriteSegment_ = segment;
 	handleSegment_ = TextureManager::GetInstance().Load("Resources/Textures/white.png");
 
-	// BGは中央、Fill/Afterは左寄せ
-	spriteBG_->SetAnchor({0.5f, 0.5f});
-	spriteFill_->SetAnchor({0.0f, 0.5f});
-	// セグメントも左寄せにして、Fillと同じ基準で配置する
-	if (spriteSegment_) spriteSegment_->SetAnchor({0.0f, 0.5f});
-
-	// 初期スケール設定
-	Vector2 texBG = spriteBG_->GetTextureSize();
-	Vector2 texFill = spriteFill_->GetTextureSize();
-
-	// fullWidth_/fullHeight_を実際のピクセル幅にするためスケールを設定
-	if (texBG.x > 0 && texBG.y > 0) {
-		spriteBG_->SetScale({fullWidth_ / texBG.x, fullHeight_ / texBG.y, 1.0f});
-	}
-	if (texFill.x > 0 && texFill.y > 0) {
-		// Fill & After 初期は満タン（ただし既存実装に合わせて0にしている）
-		spriteFill_->SetScale({/*fullWidth_ / texFill.x*/0, fullHeight_ / texFill.y, 1.0f});
-		// セグメントも初期は幅0にしておく
-		if (spriteSegment_) spriteSegment_->SetScale({0.0f, fullHeight_ / texFill.y, 1.0f});
-	}
+	// アンカーポイント
+	spriteBG_->SetAnchor({0.5f, 0.5f});      // 中央
+	spriteFill_->SetAnchor({0.0f, 0.5f});    // 左寄せ
+	spriteSegment_->SetAnchor({0.0f, 0.5f}); // 左寄せ
 
 	// 色の初期化
 	spriteBG_->SetColor({0.2f, 0.2f, 0.2f, 1.0f});
-	spriteFill_->SetColor({0.6f, 0.0f, 0.0f, 1.0f});
+	spriteFill_->SetColor({0.5f, 0.5f, 0.0f, 1.0f});
 	spriteSegment_->SetColor({0.8f, 1.0f, 0.0f, 1.0f});
 
-	// 初期HP
-	maxHP_ = 10.0f;
-	currentHP_ = maxHP_;
+	// 初期スケール設定
+	Vector2 texBG = spriteBG_->GetTextureSize();
+	maxSpriteSize_ = {fullWidth_ / texBG.x, fullHeight_ / texBG.y};
 
-	// 分割数
-	divisions_ = divisions;
+	// fullWidth_/fullHeight_を実際のピクセル幅にするためスケールを設定
+	if (texBG.x > 0 && texBG.y > 0) {
+		spriteBG_->SetScale({maxSpriteSize_.x, maxSpriteSize_.y, 1.0f});
+
+		// Fill & Segment初期は0
+		spriteFill_->SetScale({0.0f, maxSpriteSize_.y, 1.0f});
+
+		// セグメントも初期は幅0にしておく
+		spriteSegment_->SetScale({0.0f, maxSpriteSize_.y, 1.0f});
+	}
+
+	// 初期ゲージ値
+	maxGauge_ = 5;
+	currentGauge_ = 0;
+
+	// ゲージ1個分のサイズ
+	spriteSizeX_ = maxSpriteSize_.x / maxGauge_;
 }
 
-void GaugeUI::SetValue(float current, float max) {
-	if (max <= 0.0f)
-		max = 1.0f;
-	current = std::clamp(current, 0.0f, max);
+void GaugeUI::SetValue(int current) {
+	if (current > maxGauge_)
+		return;
 
-	// 更新
-	// currentHP_は即座に反映（Fill）
-	// afterHP_はダメージ時にcurrentHP_より大きければ徐々に下がる
-	currentHP_ = current;
-	maxHP_ = max;
+	// ゲージの値更新
+	currentGauge_ = current;
 }
 
 void GaugeUI::Update() {
@@ -96,64 +89,38 @@ void GaugeUI::Update() {
 	screenX += screenOffset_.x;
 	screenY += screenOffset_.y;
 
-	// BGは中央に置く
-	spriteBG_->SetPosition({screenX, screenY, drawDepth_});
-
 	// 左端xを計算（BGの中央を基点として左端を求める）
 	float leftX = screenX - (fullWidth_ * 0.5f);
 
-	// Fillの幅（ピクセル）
-	float fillRatio = (maxHP_ > 0.0f) ? (currentHP_ / maxHP_) : 0.0f;
-	float fillWidthPx = fullWidth_ * fillRatio;
-
-	// テクスチャ原寸を取得してスケールを決定
-	Vector2 texFill = spriteFill_->GetTextureSize();
-
-	if (texFill.x > 0.0f) {
-		float fillScaleX = (fillWidthPx / texFill.x);
-		float commonScaleY = (fullHeight_ / texFill.y);
-		spriteFill_->SetScale({fillScaleX, commonScaleY, 1.0f});
-
-		// セグメントスナップ処理:
-		// divisions_ が正なら、セグメント幅 (px) = fullWidth_ / divisions_
-		// Fill の幅がセグメント幅の整数倍に近ければ、その倍数になるように spriteSegment_ の X スケールを設定する
-		if (spriteSegment_ && divisions_ > 0) {
-			float segmentWidthPx = fullWidth_ / static_cast<float>(divisions_);
-			// 小さな誤差を許容するためのイプシロン
-			const float eps = 1e-3f;
-
-			// fmod の結果を正規化（0..segmentWidthPx)
-			float rem = std::fmod(fillWidthPx, segmentWidthPx);
-			if (rem < 0.0f) rem += segmentWidthPx;
-
-			// セグメント幅の整数倍に近ければスナップ
-			if (rem < eps || (segmentWidthPx - rem) < eps) {
-				int segmentsFilled = static_cast<int>(std::round(fillWidthPx / segmentWidthPx));
-				segmentsFilled = std::clamp(segmentsFilled, 0, divisions_);
-				float snappedWidthPx = segmentWidthPx * static_cast<float>(segmentsFilled);
-				float segmentScaleX = (snappedWidthPx / texFill.x);
-				spriteSegment_->SetScale({segmentScaleX, commonScaleY, 1.0f});
-			}
-		}
-	}
+	// BGは中央に置く
+	spriteBG_->SetPosition({screenX, screenY, drawDepth_});
 
 	// 若干の補正としてYは中央合わせ
 	spriteFill_->SetPosition({leftX, screenY, drawDepth_ + 0.0f});
-	if (spriteSegment_) spriteSegment_->SetPosition({leftX, screenY, drawDepth_ + 0.0f});
+    spriteSegment_->SetPosition({leftX, screenY, drawDepth_ + 0.0f});
 
-	// 画面外での非表示
-	bool offscreen = (screenX < -fullWidth_ || screenX > WinApp::kClientWidth + fullWidth_ || screenY < -fullHeight_ || screenY > WinApp::kClientHeight + fullHeight_);
+	// スケール更新
+	spriteFill_->SetScale({spriteSizeX_ * currentGauge_, maxSpriteSize_.y, 1.0f});
 
-	Vector4 bgColor = spriteBG_->GetColor();
-	bgColor.w = offscreen ? 0.0f : 1.0f;
-	spriteBG_->SetColor(bgColor);
-	Vector4 fillColor = spriteFill_->GetColor();
-	fillColor.w = offscreen ? 0.0f : 1.0f;
-	spriteFill_->SetColor(fillColor);
+	// セグメントのスケールを徐々に増やす
+	float targetSegmentWidth = segmentWidth_;
+	if (segmentWidth_ < spriteSizeX_ * currentGauge_) {
+		targetSegmentWidth += segmentDecreaseSpeed_ * GameUtils::GetDeltaTime();
+		if (targetSegmentWidth > spriteSizeX_ * currentGauge_) {
+			targetSegmentWidth = spriteSizeX_ * currentGauge_;
+		}
+	} else {
+		targetSegmentWidth = spriteSizeX_ * currentGauge_;
+	}
+	segmentWidth_ = targetSegmentWidth;
+	spriteSegment_->SetScale({segmentWidth_, maxSpriteSize_.y, 1.0f});
 }
 
 void GaugeUI::Draw() {
-    if (spriteBG_) spriteBG_->Draw(handleBG_.gpuHandle);
-    if (spriteFill_) spriteFill_->Draw(handleFill_.gpuHandle);
-    if (spriteSegment_) spriteSegment_->Draw(handleSegment_.gpuHandle);
+	if (spriteBG_)
+		spriteBG_->Draw(handleBG_.gpuHandle);
+	if (spriteFill_)
+		spriteFill_->Draw(handleFill_.gpuHandle);
+	if (spriteSegment_)
+		spriteSegment_->Draw(handleSegment_.gpuHandle);
 }
