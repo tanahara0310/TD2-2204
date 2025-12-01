@@ -6,16 +6,16 @@
 struct Particle;
 
 /// @brief パーティクルの色モジュール
+/// 注意: 初期色の設定はMainModuleで行います
+/// このモジュールは色の変化（グラデーション）のみを担当します
 class ColorModule : public ParticleModule {
 public:
     struct ColorOverLifetime {
-        Vector4 startColor = { 1.0f, 1.0f, 1.0f, 1.0f };   // 開始色
-        Vector4 endColor = { 1.0f, 1.0f, 1.0f, 0.0f };     // 終了色
-        bool useGradient = true;                            // グラデーションを使用するか
-        Vector4 randomColorRange = { 0.0f, 0.0f, 0.0f, 0.0f }; // ランダム色の範囲
+        Vector4 endColor = { 1.0f, 1.0f, 1.0f, 0.0f };   // 終了色
+        bool useGradient = true;   // グラデーションを使用するか
     };
 
-    ColorModule() = default;
+    ColorModule();
     ~ColorModule() = default;
 
     /// @brief 色データを設定
@@ -25,10 +25,6 @@ public:
     /// @brief 色データを取得
     /// @return 色データの参照
     const ColorOverLifetime& GetColorData() const { return colorData_; }
-
-    /// @brief パーティクルに初期色を適用
-    /// @param particle 対象のパーティクル
-    void ApplyInitialColor(Particle& particle);
 
     /// @brief パーティクルの色を更新
     /// @param particle 対象のパーティクル

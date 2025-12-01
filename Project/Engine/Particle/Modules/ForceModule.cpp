@@ -2,39 +2,49 @@
 #include "../ParticleSystem.h" // Particle構造体のために必要
 #include <algorithm>
 
-void ForceModule::ApplyForces(Particle& particle, float deltaTime) {
-    if (!enabled_) {
-        return;
-    }
+// コンストラクタでデフォルトパラメータを設定
+ForceModule::ForceModule() {
+    forceData_.gravity = { 0.0f, -9.8f, 0.0f };
+    forceData_.wind = { 0.0f, 0.0f, 0.0f };
+    forceData_.drag = 0.0f;
+    forceData_.useAccelerationField = false;
+  forceData_.acceleration = { 0.0f, 0.0f, 0.0f };
+ forceData_.area = BoundingBox();
+}
 
-    // 重力を適用
-    particle.velocity.x += forceData_.gravity.x * deltaTime;
-    particle.velocity.y += forceData_.gravity.y * deltaTime;
-    particle.velocity.z += forceData_.gravity.z * deltaTime;
+void ForceModule::ApplyForces(Particle& particle, float deltaTime, float gravityModifier) {
+	if (!enabled_) {
+		return;
+	}
 
-    // 風力を適用
-    particle.velocity.x += forceData_.wind.x * deltaTime;
-    particle.velocity.y += forceData_.wind.y * deltaTime;
-    particle.velocity.z += forceData_.wind.z * deltaTime;
+	// 重力を適用（gravityModifierを考慮）
+	particle.velocity.x += forceData_.gravity.x * gravityModifier * deltaTime;
+	particle.velocity.y += forceData_.gravity.y * gravityModifier * deltaTime;
+	particle.velocity.z += forceData_.gravity.z * gravityModifier * deltaTime;
 
-    // 抵抗力を適用
-    if (forceData_.drag > 0.0f) {
-        float dragFactor = 1.0f - (forceData_.drag * deltaTime);
-        dragFactor = (std::max)(0.0f, dragFactor); // 負の値にならないように
-        
-        particle.velocity.x *= dragFactor;
-        particle.velocity.y *= dragFactor;
-        particle.velocity.z *= dragFactor;
-    }
+	// 風力を適用
+	particle.velocity.x += forceData_.wind.x * deltaTime;
+	particle.velocity.y += forceData_.wind.y * deltaTime;
+	particle.velocity.z += forceData_.wind.z * deltaTime;
 
-    // 加速度フィールドを適用
-    if (forceData_.useAccelerationField) {
-        if (CollisionUtils::IsColliding(particle.transform.translate, forceData_.area)) {
-            particle.velocity.x += forceData_.acceleration.x * deltaTime;
-            particle.velocity.y += forceData_.acceleration.y * deltaTime;
-            particle.velocity.z += forceData_.acceleration.z * deltaTime;
-        }
-    }
+	// 抵抗力を適用
+	if (forceData_.drag > 0.0f) {
+		float dragFactor = 1.0f - (forceData_.drag * deltaTime);
+		dragFactor = (std::max)(0.0f, dragFactor); // 負の値にならないように
+
+		particle.velocity.x *= dragFactor;
+		particle.velocity.y *= dragFactor;
+		particle.velocity.z *= dragFactor;
+	}
+
+	// 加速度フィールドを適用
+	if (forceData_.useAccelerationField) {
+		if (CollisionUtils::IsColliding(particle.transform.translate, forceData_.area)) {
+			particle.velocity.x += forceData_.acceleration.x * deltaTime;
+			particle.velocity.y += forceData_.acceleration.y * deltaTime;
+			particle.velocity.z += forceData_.acceleration.z * deltaTime;
+		}
+	}
 }
 
 #ifdef _DEBUG

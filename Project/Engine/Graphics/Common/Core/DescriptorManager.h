@@ -13,7 +13,7 @@ class DescriptorManager {
 public:
 	// ディスクリプタヒープの最大サイズ
 	static constexpr UINT kMaxRTVDescriptors = 10;   // スワップチェーン2 + オフスクリーン2
-	static constexpr UINT kMaxSRVDescriptors = 128; // テクスチャやバッファ用（SRV/CBV/UAV共有）
+	static constexpr UINT kMaxSRVDescriptors = 65536; // テクスチャやバッファ用（SRV/CBV/UAV共有）
 	static constexpr UINT kMaxDSVDescriptors = 10;   // デプスステンシル用
 
 	// 予約済みインデックス（スワップチェーン用）

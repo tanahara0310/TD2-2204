@@ -10,6 +10,7 @@
 #include "Graphics/LineRenderer.h"
 #include "Graphics/Model/Model.h"
 #include "WorldTransfom/WorldTransform.h"
+#include "Engine/Collider/Collider.h"
 
 // 前方宣言
 class ICamera;
@@ -86,7 +87,47 @@ public:
    /// @param blendMode 設定するブレンドモード
    void SetBlendMode(BlendMode blendMode) override { blendMode_ = blendMode; }
 
+   /// @brief コライダーを取得
+   /// @return コライダーポインタ（未設定の場合nullptr）
+   Collider* GetCollider() const { return collider_.get(); }
 
+   /// @brief コライダーを登録
+   /// @param collider 登録するコライダー
+   void AttachCollider(std::unique_ptr<Collider> collider) {
+      collider_ = std::move(collider);
+   }
+
+   /// @brief 衝突時のコールバック（派生クラスでオーバーライド可能）
+   /// @param other 衝突相手のオブジェクト
+   virtual void OnCollisionEnter(Object3d* other) { (void)other; }
+
+   /// @brief 衝突中のコールバック（派生クラスでオーバーライド可能）
+   /// @param other 衝突相手のオブジェクト
+   virtual void OnCollisionStay(Object3d* other) { (void)other; }
+
+   /// @brief 衝突終了時のコールバック（派生クラスでオーバーライド可能）
+   /// @param other 衝突相手のオブジェクト
+   virtual void OnCollisionExit(Object3d* other) { (void)other; }
+
+   /// @brief 削除可能かどうか（GPU使用完了を考慮）
+   /// @return 削除可能ならtrue（デフォルトは非アクティブなら削除可能）
+   virtual bool CanBeDeleted() const { return !IsActive(); }
+
+   /// @brief 子オブジェクトを追加
+   /// @param child 追加する子オブジェクト
+   void AddChild(std::unique_ptr<IDrawable> child) {
+      if (child) {
+         children_.push_back(std::move(child));
+      }
+   }
+
+   /// @brief 子オブジェクトのリストを取得
+   /// @return 子オブジェクトのリスト
+   const std::vector<std::unique_ptr<IDrawable>>& GetChildren() const { return children_; }
+
+   /// @brief 子オブジェクトのリストを取得（非const版）
+   /// @return 子オブジェクトのリスト
+   std::vector<std::unique_ptr<IDrawable>>& GetChildren() { return children_; }
 
 protected:
    /// @brief モデルインスタンス
@@ -101,4 +142,9 @@ protected:
    /// @brief ブレンドモード
    BlendMode blendMode_ = BlendMode::kBlendModeNone;
 
+   /// @brief コライダー
+   std::unique_ptr<Collider> collider_;
+
+   /// @brief 子オブジェクトのリスト
+   std::vector<std::unique_ptr<IDrawable>> children_;
 };
