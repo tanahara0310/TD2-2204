@@ -7,6 +7,7 @@
 #include "../../GameObject/Player/Player.h"
 #include "../../GameObject/Boss/Boss.h"
 #include "../../GameObject/GameObject.h"
+#include "../../GameObject/Bullet/Bullet.h"
 #include "../../Collider/CollisionManager.h"
 #include "../../Collider/CollisionConfig.h"
 #include "../../Camera/CameraController.h"
@@ -31,16 +32,23 @@ public:
    /// @brief 解放
    void Finalize() override;
 
+   /// @brief 弾を生成
+   /// @param position 生成位置
+   /// @param direction 進行方向
+   /// @param speed 速度（デフォルト: 30.0f）
+   /// @return 生成された弾のポインタ
+   Bullet* CreateBullet(const Vector3& position, const Vector3& direction, float speed = 30.0f);
+
 private:
    Player* player_;
    Boss* boss_;
+   std::list<Bullet*> bullets_;
 
    std::unique_ptr<CollisionManager> collisionManager_;
    std::unique_ptr<CollisionConfig> collisionConfig_;
 
    std::unique_ptr<BehaviorTree> bossBehaviorTree_;
 
-   // カメラコントローラー
    std::unique_ptr<CameraController> cameraController_;
 
 private:

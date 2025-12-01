@@ -268,6 +268,11 @@
     <ClCompile Include="Application\TD2_2\AI\BehaviorTree\BehaviorTree.cpp" />
     <ClCompile Include="Application\TD2_2\GameObject\Boss\ActionNode\MoveAction.cpp" />
     <ClCompile Include="Application\TD2_2\UI\GaugeUI.cpp" />
+    <ClCompile Include="Application\TD2_2\GameObject\Bullet\Bullet.cpp" />
+    <ClCompile Include="Application\TD2_2\GameObject\Boss\ActionNode\MoveToCenterAction.cpp" />
+    <ClCompile Include="Application\TD2_2\GameObject\Boss\ActionNode\FleeFromPlayerAction.cpp" />
+    <ClCompile Include="Application\TD2_2\GameObject\Boss\ActionNode\MoveToPlayerAction.cpp" />
+    <ClCompile Include="Application\TD2_2\GameObject\Boss\ActionNode\ShootEightWayAction.cpp" />
     <ClCompile Include="Engine\Particle\Core\ParticleEmitter.cpp" />
     <ClCompile Include="Engine\Particle\Core\ParticleRenderDataBuilder.cpp" />
     <ClCompile Include="Engine\Particle\Core\ParticleResourceManager.cpp" />
@@ -704,9 +709,13 @@
     <ClInclude Include="Application\TD2_2\AI\BehaviorTree\BehaviorTree.h" />
     <ClInclude Include="Application\TD2_2\GameObject\Boss\ActionNode\ActionNode.h" />
     <ClInclude Include="Application\TD2_2\GameObject\Boss\ActionNode\ChargeToPlayerAction.h" />
-    <ClInclude Include="Application\TD2_2\GameObject\Boss\ActionNode\UsageExample.h" />
     <ClInclude Include="Application\TD2_2\GameObject\Boss\ActionNode\MoveAction.h" />
     <ClInclude Include="Application\TD2_2\UI\GaugeUI.h" />
+    <ClInclude Include="Application\TD2_2\GameObject\Bullet\Bullet.h" />
+    <ClInclude Include="Application\TD2_2\GameObject\Boss\ActionNode\MoveToCenterAction.h" />
+    <ClInclude Include="Application\TD2_2\GameObject\Boss\ActionNode\FleeFromPlayerAction.h" />
+    <ClInclude Include="Application\TD2_2\GameObject\Boss\ActionNode\MoveToPlayerAction.h" />
+    <ClInclude Include="Application\TD2_2\GameObject\Boss\ActionNode\ShootEightWayAction.h" />
     <ClInclude Include="Engine\Particle\Core\ParticleEmitter.h" />
     <ClInclude Include="Engine\Particle\Core\ParticleRenderDataBuilder.h" />
     <ClInclude Include="Engine\Particle\Core\ParticleResourceManager.h" />
@@ -729,9 +738,7 @@
     <None Include="Docs\ModelParticle_Implementation_Guide.md" />
     <None Include="Application\TD2_2\AI\Node\BehaviorTreeUsageExamples.md" />
     <None Include="Application\TD2_2\AI\Node\README.md" />
-    <None Include="Application\TD2_2\GameObject\Boss\ActionNode\README.md" />
     <None Include="Application\TD2_2\AI\BehaviorTree\README.md" />
-    <None Include="Application\TD2_2\GameObject\Boss\ARCHITECTURE.md" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Source Files">

@@ -53,6 +53,7 @@ public:
    
    /// @brief ビヘイビアツリーを取得
    BehaviorTree* GetBehaviorTree() const { return behaviorTree_.get(); }
+
 private:
 
    Vector2 acceleration_ = { 0.0f, 0.0f }; // 加速度ベクトル
@@ -70,6 +71,12 @@ private:
    // 突進フラグ
    bool isCharging_ = false;
 
+   // スタン
+   float stunDuration_ = 0.3f;      // スタン持続時間（秒）
+   float stunDamping_ = 0.02f;      // スタン減衰率
+   float stunMaxSpeed_ = 35.0f;     // スタン最大速度
+   GameTimer stunTimer_;            // スタンタイマー
+
    // ノックバックによる中心バイアス増加
    GameTimer knockbackBiasTimer_;
    float knockbackBiasMultiplier_ = 1.0f; // 1.0 = 通常, 小さいほど中心バイアスが強くなる
@@ -84,7 +91,22 @@ private:
    /// @brief コライダーの初期化
    void InitializeCollider();
 
+   /// @brief ステートマシンの初期化
+   void InitializeStateMachine();
+
    void UpdateMovement();
 
    void UpdateRotation() override;
+
+   /// @brief スタン処理
+   void Stun();
+
+   /// @brief スタン初期化
+   void InitializeStun();
+
+   /// @brief 通常状態の初期化
+   void InitializeNormal();
+
+   /// @brief 通常状態の処理
+   void Normal();
 };
