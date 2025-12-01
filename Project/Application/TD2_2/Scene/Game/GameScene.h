@@ -7,6 +7,7 @@
 #include "../../GameObject/Player/Player.h"
 #include "../../GameObject/Boss/Boss.h"
 #include "../../GameObject/GameObject.h"
+#include "../../GameObject/Background/Background.h"
 #include "../../Collider/CollisionManager.h"
 #include "../../Collider/CollisionConfig.h"
 #include "../../Camera/CameraController.h"
@@ -33,6 +34,7 @@ public:
 private:
    Player* player_;
    Boss* boss_;
+   Background* background_;
 
    std::unique_ptr<CollisionManager> collisionManager_;
    std::unique_ptr<CollisionConfig> collisionConfig_;
