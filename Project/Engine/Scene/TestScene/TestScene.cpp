@@ -121,10 +121,17 @@ void TestScene::Initialize(EngineSystem* engine)
 		auto& emissionModule = particleSystem_->GetEmissionModule();
 		auto emissionData = emissionModule.GetEmissionData();
 		emissionData.rateOverTime = 20;  // 1秒に20個のパーティクルを放出
-		emissionData.shapeType = EmissionModule::ShapeType::Sphere;
-		emissionData.radius = 0.5f;
-		emissionData.emitFromSurface = false;
 		emissionModule.SetEmissionData(emissionData);
+	}
+
+	// 形状モジュールの設定
+	{
+		auto& shapeModule = particleSystem_->GetShapeModule();
+		auto shapeData = shapeModule.GetShapeData();
+		shapeData.shapeType = ShapeModule::ShapeType::Sphere;
+		shapeData.radius = 0.5f;
+		shapeData.emitFromSurface = false;
+		shapeModule.SetShapeData(shapeData);
 	}
 
 	// 速度モジュールの設定
@@ -137,30 +144,29 @@ void TestScene::Initialize(EngineSystem* engine)
 		velocityModule.SetVelocityData(velocityData);
 	}
 
-	// 色モジュールの設定
+	// MainModuleの設定
+	{
+		auto& mainModule = particleSystem_->GetMainModule();
+	auto& mainData = mainModule.GetMainData();
+		mainData.startLifetime = 2.0f;
+		mainData.startLifetimeRandomness = 0.25f;
+		mainData.startColor = { 1.0f, 0.8f, 0.2f, 1.0f };  // 黄色
+		mainData.startSize = { 0.3f, 0.3f, 0.3f };
+	}
+
+	// 色モジュールの設定（グラデーションのみ）
 	{
 		auto& colorModule = particleSystem_->GetColorModule();
 		auto colorData = colorModule.GetColorData();
 		colorData.useGradient = true;
-		colorData.startColor = { 1.0f, 0.8f, 0.2f, 1.0f };  // 黄色
 		colorData.endColor = { 1.0f, 0.2f, 0.0f, 0.0f };    // 赤でフェードアウト
 		colorModule.SetColorData(colorData);
 	}
 
-	// ライフタイムモジュールの設定
-	{
-		auto& lifetimeModule = particleSystem_->GetLifetimeModule();
-		auto lifetimeData = lifetimeModule.GetLifetimeData();
-		lifetimeData.startLifetime = 2.0f;
-		lifetimeData.lifetimeRandomness = 0.25f;
-		lifetimeModule.SetLifetimeData(lifetimeData);
-	}
-
-	// サイズモジュールの設定
+	// サイズモジュールの設定（Over Lifetimeのみ）
 	{
 		auto& sizeModule = particleSystem_->GetSizeModule();
 		auto sizeData = sizeModule.GetSizeData();
-		sizeData.startSize = 0.3f;
 		sizeData.endSize = 0.05f;
 		sizeData.sizeOverLifetime = true;
 		sizeModule.SetSizeData(sizeData);
@@ -199,10 +205,17 @@ void TestScene::Initialize(EngineSystem* engine)
 		auto& emissionModule = modelParticleSystem_->GetEmissionModule();
 		auto emissionData = emissionModule.GetEmissionData();
 		emissionData.rateOverTime = 10;  // 1秒に10個のパーティクルを放出
-		emissionData.shapeType = EmissionModule::ShapeType::Box;
-		emissionData.scale = { 1.0f, 0.1f, 1.0f };  // 箱型の放出形状
-		emissionData.emitFromSurface = false;
 		emissionModule.SetEmissionData(emissionData);
+	}
+
+	// 形状モジュールの設定（モデルパーティクル用）
+	{
+		auto& shapeModule = modelParticleSystem_->GetShapeModule();
+		auto shapeData = shapeModule.GetShapeData();
+		shapeData.shapeType = ShapeModule::ShapeType::Box;
+		shapeData.scale = { 1.0f, 0.1f, 1.0f };  // 箱型の放出形状
+		shapeData.emitFromSurface = false;
+		shapeModule.SetShapeData(shapeData);
 	}
 
 	// 速度モジュールの設定（モデルパーティクル用）
@@ -215,30 +228,29 @@ void TestScene::Initialize(EngineSystem* engine)
 		velocityModule.SetVelocityData(velocityData);
 	}
 
-	// 色モジュールの設定（モデルパーティクル用）
+	// MainModuleの設定（モデルパーティクル用）
+	{
+		auto& mainModule = modelParticleSystem_->GetMainModule();
+		auto& mainData = mainModule.GetMainData();
+		mainData.startLifetime = 3.0f;
+		mainData.startLifetimeRandomness = 0.5f;
+		mainData.startColor = { 0.2f, 0.8f, 1.0f, 1.0f };  // 水色
+		mainData.startSize = { 0.2f, 0.2f, 0.2f };
+	}
+
+	// 色モジュールの設定（グラデーションのみ）
 	{
 		auto& colorModule = modelParticleSystem_->GetColorModule();
 		auto colorData = colorModule.GetColorData();
 		colorData.useGradient = true;
-		colorData.startColor = { 0.2f, 0.8f, 1.0f, 1.0f };  // 水色
-		colorData.endColor = { 1.0f, 1.0f, 1.0f, 0.0f };    // 白でフェードアウト
+		colorData.endColor = { 1.0f, 1.0f, 1.0f, 0.0f };  // 白でフェードアウト
 		colorModule.SetColorData(colorData);
 	}
 
-	// ライフタイムモジュールの設定（モデルパーティクル用）
-	{
-		auto& lifetimeModule = modelParticleSystem_->GetLifetimeModule();
-		auto lifetimeData = lifetimeModule.GetLifetimeData();
-		lifetimeData.startLifetime = 3.0f;
-		lifetimeData.lifetimeRandomness = 0.5f;
-		lifetimeModule.SetLifetimeData(lifetimeData);
-	}
-
-	// サイズモジュールの設定（モデルパーティクル用）
+	// サイズモジュールの設定（モデルパーティクル用Over Lifetimeのみ）
 	{
 		auto& sizeModule = modelParticleSystem_->GetSizeModule();
 		auto sizeData = sizeModule.GetSizeData();
-		sizeData.startSize = 0.2f;
 		sizeData.endSize = 0.05f;
 		sizeData.sizeOverLifetime = true;
 		sizeModule.SetSizeData(sizeData);
@@ -249,7 +261,7 @@ void TestScene::Initialize(EngineSystem* engine)
 		auto& rotationModule = modelParticleSystem_->GetRotationModule();
 		auto rotationData = rotationModule.GetRotationData();
 		rotationData.use2DRotation = false;  // 3D回転を使用
-		rotationData.rotationSpeed = { 0.0f, 3.0f, 0.0f };  // Y軸回転
+		rotationData.rotationSpeed = { 0.0f, 3.0f, 0.0f };// Y軸回転
 		rotationData.rotationSpeedRandomness = { 1.0f, 1.0f, 1.0f };
 		rotationModule.SetRotationData(rotationData);
 	}

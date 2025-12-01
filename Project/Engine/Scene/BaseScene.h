@@ -10,6 +10,8 @@ class EngineSystem;
 class CameraManager;
 class DirectXCommon;
 class Object3d;
+class RenderManager;
+class LineRenderer;  // 前方宣言
 
 /// @brief シーンの基底クラス（共通処理を実装）
 class BaseScene : public IScene {
@@ -46,6 +48,11 @@ private:
    /// @brief デバッグ描画を行う（派生クラスでオーバーライド可能）
    virtual void DrawDebug();
 
+   /// @brief 再帰的に描画可能オブジェクトをRenderManagerに追加
+   /// @param renderManager レンダーマネージャー
+   /// @param drawable 描画可能オブジェクト
+   void AddDrawableRecursive(RenderManager* renderManager, IDrawable* drawable);
+
 protected:
    // 派生クラスからアクセス可能な共通メンバー
    EngineSystem* engine_ = nullptr;
@@ -54,4 +61,7 @@ protected:
 
    // ゲームオブジェクト管理
    std::vector<std::unique_ptr<IDrawable>> gameObjects_;
+
+   // ラインレンダラー（エミッターのデバッグ表示用
+   LineRenderer* lineRenderer_ = nullptr;
 };

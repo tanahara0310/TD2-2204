@@ -4,10 +4,11 @@
 #include "MathCore.h"
 
 /// @brief パーティクルの回転制御モジュール
+/// 注意: 初期回転の設定はMainModuleで行います
+/// このモジュールは回転速度と回転の変化のみを担当します
 class RotationModule : public ParticleModule {
 public:
     struct RotationData {
-        Vector3 startRotation = {0.0f, 0.0f, 0.0f};   // 初期回転角度（ラジアン）
         Vector3 rotationSpeed = {0.0f, 0.0f, 0.0f};   // 回転速度（ラジアン/秒）
         Vector3 rotationSpeedRandomness = {0.0f, 0.0f, 0.0f}; // 回転速度のランダム性
         
@@ -40,7 +41,7 @@ public:
         float velocityAlignmentStrength = 1.0f;       // 移動方向への整列強度
     };
 
-    RotationModule() = default;
+    RotationModule();
     ~RotationModule() = default;
 
     /// @brief 回転データを設定

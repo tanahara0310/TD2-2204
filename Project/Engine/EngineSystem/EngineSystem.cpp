@@ -11,6 +11,7 @@
 #include "Engine/Graphics/Resource/ResourceFactory.h"
 #include "Engine/Graphics/PostEffect/PostEffectManager.h"
 #include "Engine/Graphics/LineRenderer.h"
+#include "Engine/Graphics/Render/Line/LineRendererPipeline.h"
 #include "Engine/Graphics/Render/Model/ModelRenderer.h"
 #include "Engine/Graphics/Render/Model/SkinnedModelRenderer.h"
 #include "Engine/Graphics/Render/SkyBox/SkyBoxRenderer.h"
@@ -280,13 +281,13 @@ void EngineSystem::CreateGraphicsComponents()
 	modelParticleRenderer->Initialize(dxPtr->GetDevice());
 	renderManager->RegisterRenderer(RenderPassType::ModelParticle, std::move(modelParticleRenderer));
 	
+	// LineRendererPipelineの作成と登録
+	auto lineRendererPipeline = std::make_unique<LineRendererPipeline>();
+	lineRendererPipeline->Initialize(dxPtr, resourcePtr);
+	renderManager->RegisterRenderer(RenderPassType::Line, std::move(lineRendererPipeline));
+	
 	// RenderManagerを登録
 	RegisterComponent(std::move(renderManager));
-
-	// LineRendererの作成と初期化
-	auto lineRenderer = std::make_unique<LineRenderer>();
-	lineRenderer->Initialize(dxPtr->GetDevice());
-	RegisterComponent(std::move(lineRenderer));
 
 	// PostEffectManagerの作成と初期化
 	auto postEffectManager = std::make_unique<PostEffectManager>();
