@@ -198,6 +198,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="Engine\Graphics\Model\Skeleton\SkeletonLoader.cpp" />
     <ClCompile Include="Engine\Graphics\Model\Skeleton\SkinClusterGenerator.cpp" />
     <ClCompile Include="Engine\Graphics\PostEffect\PostEffectPresetManager.cpp" />
+    <ClCompile Include="Engine\Graphics\Render\Line\LineRendererPipeline.cpp" />
     <ClCompile Include="Engine\Graphics\Render\Model\ModelRenderer.cpp" />
     <ClCompile Include="Engine\Graphics\Render\Model\SkinnedModelRenderer.cpp" />
     <ClCompile Include="Engine\Graphics\Render\Particle\BaseParticleRenderer.cpp" />
@@ -207,6 +208,14 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="Engine\Graphics\Render\SkyBox\SkyBoxRenderer.cpp" />
     <ClCompile Include="Engine\Graphics\Render\Sprite\SpriteRenderer.cpp" />
     <ClCompile Include="Engine\ObjectCommon\IDrawable.cpp" />
+    <ClCompile Include="Engine\Particle\Core\ParticleEmitter.cpp" />
+    <ClCompile Include="Engine\Particle\Core\ParticleRenderDataBuilder.cpp" />
+    <ClCompile Include="Engine\Particle\Core\ParticleResourceManager.cpp" />
+    <ClCompile Include="Engine\Particle\Core\ParticleUpdater.cpp" />
+    <ClCompile Include="Engine\Particle\Debug\ParticleSystemDebugUI.cpp" />
+    <ClCompile Include="Engine\Particle\Modules\MainModule.cpp" />
+    <ClCompile Include="Engine\Particle\Modules\NoiseModule.cpp" />
+    <ClCompile Include="Engine\Particle\Modules\ShapeModule.cpp" />
     <ClCompile Include="Engine\Particle\ParticlePresetManager.cpp" />
     <ClCompile Include="Engine\Scene\BaseScene.cpp" />
     <ClCompile Include="Engine\ObjectCommon\Object3d.cpp" />
@@ -383,6 +392,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="Engine\Graphics\Model\Skeleton\SkinClusterGenerator.h" />
     <ClInclude Include="Engine\Graphics\PostEffect\PostEffectPresetManager.h" />
     <ClInclude Include="Engine\Graphics\Render\IRenderer.h" />
+    <ClInclude Include="Engine\Graphics\Render\Line\LineRendererPipeline.h" />
     <ClInclude Include="Engine\Graphics\Render\Model\ModelRenderer.h" />
     <ClInclude Include="Engine\Graphics\Render\Model\SkinnedModelRenderer.h" />
     <ClInclude Include="Engine\Graphics\Render\Particle\BaseParticleRenderer.h" />
@@ -396,6 +406,14 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="Engine\Graphics\Structs\SkinCluster.h" />
     <ClInclude Include="Engine\Math\EulerTransform.h" />
     <ClInclude Include="Engine\Math\QuaternionTransform.h" />
+    <ClInclude Include="Engine\Particle\Core\ParticleEmitter.h" />
+    <ClInclude Include="Engine\Particle\Core\ParticleRenderDataBuilder.h" />
+    <ClInclude Include="Engine\Particle\Core\ParticleResourceManager.h" />
+    <ClInclude Include="Engine\Particle\Core\ParticleUpdater.h" />
+    <ClInclude Include="Engine\Particle\Debug\ParticleSystemDebugUI.h" />
+    <ClInclude Include="Engine\Particle\Modules\MainModule.h" />
+    <ClInclude Include="Engine\Particle\Modules\NoiseModule.h" />
+    <ClInclude Include="Engine\Particle\Modules\ShapeModule.h" />
     <ClInclude Include="Engine\Particle\ParticlePresetManager.h" />
     <ClInclude Include="Engine\Particle\ParticleSystem.h" />
     <ClInclude Include="Engine\Scene\BaseScene.h" />

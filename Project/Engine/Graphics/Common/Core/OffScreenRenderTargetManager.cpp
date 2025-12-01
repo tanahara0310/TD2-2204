@@ -2,6 +2,7 @@
 #include "DescriptorManager.h"
 #include "WinApp/WinApp.h"
 #include "Engine/Utility/Logger/Logger.h"
+#include "Engine/Graphics/Render/Render.h"
 
 #include <cassert>
 #include <format>
@@ -29,10 +30,11 @@ void OffScreenRenderTargetManager::CreateOffScreenRenderTarget()
 
     D3D12_CLEAR_VALUE clearValue = {};
     clearValue.Format = texDesc.Format;
-    clearValue.Color[0] = 0.1f;
-    clearValue.Color[1] = 0.25f;
-    clearValue.Color[2] = 0.5f;
-    clearValue.Color[3] = 1.0f;
+    // 統一されたクリアカラーを使用
+    clearValue.Color[0] = Render::kClearColor[0];
+    clearValue.Color[1] = Render::kClearColor[1];
+    clearValue.Color[2] = Render::kClearColor[2];
+    clearValue.Color[3] = Render::kClearColor[3];
 
     D3D12_HEAP_PROPERTIES heapProps = {};
     heapProps.Type = D3D12_HEAP_TYPE_DEFAULT;
