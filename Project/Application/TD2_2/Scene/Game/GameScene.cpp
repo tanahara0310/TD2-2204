@@ -74,17 +74,6 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  cameraController_->SetSmoothSpeed(50.0f);
 	  cameraController_->SetMarginDistance(8.0f);
    }
-
-   {
-	   // モデルの読み込み
-	   modelManager->LoadModelResource("Resources/Models/Background", "Background.obj");
-	   auto bgModel = modelManager->CreateStaticModel("Resources/Models/Background/Background.obj");
-	   auto bgTexture = textureManager.Load("Resources/Textures/Background.png");
-	   auto bgObject = std::make_unique<Background>();
-	   bgObject->Initialize(std::move(bgModel), bgTexture);
-	   background_ = bgObject.get();
-	   gameObjects_.push_back(std::move(bgObject));
-   }
 }
 
 void GameScene::Update() {
