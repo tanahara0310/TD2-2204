@@ -33,16 +33,18 @@ void Player::Initialize(std::unique_ptr<Model> model, TextureManager::LoadedText
 
 void Player::Update() {
    if (keyConfig_->Get<bool>("Charge")) {
-      if (GetMoveDirection().Length() > 0.0f) {
-         stateMachine_->RequestState("Charge", 0);
-      }
+	  if (GetMoveDirection().Length() > 0.0f) {
+		 stateMachine_->RequestState("Charge", 0);
+	  }
    }
 
    if (keyConfig_->Get<bool>("Damage")) {
-      stateMachine_->RequestState("Damage", 1);
+	  stateMachine_->RequestState("Damage", 1);
    }
 
    stateMachine_->Update();
+
+   GameObject::UpdateModelSwapAnimation();
 
    UpdateRotation();
 
@@ -53,7 +55,7 @@ void Player::Update() {
 
 void Player::Draw(const ICamera* camera) {
    if (!model_ || !camera) {
-      return;
+	  return;
    }
 
    // モデルの描画
@@ -71,9 +73,9 @@ void Player::OnCollisionEnter(GameObject* other) {
    Vector2 otherVel = { 0.0f, 0.0f };
    // other が Boss か Player かを判別して速度を取得
    if (auto p = dynamic_cast<Player*>(other)) {
-      otherVel = p->GetVelocity();
+	  otherVel = p->GetVelocity();
    } else if (auto b = dynamic_cast<Boss*>(other)) {
-      otherVel = b->GetVelocity();
+	  otherVel = b->GetVelocity();
    }
 
    Vector2 relativeVel = velocity_ - otherVel;
@@ -83,14 +85,14 @@ void Player::OnCollisionEnter(GameObject* other) {
 
    // 突進中かつ相手に向かって突進している場合は反発を弱める
    if (isCharging_) {
-      Vector2 chargeDir = direction_.Normalize();
-      if (chargeDir.Length() > 0.0f) {
-         float dot = chargeDir.x * normal.x + chargeDir.y * normal.y; // cos(theta)
-         // dot が大きいほど相手方向に突進している
-         if (dot > 0.0f) {
-            response *= 0.1f; 
-         }
-      }
+	  Vector2 chargeDir = direction_.Normalize();
+	  if (chargeDir.Length() > 0.0f) {
+		 float dot = chargeDir.x * normal.x + chargeDir.y * normal.y; // cos(theta)
+		 // dot が大きいほど相手方向に突進している
+		 if (dot > 0.0f) {
+			response *= 0.1f;
+		 }
+	  }
    }
 
    // clamp to max
@@ -113,9 +115,9 @@ void Player::OnCollisionStay(GameObject* other) {
 
    Vector2 otherVel = { 0.0f, 0.0f };
    if (auto p = dynamic_cast<Player*>(other)) {
-      otherVel = p->GetVelocity();
+	  otherVel = p->GetVelocity();
    } else if (auto b = dynamic_cast<Boss*>(other)) {
-      otherVel = b->GetVelocity();
+	  otherVel = b->GetVelocity();
    }
 
    Vector2 relativeVel = velocity_ - otherVel;
@@ -124,13 +126,13 @@ void Player::OnCollisionStay(GameObject* other) {
    float response = stunPower_ + speed * collisionResponseScale_;
 
    if (isCharging_) {
-      Vector2 chargeDir = direction_.Normalize();
-      if (chargeDir.Length() > 0.0f) {
-         float dot = chargeDir.x * normal.x + chargeDir.y * normal.y;
-         if (dot > 0.0f) {
-            response *= 0.1f;
-         }
-      }
+	  Vector2 chargeDir = direction_.Normalize();
+	  if (chargeDir.Length() > 0.0f) {
+		 float dot = chargeDir.x * normal.x + chargeDir.y * normal.y;
+		 if (dot > 0.0f) {
+			response *= 0.1f;
+		 }
+	  }
    }
 
    if (response > maxCollisionResponse_) response = maxCollisionResponse_;
@@ -152,18 +154,18 @@ void Player::InitializeKeyConfig() {
    // Moveアクションの追加とバインド設定
    keyConfig_->AddAction("Move", ActionType::Vector2);
    ActionBuilder(keyConfig_->GetAction("Move"))
-      .BindKeyboardWASD(DIK_W, DIK_S, DIK_A, DIK_D)
-      .BindGamepadLeftStick();
+	  .BindKeyboardWASD(DIK_W, DIK_S, DIK_A, DIK_D)
+	  .BindGamepadLeftStick();
 
    // Chargeアクションの追加とバインド設定
    keyConfig_->AddAction("Charge", ActionType::Bool);
    ActionBuilder(keyConfig_->GetAction("Charge"))
-      .BindKey(DIK_SPACE)
-      .BindGamepadButton(GamepadButton::A);
+	  .BindKey(DIK_SPACE)
+	  .BindGamepadButton(GamepadButton::A);
 
    keyConfig_->AddAction("Damage", ActionType::Bool);
    ActionBuilder(keyConfig_->GetAction("Damage"))
-      .BindKey(DIK_0);
+	  .BindKey(DIK_0);
 }
 
 void Player::InitializeStateMachine() {
@@ -221,9 +223,9 @@ void Player::UpdateRotation() {
    direction_.y = std::clamp(direction_.y, -1.0f, 1.0f);
 
    if (direction_.Length() == 0.0f) {
-      direction_ = velocity_.Normalize();
-      direction_.x = std::clamp(direction_.x, -0.2f, 0.2f);
-      direction_.y = std::clamp(direction_.y, -0.2f, 0.2f);
+	  direction_ = velocity_.Normalize();
+	  direction_.x = std::clamp(direction_.x, -0.2f, 0.2f);
+	  direction_.y = std::clamp(direction_.y, -0.2f, 0.2f);
    }
 
    GameObject::TiltByVelocity(direction_);
@@ -240,7 +242,7 @@ void Player::Charge() {
 
    chargeTimer_.Update(GameUtils::GetDeltaTime());
    if (chargeTimer_.IsFinished()) {
-      stateMachine_->RequestState("Move", 0);
+	  stateMachine_->RequestState("Move", 0);
    }
 }
 
@@ -248,20 +250,17 @@ void Player::Stun() {
 
    stunTimer_.Update(GameUtils::GetDeltaTime());
    if (stunTimer_.IsFinished()) {
-      stateMachine_->RequestState("Move", 0);
-      GameObject::ChangeModelResource("Resources/Models/Player/Player.obj");
-      stateMachine_->RequestState("Move", 0);
+	  stateMachine_->RequestState("Move", 0);
    }
 }
 
 void Player::Damage() {
    if (damageFunction_) {
-      damageFunction_();
+	  damageFunction_();
    }
 
    if (GameObject::UpdateShake()) return;
 
-   GameObject::ChangeModelResource("Resources/Models/Player/Player.obj");
    stateMachine_->RequestState("Move", 0);
 }
 
@@ -283,7 +282,7 @@ void Player::InitializeCharge() {
 void Player::InitializeMove() {
    dampingPerSecond_ = moveDamping_;
    maxSpeed_ = moveMaxSpeed_;
-
+   StartModelSwapAnimation("Player1", "Player2", 0.1f, true);
    isCharging_ = false;
 }
 
@@ -292,21 +291,26 @@ void Player::InitializeStun() {
    maxSpeed_ = stunMaxSpeed_;
 
    stunTimer_.Start(stunDuration_, false);
-   GameObject::ChangeModelResource("Resources/Models/Player/Damage/PlayerDamage.obj");
+
+   StopModelSwapAnimation();
+
+   ChangeToRegisteredModel("Damage");
 
    isCharging_ = false;
 }
 
 void Player::InitializeDamage() {
    if (startDamageFunction_) {
-      startDamageFunction_();
+	  startDamageFunction_();
    }
+
+   StopModelSwapAnimation();
 
    GameObject::StartShake(0.15f, 1.0f);
 
    velocity_ = { 0.0f, 0.0f };
 
-   GameObject::ChangeModelResource("Resources/Models/Player/Damage/PlayerDamage.obj");
+   ChangeToRegisteredModel("Damage");
 
    isCharging_ = false;
 }
