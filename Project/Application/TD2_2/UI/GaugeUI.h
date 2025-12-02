@@ -22,13 +22,13 @@ public:
 	/// <param name="segment">セグメントスプライト</param>
 	/// <param name="cameraManager">カメラマネージャー</param>
 	/// <param name="divisions">ゲージの分割数</param>
-	void Initialize(Sprite* fill, Sprite* bg, Sprite* segment, CameraManager* cameraManager, int divisions);
+	void Initialize(Sprite* fill, Sprite* bg, Sprite* segment, CameraManager* cameraManager);
 
 	// 追従対象を設定
 	void SetTarget(GameObject* target) { target_ = target; }
 
 	// 外部から分割数を設定
-	void SetValue(float current, float max);
+	void SetValue(int current);
 
 	// 毎フレーム呼ぶ
 	void Update();
@@ -49,9 +49,9 @@ private:
 	CameraManager* cameraManager_ = nullptr;
 	GameObject* target_ = nullptr;
 
-	// HP値管理
-	float maxHP_ = 10.0f;
-	float currentHP_ = 0.0f;
+	// ゲージ値管理
+	int maxGauge_ = 5;
+	int currentGauge_ = 0;
 
 	// 見た目設定（ピクセル単位）
 	float fullWidth_ = 120.0f; // HPゲージの最大幅（px）
@@ -60,13 +60,16 @@ private:
 	// 分割数分増やす
 	float segmentWidth_ = 0.0f;
 
-	// Afterが減る速度（HP/s）
-	float afterDecreaseSpeed_ = 5.0f;
+	// Segmentが増える速度
+	float segmentDecreaseSpeed_ = 10.0f;
 
 	// 位置オフセット
 	Vector2 screenOffset_ = {0.0f, -100.0f};
 	float drawDepth_ = 0.0f;
 
-	// 分割数
-	int divisions_ = 0;
+	// ゲージの最大サイズ
+	Vector2 maxSpriteSize_ = {};
+
+	// ゲージ1個分のサイズX
+	float spriteSizeX_ = 0.0f;
 };
