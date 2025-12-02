@@ -5,37 +5,37 @@
 #include <Windows.h>  // OutputDebugStringW用
 #endif
 
-void Voxel::Initialize()
+void Voxel::Initialize(ModelResource* modelResource, TextureManager::LoadedTexture texture)
 {
 	auto engine = GetEngineSystem();
-
-	// 必須コンポーネントの取得
 	auto dxCommon = engine->GetComponent<DirectXCommon>();
-	auto modelManager = engine->GetComponent<ModelManager>();
-	auto& textureManager = TextureManager::GetInstance();
 
-	// モデルの作成
-	model_ = modelManager->CreateStaticModel("Resources/Models/Voxel/voxel.obj");
-	
+	if (!modelResource) {
+#ifdef _DEBUG
+		OutputDebugStringW(L"[ERROR] Voxel: モデルリソースがnullptrです\n");
+#endif
+		return;
+	}
+
+	// モデルの作成（リソースから新しいインスタンスを作成）
+	model_ = std::make_unique<Model>();
+	model_->Initialize(modelResource);
+
 #ifdef _DEBUG
 	if (!model_) {
-		OutputDebugStringW(L"[ERROR] Voxel: モデルの読み込みに失敗しました: Resources/Models/Voxel/voxel.obj\n");
-	} else {
-		OutputDebugStringW(L"[INFO] Voxel: モデルを正常に読み込みました\n");
+		OutputDebugStringW(L"[ERROR] Voxel: モデルの作成に失敗しました\n");
 	}
 #endif
-	
+
 	// トランスフォームの初期化
 	transform_.Initialize(dxCommon->GetDevice());
-	
-	// テクスチャの読み込み（white1x1）
-	texture_ = textureManager.Load("Resources/SampleResources/white1x1.png");
-	
+
+	// テクスチャを設定
+	texture_ = texture;
+
 #ifdef _DEBUG
 	if (texture_.gpuHandle.ptr == 0) {
-		OutputDebugStringW(L"[ERROR] Voxel: テクスチャの読み込みに失敗しました: Resources/SampleResources/white1x1.png\n");
-	} else {
-		OutputDebugStringW(L"[INFO] Voxel: テクスチャを正常に読み込みました\n");
+		OutputDebugStringW(L"[WARNING] Voxel: テクスチャのGPUハンドルが無効です\n");
 	}
 #endif
 }
@@ -49,15 +49,12 @@ void Voxel::Update()
 void Voxel::Draw(const ICamera* camera)
 {
 	if (!model_ || !camera) {
-#ifdef _DEBUG
-		if (!model_) {
-			OutputDebugStringW(L"[WARNING] Voxel::Draw: モデルがnullptrです\n");
-		}
-		if (!camera) {
-			OutputDebugStringW(L"[WARNING] Voxel::Draw: カメラがnullptrです\n");
-		}
-#endif
 		return;
+	}
+
+	// マテリアルに色を設定
+	if (auto* materialManager = model_->GetMaterialManager()) {
+		materialManager->SetColor(color_);
 	}
 
 	// モデルの描画
@@ -66,5 +63,16 @@ void Voxel::Draw(const ICamera* camera)
 
 bool Voxel::DrawImGui()
 {
-	return Object3d::DrawImGui();
+	// 親クラスのImGuiを呼び出し
+	return GameObject::DrawImGui();
+}
+
+void Voxel::SetColor(const Vector4& color)
+{
+	color_ = color;
+}
+
+Vector4 Voxel::GetColor() const
+{
+	return color_;
 }
