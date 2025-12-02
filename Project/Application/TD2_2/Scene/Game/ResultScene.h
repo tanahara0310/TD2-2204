@@ -3,6 +3,8 @@
 #include <memory>
 #include "Scene/BaseScene.h"
 #include "Engine/Graphics/Sprite/Sprite.h"
+#include "Engine/Graphics/TextureManager.h"
+#include "Engine/ObjectCommon/SpriteObject.h"
 
 class EngineSystem;
 class CameraManager;
@@ -31,8 +33,7 @@ private:
 	float currentClearTime_ = 0.0f;
 
 	// リザルト画像
-	//std::unique_ptr<Sprite> resultSprite_;
-	//TextureManager::LoadedTexture resultTexture_;
+	SpriteObject* resultSprite_ = nullptr;
 
 	// リスタート画像
 	std::unique_ptr<Sprite> restartSprite_;
@@ -42,4 +43,7 @@ private:
 
 	// タイマー画像
 	std::unique_ptr<Sprite> curretTimeSprite_;
+
+private:
+	std::unique_ptr<SpriteObject> CreateResultSprite();
 };
