@@ -1,4 +1,5 @@
 #include "GameScene.h"
+#include <numbers>
 #include "EngineSystem/EngineSystem.h"
 #include "Scene/SceneManager.h"
 #include "Engine/Camera/CameraManager.h"
@@ -16,6 +17,7 @@
 #include "../../GameObject/Boss/ActionNode/MoveToCenterAction.h"
 #include "../../GameObject/Boss/ActionNode/FleeFromPlayerAction.h"
 #include "../../GameObject/Bullet/Bullet.h"
+#include "../Config/GameSceneConfig.h"
 
 void GameScene::Initialize(EngineSystem* engine) {
    // 基底クラスの初期化
@@ -57,6 +59,19 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  gameObjects_.push_back(std::move(boss));
    }
 
+   // 背景の生成と初期化
+   {
+	  auto backgroundModel = modelManager->CreateStaticModel("Resources/Models/Background/Background.obj");
+	  auto backgroundTexture = textureManager.Load("Resources/Textures/Background.png");
+	  auto background = std::make_unique<Background>();
+	  background_ = background.get();
+	  background->Initialize(std::move(backgroundModel), backgroundTexture);
+	  gameObjects_.push_back(std::move(background));
+   }
+
+   // フレームの初期化
+   InitializeFrames();
+
    // 衝突設定の初期化
    {
 	  collisionConfig_ = std::make_unique<CollisionConfig>();
@@ -75,13 +90,27 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  cameraController_->Initialize(releaseCamera, player_, boss_);
 
 	  // カメラパラメータの調整（オプション）
-	  cameraController_->SetMinDistance(20.0f);
+	  cameraController_->SetMinDistance(35.0f);
 	  cameraController_->SetMaxDistance(100.0f);
 	  cameraController_->SetDistanceScale(1.8f);
 	  cameraController_->SetHeightOffset(0.0f);
 	  cameraController_->SetPitchAngle(0.0f);
 	  cameraController_->SetSmoothSpeed(50.0f);
 	  cameraController_->SetMarginDistance(8.0f);
+
+	  // ステージ境界を設定（フレームの外側まで）
+	  // kStageSize はフレームを含めた全体サイズなので、フレーム1個分外側に広げる
+	  float stageHalfWidth = GameSceneConfig::kStageSize.x / 2.0f;
+	  float stageHalfHeight = GameSceneConfig::kStageSize.y / 2.0f;
+	  float frameWidth = GameSceneConfig::kFrameSize.x*0.65f;
+	  float frameHeight = GameSceneConfig::kFrameSize.y*0.65f;
+	  
+	  cameraController_->SetStageBounds(
+		 GameSceneConfig::kStageCenter.x - stageHalfWidth - frameWidth,
+		 GameSceneConfig::kStageCenter.x + stageHalfWidth + frameWidth,
+		 GameSceneConfig::kStageCenter.y - stageHalfHeight - frameHeight,
+		 GameSceneConfig::kStageCenter.y + stageHalfHeight + frameHeight
+	  );
    }
 }
 
@@ -142,6 +171,75 @@ std::unique_ptr<BehaviorTree> GameScene::CreateBossBehaviorTree() {
 	  },
 	  "BossMainAI"
    );
+}
+
+void GameScene::InitializeFrames() {
+   auto modelManager = engine_->GetComponent<ModelManager>();
+   auto& textureManager = TextureManager::GetInstance();
+
+   size_t row = static_cast<size_t>(GameSceneConfig::kStageSize.y / GameSceneConfig::kFrameSize.y);
+   size_t col = static_cast<size_t>(GameSceneConfig::kStageSize.x / GameSceneConfig::kFrameSize.x);
+
+   float startX = GameSceneConfig::kStageCenter.x - GameSceneConfig::kStageSize.x / 2.0f;
+   float startY = GameSceneConfig::kStageCenter.y - GameSceneConfig::kStageSize.y / 2.0f;
+
+   auto frameTexture = textureManager.Load("Resources/Textures/Frame.png");
+
+   for (size_t y = 0; y <= row; ++y) {
+	  for (size_t x = 0; x <= col; ++x) {
+
+		 bool isEdge = (y == 0 || y == row || x == 0 || x == col);
+		 if (!isEdge) continue;
+
+		 bool isCorner = (y == 0 || y == row) && (x == 0 || x == col);
+
+		 std::unique_ptr<Model> model;
+		 float rotation = 0.0f;
+		 using std::numbers::pi_v;
+
+		 if (isCorner) {
+			model = modelManager->CreateStaticModel("Resources/Models/FrameCorner/FrameCorner.obj");
+
+			// 左下 → 右下 → 右上 → 左上 の順に +90°ずつ回転
+			if (x == 0 && y == 0) {
+			   rotation = 0.0f;                   // 左下
+			} else if (x == col && y == 0) {
+			   rotation = pi_v<float> / 2.0f;     // 右下
+			} else if (x == col && y == row) {
+			   rotation = pi_v<float>;            // 右上
+			} else if (x == 0 && y == row) {
+			   rotation = pi_v<float> *1.5f;     // 左上
+			}
+
+		 } else {
+			model = modelManager->CreateStaticModel("Resources/Models/Frame/Frame.obj");
+
+			// 上下は横向き（回転なし）
+			// 左右は縦向き（+90°）
+			if (y == 0 || y == row) {
+			   rotation = 0.0f;
+			} else {
+			   rotation = pi_v<float> / 2.0f;
+			}
+		 }
+
+		 auto frame = std::make_unique<Frame>();
+		 frame->Initialize(std::move(model), frameTexture);
+
+		 frame->GetTransform().translate = {
+			startX + x * GameSceneConfig::kFrameSize.x,
+			startY + y * GameSceneConfig::kFrameSize.y,
+			0.0f
+		 };
+
+		 frame->GetTransform().rotate.z = rotation;
+
+		 frame->GetTransform().SetRotationMode(WorldTransform::RotationMode::Euler);
+
+		 frames_.push_back(frame.get());
+		 gameObjects_.push_back(std::move(frame));
+	  }
+   }
 }
 
 Bullet* GameScene::CreateBullet(const Vector3& position, const Vector3& direction, float speed) {

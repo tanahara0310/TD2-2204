@@ -26,6 +26,12 @@ void CameraController::Initialize(Camera* camera, GameObject* object1, GameObjec
 	targetPosition_ = CalculateTargetPosition();
 	float objectDistance = CalculateObjectDistance();
 	currentDistance_ = CalculateCameraDistance(objectDistance);
+	
+	// ステージ境界制限を適用
+	if (useStageBounds_) {
+		targetPosition_ = ClampTargetToStageBounds(targetPosition_, currentDistance_);
+	}
+	
 	currentCameraPos_ = CalculateCameraPosition(targetPosition_, currentDistance_);
 
 	// カメラに初期設定を適用
@@ -64,6 +70,11 @@ void CameraController::Update()
 
 	// 距離の補間（スムーズにズーム）
 	currentDistance_ = EasingUtil::Lerp(currentDistance_, targetDistance, easedFactor, EasingUtil::Type::EaseOutQuad);
+
+	// ステージ境界制限を適用
+	if (useStageBounds_) {
+		targetPosition_ = ClampTargetToStageBounds(targetPosition_, currentDistance_);
+	}
 
 	// カメラ位置を計算
 	Vector3 targetCameraPos = CalculateCameraPosition(targetPosition_, currentDistance_);
@@ -186,6 +197,74 @@ void CameraController::SetTargets(GameObject* object1, GameObject* object2)
 {
 	object1_ = object1;
 	object2_ = object2;
+}
+
+void CameraController::SetStageBounds(float minX, float maxX, float minY, float maxY)
+{
+	stageBoundsMinX_ = minX;
+	stageBoundsMaxX_ = maxX;
+	stageBoundsMinY_ = minY;
+	stageBoundsMaxY_ = maxY;
+	useStageBounds_ = true;
+}
+
+Vector3 CameraController::ClampTargetToStageBounds(const Vector3& targetPos, float cameraDistance) const
+{
+	if (!useStageBounds_) {
+		return targetPos;
+	}
+
+	Vector3 clampedPos = targetPos;
+
+	// 視野角の計算
+	float halfFovY = kFovY * 0.5f;
+	float halfFovX = std::atan(std::tan(halfFovY) * kAspectRatio);
+
+	// カメラの俯角を考慮
+	float cosAngle = std::cos(pitchAngle_);
+	float sinAngle = std::sin(pitchAngle_);
+
+	// カメラからターゲットまでの水平距離
+	float horizontalDistance = cameraDistance * cosAngle;
+
+	// X軸方向の可視範囲（左右）
+	float visibleHalfWidth = horizontalDistance * std::tan(halfFovX);
+
+	// Y軸方向の可視範囲（上下）
+	// カメラが斜めから見るため、上下の見える範囲は異なる
+	float effectiveDistance = cameraDistance;
+	float visibleHalfHeight = effectiveDistance * std::tan(halfFovY);
+
+	// 可視範囲の実際の高さ（俯角を考慮した補正）
+	float actualVisibleTop = visibleHalfHeight * (1.0f + sinAngle * 0.5f);
+	float actualVisibleBottom = visibleHalfHeight * (1.0f - sinAngle * 0.5f);
+
+	// ターゲット位置をステージ境界内に制限
+	// X軸の制限
+	float minTargetX = stageBoundsMinX_ + visibleHalfWidth;
+	float maxTargetX = stageBoundsMaxX_ - visibleHalfWidth;
+	
+	// minが maxを超えないように修正
+	if (minTargetX > maxTargetX) {
+		float center = (stageBoundsMinX_ + stageBoundsMaxX_) * 0.5f;
+		clampedPos.x = center;
+	} else {
+		clampedPos.x = std::clamp(clampedPos.x, minTargetX, maxTargetX);
+	}
+
+	// Y軸の制限（俯角を考慮）
+	float minTargetY = stageBoundsMinY_ + actualVisibleBottom;
+	float maxTargetY = stageBoundsMaxY_ - actualVisibleTop;
+	
+	// minが maxを超えないように修正
+	if (minTargetY > maxTargetY) {
+		float center = (stageBoundsMinY_ + stageBoundsMaxY_) * 0.5f;
+		clampedPos.y = center;
+	} else {
+		clampedPos.y = std::clamp(clampedPos.y, minTargetY, maxTargetY);
+	}
+
+	return clampedPos;
 }
 
 Vector3 CameraController::CalculateTargetPosition() const
@@ -370,6 +449,30 @@ void CameraController::DrawImGui()
 		// スムーズ設定
 		ImGui::DragFloat("Smooth Speed", &smoothSpeed_, 0.1f, 0.1f, 20.0f);
 		ImGui::TextWrapped("推奨値: 3.0-8.0 (低いほど滑らか、高いほど反応が速い)");
+
+		ImGui::Separator();
+
+		// ステージ境界設定
+		if (ImGui::CollapsingHeader("Stage Bounds")) {
+			ImGui::Checkbox("Use Stage Bounds", &useStageBounds_);
+			ImGui::TextWrapped("ステージ境界制限を有効にすると、カメラがステージ外を映さなくなります");
+
+			if (useStageBounds_) {
+				ImGui::Separator();
+				ImGui::Text("境界設定:");
+				ImGui::DragFloat("Min X", &stageBoundsMinX_, 0.5f, -200.0f, stageBoundsMaxX_);
+				ImGui::DragFloat("Max X", &stageBoundsMaxX_, 0.5f, stageBoundsMinX_, 200.0f);
+				ImGui::DragFloat("Min Y", &stageBoundsMinY_, 0.5f, -200.0f, stageBoundsMaxY_);
+				ImGui::DragFloat("Max Y", &stageBoundsMaxY_, 0.5f, stageBoundsMinY_, 200.0f);
+
+				ImGui::Separator();
+				ImGui::Text("ステージサイズ:");
+				float stageWidth = stageBoundsMaxX_ - stageBoundsMinX_;
+				float stageHeight = stageBoundsMaxY_ - stageBoundsMinY_;
+				ImGui::Text("幅: %.2f", stageWidth);
+				ImGui::Text("高さ: %.2f", stageHeight);
+			}
+		}
 
 		ImGui::Separator();
 
