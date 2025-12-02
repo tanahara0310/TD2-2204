@@ -5,7 +5,9 @@
 
 //ゲームオブジェクトのインクルード
 #include "Object3d.h"
-#include "../../GameObject/Title/Sphere.h"
+#include "../../GameObject/Voxel/Voxel.h"
+#include "../../GameObject/Lightning/Lightning.h"
+#include "../../GameObject/Title/TitleUI.h"
 
 class EngineSystem;
 class CameraManager;
@@ -26,4 +28,5 @@ public:
 	void Finalize() override;
 
 private:
+	std::unique_ptr<TitleUI> titleUI_;
 };
