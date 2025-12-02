@@ -83,6 +83,13 @@ public:
 	/// @param padding 画面端からの余白（0.0-1.0、デフォルト0.1 = 10%）
 	void SetScreenPadding(float padding) { screenPadding_ = padding; }
 
+	/// @brief ステージ境界を設定
+	/// @param minX ステージの最小X座標
+	/// @param maxX ステージの最大X座標
+	/// @param minY ステージの最小Y座標
+	/// @param maxY ステージの最大Y座標
+	void SetStageBounds(float minX, float maxX, float minY, float maxY);
+
 	/// @brief 追跡対象を設定
 	/// @param object1 追跡するゲームオブジェクト1
 	/// @param object2 追跡するゲームオブジェクト2
@@ -148,6 +155,12 @@ private:
 	/// @return シェイクによるオフセット
 	Vector3 CalculateShakeOffset() const;
 
+	/// @brief ステージ境界内にターゲット位置を制限
+	/// @param targetPos 制限前のターゲット位置
+	/// @param cameraDistance カメラの距離
+	/// @return ステージ境界内に制限されたターゲット位置
+	Vector3 ClampTargetToStageBounds(const Vector3& targetPos, float cameraDistance) const;
+
 	// 制御対象
 	Camera* camera_ = nullptr;              ///< 制御するカメラ
 	GameObject* object1_ = nullptr;         ///< 追跡対象1
@@ -162,6 +175,13 @@ private:
 	float smoothSpeed_ = 4.0f;              ///< スムーズ補間速度（カメラ酔い防止のため低めに設定）
 	float marginDistance_ = 5.0f;           ///< この距離内は無視するマージン
 	float screenPadding_ = 0.15f;           ///< 画面端からの余白（0.15 = 15%）
+
+	// ステージ境界
+	float stageBoundsMinX_ = -50.0f;        ///< ステージの最小X座標
+	float stageBoundsMaxX_ = 50.0f;         ///< ステージの最大X座標
+	float stageBoundsMinY_ = -50.0f;        ///< ステージの最小Y座標
+	float stageBoundsMaxY_ = 50.0f;         ///< ステージの最大Y座標
+	bool useStageBounds_ = false;           ///< ステージ境界制限を使用するか
 
 	// アスペクト比設定
 	static constexpr float kAspectRatio = 16.0f / 9.0f;  ///< アスペクト比（16:9）

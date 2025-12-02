@@ -169,8 +169,14 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="Application\TD2_2\GameObject\Boss\ActionNode\ActionNode.cpp" />
     <ClCompile Include="Application\TD2_2\GameObject\Boss\ActionNode\ChargeToPlayerAction.cpp" />
     <ClCompile Include="Application\TD2_2\AI\BehaviorTree\BehaviorTree.cpp" />
+    <ClCompile Include="Application\TD2_2\GameObject\Boss\ActionNode\FleeFromPlayerAction.cpp" />
     <ClCompile Include="Application\TD2_2\GameObject\Boss\ActionNode\MoveAction.cpp" />
+    <ClCompile Include="Application\TD2_2\GameObject\Boss\ActionNode\MoveToCenterAction.cpp" />
+    <ClCompile Include="Application\TD2_2\GameObject\Boss\ActionNode\MoveToPlayerAction.cpp" />
+    <ClCompile Include="Application\TD2_2\GameObject\Boss\ActionNode\ShootEightWayAction.cpp" />
     <ClCompile Include="Application\TD2_2\GameObject\Boss\Boss.cpp" />
+    <ClCompile Include="Application\TD2_2\GameObject\Bullet\Bullet.cpp" />
+    <ClCompile Include="Application\TD2_2\GameObject\Frame\Frame.cpp" />
     <ClCompile Include="Application\TD2_2\GameObject\GameObject.cpp" />
     <ClCompile Include="Application\TD2_2\GameObject\Lightning\Lightning.cpp" />
     <ClCompile Include="Application\TD2_2\GameObject\Player\Player.cpp" />
@@ -189,6 +195,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="Application\TD2_2\Scene\Game\TitleScene.cpp" />
     <ClCompile Include="Application\TD2_2\Utility\GameUtils.cpp" />
     <ClCompile Include="Application\TD2_2\Utility\KeyConfig.cpp" />
+    <ClCompile Include="Application\TD2_2\GameObject\Background\Background.cpp" />
     <ClCompile Include="Engine\Camera\Camera2D.cpp" />
     <ClCompile Include="Engine\Camera\CameraManager.cpp" />
     <ClCompile Include="Engine\EngineSystem\EngineSystem.cpp" />
@@ -353,10 +360,15 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="Application\TD2_2\Collider\SphereCollider.h" />
     <ClInclude Include="Application\TD2_2\GameObject\Boss\ActionNode\ActionNode.h" />
     <ClInclude Include="Application\TD2_2\GameObject\Boss\ActionNode\ChargeToPlayerAction.h" />
+    <ClInclude Include="Application\TD2_2\GameObject\Boss\ActionNode\FleeFromPlayerAction.h" />
     <ClInclude Include="Application\TD2_2\GameObject\Boss\ActionNode\MoveAction.h" />
-    <ClInclude Include="Application\TD2_2\GameObject\Boss\ActionNode\UsageExample.h" />
+    <ClInclude Include="Application\TD2_2\GameObject\Boss\ActionNode\MoveToCenterAction.h" />
+    <ClInclude Include="Application\TD2_2\GameObject\Boss\ActionNode\MoveToPlayerAction.h" />
+    <ClInclude Include="Application\TD2_2\GameObject\Boss\ActionNode\ShootEightWayAction.h" />
     <ClInclude Include="Application\TD2_2\AI\BehaviorTree\BehaviorTree.h" />
     <ClInclude Include="Application\TD2_2\GameObject\Boss\Boss.h" />
+    <ClInclude Include="Application\TD2_2\GameObject\Bullet\Bullet.h" />
+    <ClInclude Include="Application\TD2_2\GameObject\Frame\Frame.h" />
     <ClInclude Include="Application\TD2_2\GameObject\GameObject.h" />
     <ClInclude Include="Application\TD2_2\GameObject\Lightning\Lightning.h" />
     <ClInclude Include="Application\TD2_2\GameObject\Player\Player.h" />
@@ -368,6 +380,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="Application\TD2_2\AI\Node\LeafNode.h" />
     <ClInclude Include="Application\TD2_2\GameObject\Title\TitleUI.h" />
     <ClInclude Include="Application\TD2_2\GameObject\Voxel\Voxel.h" />
+    <ClInclude Include="Application\TD2_2\Scene\Config\GameSceneConfig.h" />
     <ClInclude Include="Application\TD2_2\UI\GaugeUI.h" />
     <ClInclude Include="Application\TD2_2\Utility\StateMachine.h" />
     <ClInclude Include="Application\TD2_2\GameObject\Title\Sphere.h" />
@@ -376,6 +389,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="Application\TD2_2\Scene\Game\TitleScene.h" />
     <ClInclude Include="Application\TD2_2\Utility\GameUtils.h" />
     <ClInclude Include="Application\TD2_2\Utility\KeyConfig.h" />
+    <ClInclude Include="Application\TD2_2\GameObject\Background\Background.h" />
     <ClInclude Include="Engine\Camera\Camera2D.h" />
     <ClInclude Include="Engine\Camera\CameraManager.h" />
     <ClInclude Include="Engine\Camera\CameraStructs.h" />
@@ -635,8 +649,6 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
   <ItemGroup>
     <None Include="Application\TD2_2\AI\Node\BehaviorTreeUsageExamples.md" />
     <None Include="Application\TD2_2\AI\Node\README.md" />
-    <None Include="Application\TD2_2\GameObject\Boss\ActionNode\README.md" />
-    <None Include="Application\TD2_2\GameObject\Boss\ARCHITECTURE.md" />
     <None Include="Application\TD2_2\AI\BehaviorTree\README.md" />
     <None Include="docs\LightningImplementation.md" />
     <None Include="docs\Logger_Usage.md" />
