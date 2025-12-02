@@ -9,6 +9,9 @@
 #include "../../GameObject/Lightning/Lightning.h"
 #include "../../GameObject/Title/TitleUI.h"
 
+// パーティクルシステム
+#include "Engine/Particle/ParticleSystem.h"
+
 class EngineSystem;
 class CameraManager;
 
@@ -28,5 +31,20 @@ public:
 	void Finalize() override;
 
 private:
+	/// @brief 電気パーティクルエフェクトを作成
+	void CreateElectricParticleEffect();
+
+	/// @brief シーン遷移の処理
+	void UpdateSceneTransition(float deltaTime);
+
+private:
 	std::unique_ptr<TitleUI> titleUI_;
+	
+	// パーティクルシステム
+	ParticleSystem* electricParticle_ = nullptr;
+	
+	// シーン遷移フラグとタイマー
+	bool isTransitioning_ = false;
+	float transitionTimer_ = 0.0f;
+	static constexpr float kTransitionDuration = 1.0f; // 1秒で遷移
 };
