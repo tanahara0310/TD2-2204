@@ -750,7 +750,6 @@
     <None Include="Application\TD2_2\AI\Node\BehaviorTreeUsageExamples.md" />
     <None Include="Application\TD2_2\AI\Node\README.md" />
     <None Include="Application\TD2_2\AI\BehaviorTree\README.md" />
-    <None Include="Application\TD2_2\GameObject\Boss\ARCHITECTURE.md" />
     <None Include="docs\LightningImplementation.md" />
   </ItemGroup>
   <ItemGroup>
