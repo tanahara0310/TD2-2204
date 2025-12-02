@@ -6,6 +6,8 @@
 #include "Scene/BaseScene.h"
 #include "../../GameObject/Player/Player.h"
 #include "../../GameObject/Boss/Boss.h"
+#include "../../GameObject/Background/Background.h"
+#include "../../GameObject/Frame/Frame.h"
 #include "../../GameObject/GameObject.h"
 #include "../../GameObject/Bullet/Bullet.h"
 #include "../../Collider/CollisionManager.h"
@@ -42,7 +44,9 @@ public:
 private:
    Player* player_;
    Boss* boss_;
+   Background* background_;
    std::list<Bullet*> bullets_;
+   std::list<Frame*> frames_;
 
    std::unique_ptr<CollisionManager> collisionManager_;
    std::unique_ptr<CollisionConfig> collisionConfig_;
@@ -50,11 +54,12 @@ private:
    std::unique_ptr<BehaviorTree> bossBehaviorTree_;
 
    std::unique_ptr<CameraController> cameraController_;
-
 private:
    void RegisterAllColliders();
 
    void CheckCollisions();
 
    std::unique_ptr<BehaviorTree> CreateBossBehaviorTree();
+
+   void InitializeFrames();
 };
