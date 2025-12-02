@@ -33,6 +33,7 @@ void GameScene::Initialize(EngineSystem* engine) {
    // プレイヤーの生成と初期化
    {
 	  modelManager->LoadModelResource("Resources/Models/Player/Damage", "PlayerDamage.obj");
+	  modelManager->LoadModelResource("Resources/Models/PlayerPropeller", "PlayerPropeller.obj");
 	  auto playerModel = modelManager->CreateStaticModel("Resources/Models/Player/Player.obj");
 	  auto playerTexture = textureManager.Load("Resources/Textures/Player.png");
 	  auto player = std::make_unique<Player>();
@@ -43,14 +44,18 @@ void GameScene::Initialize(EngineSystem* engine) {
 			cameraController_->StartShake(CameraController::ShakeIntensity::Medium);
 		 }
 		 });
+	  player->RegisterModelResource("Damage", "Resources/Models/Player/Damage/PlayerDamage.obj");
+	  player->RegisterModelResource("Player1", "Resources/Models/Player/Player.obj");
+	  player->RegisterModelResource("Player2", "Resources/Models/PlayerPropeller/PlayerPropeller.obj");
 	  player_ = player.get();
 	  gameObjects_.push_back(std::move(player));
    }
 
    // ボスの生成と初期化
    {
-	  auto bossModel = modelManager->CreateStaticModel("Resources/Models/Boss/Boss.obj");
-	  auto bossTexture = textureManager.Load("Resources/Textures/Boss.png");
+	  modelManager->LoadModelResource("Resources/Models/Boss/Damage", "BossDamage.obj");
+	  auto bossModel = modelManager->CreateStaticModel("Resources/Models/Boss/Damage/BossDamage.obj");
+	  auto bossTexture = textureManager.Load("Resources/Textures/BossDamage.png");
 	  auto boss = std::make_unique<Boss>();
 	  boss_ = boss.get();
 	  bossBehaviorTree_ = CreateBossBehaviorTree();
@@ -90,13 +95,14 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  cameraController_->Initialize(releaseCamera, player_, boss_);
 
 	  // カメラパラメータの調整（オプション）
-	  cameraController_->SetMinDistance(35.0f);
-	  cameraController_->SetMaxDistance(200.0f);
+	  cameraController_->SetMinDistance(30.0f);
+	  cameraController_->SetMaxDistance(70.0f);
 	  cameraController_->SetDistanceScale(1.8f);
 	  cameraController_->SetHeightOffset(0.0f);
 	  cameraController_->SetPitchAngle(0.0f);
-	  cameraController_->SetSmoothSpeed(50.0f);
+	  cameraController_->SetSmoothSpeed(100.0f);
 	  cameraController_->SetMarginDistance(8.0f);
+	  cameraController_->SetScreenPadding(0.35f);
 
 	  // ステージ境界を設定（フレームの外側まで）
 	  // kStageSize はフレームを含めた全体サイズなので、フレーム1個分外側に広げる

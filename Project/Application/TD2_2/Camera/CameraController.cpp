@@ -65,11 +65,19 @@ void CameraController::Update()
 	// EaseOutQuad を使用して減速カーブを適用（より滑らかな停止）
 	float easedFactor = EasingUtil::Apply(lerpFactor, EasingUtil::Type::EaseOutQuad);
 
+	// 距離の補間（スムーズにズーム）
+	float interpolatedDistance = EasingUtil::Lerp(currentDistance_, targetDistance, easedFactor, EasingUtil::Type::EaseOutQuad);
+
+	// 補間後の距離で両者が画面内に収まるかチェックし、収まらない場合はプレイヤーを優先
+	if (useStageBounds_) {
+		newTargetPos = CalculatePlayerPriorityTargetPosition(newTargetPos, interpolatedDistance);
+	}
+
 	// 注視点の補間（スムーズに追従）
 	targetPosition_ = EasingUtil::LerpVector3(targetPosition_, newTargetPos, easedFactor);
 
-	// 距離の補間（スムーズにズーム）
-	currentDistance_ = EasingUtil::Lerp(currentDistance_, targetDistance, easedFactor, EasingUtil::Type::EaseOutQuad);
+	// 距離を更新
+	currentDistance_ = interpolatedDistance;
 
 	// ステージ境界制限を適用
 	if (useStageBounds_) {
@@ -88,6 +96,11 @@ void CameraController::Update()
 		currentCameraPos_.y + shakeOffset_.y,
 		currentCameraPos_.z + shakeOffset_.z
 	};
+
+	// シェイク適用後もステージ境界を超えないようにクランプ
+	if (useStageBounds_) {
+		finalCameraPos = ClampCameraToStageBounds(finalCameraPos, currentDistance_);
+	}
 
 	// カメラに適用
 	camera_->SetTranslate(finalCameraPos);
@@ -267,6 +280,28 @@ Vector3 CameraController::ClampTargetToStageBounds(const Vector3& targetPos, flo
 	return clampedPos;
 }
 
+Vector3 CameraController::ClampCameraToStageBounds(const Vector3& cameraPos, float cameraDistance) const
+{
+	if (!useStageBounds_) {
+		return cameraPos;
+	}
+
+	// カメラ位置からターゲット位置を逆算
+	float cosAngle = std::cos(pitchAngle_);
+	float sinAngle = std::sin(pitchAngle_);
+
+	Vector3 targetPos;
+	targetPos.x = cameraPos.x;
+	targetPos.y = cameraPos.y - heightOffset_ - cameraDistance * sinAngle;
+	targetPos.z = cameraPos.z + cameraDistance * cosAngle;
+
+	// ターゲット位置をステージ境界内に制限
+	Vector3 clampedTargetPos = ClampTargetToStageBounds(targetPos, cameraDistance);
+
+	// 制限されたターゲット位置から正しいカメラ位置を再計算
+	return CalculateCameraPosition(clampedTargetPos, cameraDistance);
+}
+
 Vector3 CameraController::CalculateTargetPosition() const
 {
 	if (!object1_ || !object2_) {
@@ -282,6 +317,95 @@ Vector3 CameraController::CalculateTargetPosition() const
 		(pos1.y + pos2.y) * 0.5f,
 		(pos1.z + pos2.z) * 0.5f
 	};
+}
+
+Vector3 CameraController::CalculatePlayerPriorityTargetPosition(const Vector3& midpoint, float cameraDistance) const
+{
+	if (!object1_ || !object2_) {
+		return midpoint;
+	}
+
+	// プレイヤー（object1_）とボス（object2_）の位置
+	Vector3 playerPos = object1_->GetWorldPosition();
+	Vector3 bossPos = object2_->GetWorldPosition();
+
+	// 現在のカメラ距離でプレイヤーとボスが画面内に収まるかを確認
+	// 視野角の計算
+	float halfFovY = kFovY * 0.5f;
+	float halfFovX = std::atan(std::tan(halfFovY) * kAspectRatio);
+
+	// 画面パディングを考慮した有効視野
+	float effectiveHalfFovX = halfFovX * (1.0f - screenPadding_);
+	float effectiveHalfFovY = halfFovY * (1.0f - screenPadding_);
+
+	// カメラの俯角を考慮
+	float cosAngle = std::cos(pitchAngle_);
+
+	// 現在のカメラ距離での可視範囲を計算
+	float horizontalDistance = cameraDistance * cosAngle;
+	float visibleHalfWidth = horizontalDistance * std::tan(effectiveHalfFovX);
+	float visibleHalfHeight = cameraDistance * std::tan(effectiveHalfFovY);
+
+	// 中点からプレイヤーとボスへの距離を計算
+	Vector3 midpointToPlayer = {
+		playerPos.x - midpoint.x,
+		playerPos.y - midpoint.y,
+		playerPos.z - midpoint.z
+	};
+
+	Vector3 midpointToBoss = {
+		bossPos.x - midpoint.x,
+		bossPos.y - midpoint.y,
+		bossPos.z - midpoint.z
+	};
+
+	// チャタリング防止のためのマージン（可視範囲の10%）
+	float marginRatio = 1.1f;
+
+	// 両者が画面内に収まるかチェック（マージン付き）
+	bool playerFitsX = std::abs(midpointToPlayer.x) <= visibleHalfWidth * marginRatio;
+	bool bossFitsX = std::abs(midpointToBoss.x) <= visibleHalfWidth * marginRatio;
+	bool playerFitsY = std::abs(midpointToPlayer.y) <= visibleHalfHeight * marginRatio;
+	bool bossFitsY = std::abs(midpointToBoss.y) <= visibleHalfHeight * marginRatio;
+
+	// 両者が画面内に収まる場合は中点をそのまま返す
+	if (playerFitsX && bossFitsX && playerFitsY && bossFitsY) {
+		return midpoint;
+	}
+
+	// 収まらない場合、プレイヤーを画面内に確実に収めるように調整
+	Vector3 playerPriorityTarget = midpoint;
+
+	// X軸方向の調整
+	if (!playerFitsX || !bossFitsX) {
+		// プレイヤーとボスの中間点から、プレイヤー寄りにシフト
+		// プレイヤーを画面の端から余裕を持った位置に配置
+		float playerSafeZoneRatio = 0.6f; // プレイヤーを可視範囲の60%の位置に配置
+		
+		if (midpointToPlayer.x > 0.0f) {
+			// プレイヤーが右側にいる
+			playerPriorityTarget.x = playerPos.x - visibleHalfWidth * playerSafeZoneRatio;
+		} else {
+			// プレイヤーが左側にいる
+			playerPriorityTarget.x = playerPos.x + visibleHalfWidth * playerSafeZoneRatio;
+		}
+	}
+
+	// Y軸方向の調整
+	if (!playerFitsY || !bossFitsY) {
+		// プレイヤーとボスの中間点から、プレイヤー寄りにシフト
+		float playerSafeZoneRatio = 0.6f;
+		
+		if (midpointToPlayer.y > 0.0f) {
+			// プレイヤーが上側にいる
+			playerPriorityTarget.y = playerPos.y - visibleHalfHeight * playerSafeZoneRatio;
+		} else {
+			// プレイヤーが下側にいる
+			playerPriorityTarget.y = playerPos.y + visibleHalfHeight * playerSafeZoneRatio;
+		}
+	}
+
+	return playerPriorityTarget;
 }
 
 float CameraController::CalculateObjectDistance() const

@@ -5,7 +5,7 @@ void Background::Initialize(std::unique_ptr<Model> model, TextureManager::Loaded
 	// 基底クラスの初期化を呼び出す
 	GameObject::Initialize(std::move(model), texture);
 
-	transform_.translate = {0.0f, 0.0f, 20.0f};
+	transform_.translate = {0.0f, 0.0f, 44.5f};
 
 	transform_.TransferMatrix();
 }
