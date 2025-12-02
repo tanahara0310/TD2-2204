@@ -1,8 +1,8 @@
 #pragma once
-#include "Object3d.h"
+#include "Application/TD2_2/GameObject/GameObject.h"
 
 /// @brief ボクセルオブジェクト
-class Voxel : public Object3d {
+class Voxel : public GameObject {
 public:
 	/// @brief デフォルトコンストラクタ
 	Voxel() = default;
@@ -11,7 +11,9 @@ public:
 	~Voxel() override = default;
 
 	/// @brief 初期化
-	void Initialize();
+	/// @param model モデルリソース（共有）
+	/// @param texture テクスチャ（共有）
+	void Initialize(ModelResource* model, TextureManager::LoadedTexture texture);
 
 	/// @brief 更新処理
 	void Update() override;
@@ -28,5 +30,14 @@ public:
 	/// @return オブジェクト名
 	const char* GetObjectName() const override { return "Voxel"; }
 
+	/// @brief 色を設定
+	/// @param color 色（RGBA）
+	void SetColor(const Vector4& color);
+
+	/// @brief 色を取得
+	/// @return 色（RGBA）
+	Vector4 GetColor() const;
+
 private:
+	Vector4 color_ = { 1.0f, 1.0f, 1.0f, 1.0f }; // デフォルトは白
 };

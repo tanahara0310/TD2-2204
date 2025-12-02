@@ -10,27 +10,68 @@
 #include "Engine/Graphics/Light/LightManager.h"
 #include "Engine/Graphics/Light/LightData.h"
 #include "Engine/Graphics/Resource/ResourceFactory.h"
+#include "Engine/Graphics/Model/ModelManager.h"
+#include "Engine/Graphics/TextureManager.h"
 #include "Engine/Input/KeyboardInput.h"
 #include "Engine/WinApp/WinApp.h"
 #include "MathCore.h"
 
+
 void TitleScene::Initialize(EngineSystem* engine) {
 	BaseScene::Initialize(engine);
 
+	// 共有リソースの読み込み（Lightning用）
+	{
+		auto modelManager = engine->GetComponent<ModelManager>();
+		auto& textureManager = TextureManager::GetInstance();
+
+		// ボクセルモデルリソースを取得（事前読み込み）
+		modelManager->LoadModelResource("Resources/Models/Voxel/", "voxel.obj");
+		voxelModelResource_ = modelManager->GetModelResource("Resources/Models/Voxel/voxel.obj");
+		voxelTexture_ = textureManager.Load("Resources/SampleResources/white1x1.png");
+
+	}
+
 	// ゲームオブジェクトの初期化
 	{
-		/*auto lightning = std::make_unique<Lightning>();
-		Lightning::LightningConfig config;
-		config.startPoint = { 0.0f, 5.0f, 0.0f };
-		config.endPoint = { 0.0f, 0.0f, 0.0f };
-		config.noiseStrength = 0.5f;
-		config.noiseFrequency = 2.0f;
-		config.segmentCount = 10;
+		// 雷エフェクト1本目（左側・青色）
+		auto lightning1 = std::make_unique<Lightning>();
+		Lightning::Config config1;
+		config1.startPoint = { -3.0f, 5.0f, 0.0f };
+		config1.endPoint = { -3.0f, 0.0f, 0.0f };
+		config1.segmentCount = 15;
+		config1.noiseScale = 0.6f;
+		config1.noiseSpeed = 1.5f;
+		config1.enableAnimation = true;
+		config1.color = { 0.3f, 0.5f, 1.0f, 1.0f };
+		lightning1->Initialize(voxelModelResource_, voxelTexture_, config1, "Lightning_Left_Blue");
+		gameObjects_.push_back(std::move(lightning1));
 
-		lightning->Initialize(config);
-		gameObjects_.push_back(std::move(lightning));*/
+		// 雷エフェクト2本目（中央・赤色）
+		auto lightning2 = std::make_unique<Lightning>();
+		Lightning::Config config2;
+		config2.startPoint = { 0.0f, 5.0f, 0.0f };
+		config2.endPoint = { 0.0f, 0.0f, 0.0f };
+		config2.segmentCount = 20;
+		config2.noiseScale = 0.4f;
+		config2.noiseSpeed = 2.5f;
+		config2.enableAnimation = true;
+		config2.color = { 1.0f, 0.3f, 0.3f, 1.0f };
+		lightning2->Initialize(voxelModelResource_, voxelTexture_, config2, "Lightning_Center_Red");
+		gameObjects_.push_back(std::move(lightning2));
 
-
+		// 雷エフェクト3本目（右側・緑色）
+		auto lightning3 = std::make_unique<Lightning>();
+		Lightning::Config config3;
+		config3.startPoint = { 3.0f, 5.0f, 0.0f };
+		config3.endPoint = { 3.0f, 0.0f, 0.0f };
+		config3.segmentCount = 12;
+		config3.noiseScale = 0.8f;
+		config3.noiseSpeed = 1.0f;
+		config3.enableAnimation = true;
+		config3.color = { 0.3f, 1.0f, 0.5f, 1.0f };
+		lightning3->Initialize(voxelModelResource_, voxelTexture_, config3, "Lightning_Right_Green");
+		gameObjects_.push_back(std::move(lightning3));
 	}
 
 	{
@@ -75,7 +116,7 @@ void TitleScene::Update() {
 				// 遷移開始
 				isTransitioning_ = true;
 				transitionTimer_ = 0.0f;
-				
+
 				// 電気パーティクルを画面中央で再生
 				if (electricParticle_) {
 					electricParticle_->SetEmitterPosition({ 0.0f, 0.0f, 0.0f });
