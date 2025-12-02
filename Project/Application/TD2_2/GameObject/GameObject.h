@@ -12,6 +12,7 @@
 #include "../Utility/StateMachine.h"
 #include "Application/TD2_2/Utility/GameUtils.h"
 #include "Engine/Utility/Timer/GameTimer.h"
+#include "../Scene/Config/GameSceneConfig.h"
 
 class GameObject :public Object3d {
 public:
