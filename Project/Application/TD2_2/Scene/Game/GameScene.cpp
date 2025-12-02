@@ -53,8 +53,9 @@ void GameScene::Initialize(EngineSystem* engine) {
 
    // ボスの生成と初期化
    {
-	  auto bossModel = modelManager->CreateStaticModel("Resources/Models/Boss/Boss.obj");
-	  auto bossTexture = textureManager.Load("Resources/Textures/Boss.png");
+	  modelManager->LoadModelResource("Resources/Models/Boss/Damage", "BossDamage.obj");
+	  auto bossModel = modelManager->CreateStaticModel("Resources/Models/Boss/Damage/BossDamage.obj");
+	  auto bossTexture = textureManager.Load("Resources/Textures/BossDamage.png");
 	  auto boss = std::make_unique<Boss>();
 	  boss_ = boss.get();
 	  bossBehaviorTree_ = CreateBossBehaviorTree();
