@@ -15,9 +15,9 @@ void ResultScene::Initialize(EngineSystem* engine) {
    BaseScene::Initialize(engine);
 
    // リザルト画像の生成
-   resultSprite_ = std::make_unique<Sprite>();
-   resultSprite_->Initialize(engine_->GetComponent<SpriteRenderer>(), "Resources/Textures/white.png");
-   resultTexture_ = TextureManager::GetInstance().Load("Resources/Textures/Result/result.png");
+   //resultSprite_ = std::make_unique<Sprite>();
+   //resultSprite_->Initialize(engine_->GetComponent<SpriteRenderer>(), "Resources/Textures/white.png");
+   //resultTexture_ = TextureManager::GetInstance().Load("Resources/Textures/Result/result.png");
 }
 
 void ResultScene::Update() {
@@ -28,7 +28,7 @@ void ResultScene::Draw() {
    BaseScene::Draw();
 
    // リザルト画像の描画
-   resultSprite_->Draw(resultTexture_);
+   //resultSprite_->Draw(resultTexture_);
 }
 
 void ResultScene::Finalize() {

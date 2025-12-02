@@ -31,8 +31,8 @@ private:
 	float currentClearTime_ = 0.0f;
 
 	// リザルト画像
-	std::unique_ptr<Sprite> resultSprite_;
-	TextureManager::LoadedTexture resultTexture_;
+	//std::unique_ptr<Sprite> resultSprite_;
+	//TextureManager::LoadedTexture resultTexture_;
 
 	// リスタート画像
 	std::unique_ptr<Sprite> restartSprite_;
