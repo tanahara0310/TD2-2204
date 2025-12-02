@@ -277,6 +277,9 @@
     <ClCompile Include="Engine\Particle\Modules\NoiseModule.cpp" />
     <ClCompile Include="Engine\Particle\Modules\ShapeModule.cpp" />
     <ClCompile Include="Engine\Graphics\Render\Line\LineRendererPipeline.cpp" />
+    <ClCompile Include="Application\TD2_2\GameObject\Voxel\Voxel.cpp" />
+    <ClCompile Include="Application\TD2_2\GameObject\Lightning\Lightning.cpp" />
+    <ClCompile Include="Application\TD2_2\GameObject\Title\TitleUI.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Engine\WinApp\WinApp.h">
@@ -716,6 +719,9 @@
     <ClInclude Include="Engine\Particle\Modules\NoiseModule.h" />
     <ClInclude Include="Engine\Particle\Modules\ShapeModule.h" />
     <ClInclude Include="Engine\Graphics\Render\Line\LineRendererPipeline.h" />
+    <ClInclude Include="Application\TD2_2\GameObject\Voxel\Voxel.h" />
+    <ClInclude Include="Application\TD2_2\GameObject\Lightning\Lightning.h" />
+    <ClInclude Include="Application\TD2_2\GameObject\Title\TitleUI.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Engine\Particle\README.md">
@@ -732,6 +738,7 @@
     <None Include="Application\TD2_2\GameObject\Boss\ActionNode\README.md" />
     <None Include="Application\TD2_2\AI\BehaviorTree\README.md" />
     <None Include="Application\TD2_2\GameObject\Boss\ARCHITECTURE.md" />
+    <None Include="docs\LightningImplementation.md" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Source Files">

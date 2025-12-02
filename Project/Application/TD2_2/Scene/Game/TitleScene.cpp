@@ -16,16 +16,24 @@ void TitleScene::Initialize(EngineSystem* engine) {
 
    // ゲームオブジェクトの初期化
    {
-	  // 球体オブジェクトの生成と初期化
-	  auto sphere = std::make_unique<Sphere>();
-	  sphere->Initialize();
-	  gameObjects_.push_back(std::move(sphere));
-
+      // UI初期化
+      titleUI_ = std::make_unique<TitleUI>();
+      auto sprites = titleUI_->Initialize(engine);
+      
+      // スプライトをgameObjects_に追加
+      for (auto& sprite : sprites) {
+         gameObjects_.push_back(std::move(sprite));
+      }
    }
 }
 
 void TitleScene::Update() {
    BaseScene::Update();
+   
+   // UI更新
+   if (titleUI_) {
+      titleUI_->Update();
+   }
 }
 
 void TitleScene::Draw() {

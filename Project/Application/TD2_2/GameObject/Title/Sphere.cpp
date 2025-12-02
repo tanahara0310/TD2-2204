@@ -19,7 +19,10 @@ void Sphere::Initialize()
 }
 
 void Sphere::Update()
-{}
+{
+	transform_.TransferMatrix();
+
+}
 
 void Sphere::Draw(const ICamera* camera)
 {
