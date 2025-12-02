@@ -87,6 +87,7 @@ void BaseScene::Update()
 	// ゲームオブジェクトの更新
 	UpdateGameObjects();
 
+#ifdef _DEBUG
 	// エミッター形状のデバッグ描画
 	if (lineRenderer_) {
 		lineRenderer_->Clear();  // 毎フレームクリア
@@ -109,6 +110,7 @@ void BaseScene::Update()
 			}
 		}
 	}
+#endif
 }
 
 void BaseScene::Draw()

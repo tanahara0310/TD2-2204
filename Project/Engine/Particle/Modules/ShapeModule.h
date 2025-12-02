@@ -101,7 +101,11 @@ private:
 	Vector3 GenerateEdgePosition(const Vector3& emitterPosition);
 	Vector3 GenerateCircleHalfPosition(const Vector3& emitterPosition);
 
+#ifdef _DEBUG
+
 	/// @brief 半球をデバッグ描画
 	void DrawHemisphere(class LineRenderer* lineRenderer, const class ICamera* camera,
 		const Vector3& center, float radius, const Vector3& color, float alpha);
+
+#endif // _DEBUG
 };

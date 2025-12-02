@@ -91,7 +91,7 @@ void GameScene::Initialize(EngineSystem* engine) {
 
 	  // カメラパラメータの調整（オプション）
 	  cameraController_->SetMinDistance(35.0f);
-	  cameraController_->SetMaxDistance(100.0f);
+	  cameraController_->SetMaxDistance(200.0f);
 	  cameraController_->SetDistanceScale(1.8f);
 	  cameraController_->SetHeightOffset(0.0f);
 	  cameraController_->SetPitchAngle(0.0f);
@@ -103,7 +103,7 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  float stageHalfWidth = GameSceneConfig::kStageSize.x / 2.0f;
 	  float stageHalfHeight = GameSceneConfig::kStageSize.y / 2.0f;
 	  float frameWidth = GameSceneConfig::kFrameSize.x*0.65f;
-	  float frameHeight = GameSceneConfig::kFrameSize.y*0.65f;
+	  float frameHeight = GameSceneConfig::kFrameSize.y*0.6f;
 	  
 	  cameraController_->SetStageBounds(
 		 GameSceneConfig::kStageCenter.x - stageHalfWidth - frameWidth,

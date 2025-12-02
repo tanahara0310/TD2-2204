@@ -86,6 +86,12 @@ public:
     /// @brief デフォルト値にリセット
     void Reset();
     
+    /// @brief ブレンドモードを取得
+    BlendMode GetBlendMode() const override { return blendMode_; }
+    
+    /// @brief ブレンドモードを設定
+    void SetBlendMode(BlendMode blendMode) override { blendMode_ = blendMode; }
+    
 private:
     /// @brief テクスチャサイズを自動設定
     void SetSizeFromTexture(const std::string& textureFilePath);
@@ -129,4 +135,7 @@ private:
     /// @brief UV座標範囲
     Vector2 uvMin_ = { 0.0f, 0.0f };
     Vector2 uvMax_ = { 1.0f, 1.0f };
+    
+    /// @brief ブレンドモード（デフォルトはアルファブレンド）
+    BlendMode blendMode_ = BlendMode::kBlendModeNormal;
 };

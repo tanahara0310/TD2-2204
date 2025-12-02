@@ -31,7 +31,7 @@ void Camera::UpdateMatrix()
 	}
 	// プロジェクション行列を初期化（アスペクト比 = 幅 / 高さ）
 	float aspectRatio = static_cast<float>(WinApp::kClientWidth) / static_cast<float>(WinApp::kClientHeight);
-	projectionMatrix_ = Rendering::PerspectiveFov(0.45f, aspectRatio, 0.1f, 100.0f);
+	projectionMatrix_ = Rendering::PerspectiveFov(0.45f, aspectRatio, 0.1f, 1000.0f);
 
 	// カメラの行列を転送
 	TransferMatrix();
