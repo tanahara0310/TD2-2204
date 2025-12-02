@@ -41,31 +41,32 @@ static const int permutation[512] = {
 void Lightning::Initialize(const LightningConfig& config)
 {
 	config_ = config;
-	
+	previousSegmentCount_ = config_.segmentCount; // 初期値を設定
+
 #ifdef _DEBUG
 	OutputDebugStringW(L"[INFO] Lightning::Initialize - 開始\n");
-	
-	std::wstring msg = L"  始点: (" + std::to_wstring(config_.startPoint.x) + L", " + 
-	   std::to_wstring(config_.startPoint.y) + L", " + 
-	  std::to_wstring(config_.startPoint.z) + L")\n";
+
+	std::wstring msg = L"  始点: (" + std::to_wstring(config_.startPoint.x) + L", " +
+		std::to_wstring(config_.startPoint.y) + L", " +
+		std::to_wstring(config_.startPoint.z) + L")\n";
 	OutputDebugStringW(msg.c_str());
-	
-	msg = L"  終点: (" + std::to_wstring(config_.endPoint.x) + L", " + 
-	      std::to_wstring(config_.endPoint.y) + L", " + 
-	      std::to_wstring(config_.endPoint.z) + L")\n";
+
+	msg = L"  終点: (" + std::to_wstring(config_.endPoint.x) + L", " +
+		std::to_wstring(config_.endPoint.y) + L", " +
+		std::to_wstring(config_.endPoint.z) + L")\n";
 	OutputDebugStringW(msg.c_str());
-	
+
 	msg = L"  セグメント数: " + std::to_wstring(config_.segmentCount) + L"\n";
 	OutputDebugStringW(msg.c_str());
-	
+
 	// IsActive状態を確認
 	msg = L"  IsActive: " + std::wstring(IsActive() ? L"true" : L"false") + L"\n";
 	OutputDebugStringW(msg.c_str());
 #endif
-	
+
 	// 雷のパスを生成
 	RegeneratePath();
-	
+
 #ifdef _DEBUG
 	std::wstring finalMsg = L"[INFO] Lightning::Initialize - 完了。ボクセル数: " + std::to_wstring(children_.size()) + L"\n";
 	OutputDebugStringW(finalMsg.c_str());
@@ -74,12 +75,16 @@ void Lightning::Initialize(const LightningConfig& config)
 
 void Lightning::Update()
 {
-	// アニメーションが有効な場合、時間を更新してパスを再生成
-	if (config_.animate) {
-		// アニメーション速度を調整（60FPS想定）
+	// セグメント数が変更されたかチェック
+	bool segmentCountChanged = (previousSegmentCount_ != config_.segmentCount);
+
+	if (segmentCountChanged) {
+		// セグメント数が変更された場合は即座に完全再生成
+		RegeneratePath();
+		previousSegmentCount_ = config_.segmentCount;
+	} else if (config_.animate) {
+		// セグメント数が同じ場合のみアニメーション処理
 		animationTime_ += config_.animationSpeed * (1.0f / 60.0f);
-		
-		// 重要：パス再生成のみ行い、ボクセルは位置更新のみにする
 		UpdateVoxelPositions();
 	}
 
@@ -119,21 +124,23 @@ bool Lightning::DrawImGui()
 
 		// 基本設定
 		ImGui::SeparatorText("基本設定");
-		
+
 		changed |= ImGui::DragFloat3("始点", &config_.startPoint.x, 0.1f);
 		changed |= ImGui::DragFloat3("終点", &config_.endPoint.x, 0.1f);
-		changed |= ImGui::SliderInt("セグメント数", &config_.segmentCount, 5, 100);
+
+		// セグメント数の変更（Update()で自動的に検知・再生成される）
+		changed |= ImGui::SliderInt("セグメント数", &config_.segmentCount, 5, 200);
 
 		ImGui::SeparatorText("ノイズ設定");
-		
+
 		changed |= ImGui::DragFloat("ノイズ強度", &config_.noiseStrength, 0.01f, 0.0f, 5.0f);
 		ImGui::TextDisabled("横方向のずれの大きさ");
-		
+
 		changed |= ImGui::DragFloat("ノイズ周波数", &config_.noiseFrequency, 0.01f, 0.01f, 5.0f);
 		ImGui::TextDisabled("ノイズの細かさ（高いほど細かい揺らぎ）");
 
 		ImGui::SeparatorText("アニメーション");
-		
+
 		changed |= ImGui::Checkbox("アニメーション", &config_.animate);
 		changed |= ImGui::DragFloat("アニメーション速度", &config_.animationSpeed, 0.1f, 0.0f, 10.0f);
 
@@ -147,7 +154,8 @@ bool Lightning::DrawImGui()
 
 		ImGui::Text("ボクセル数: %zu", children_.size());
 		ImGui::Text("パスポイント数: %zu", pathPoints_.size());
-		
+		ImGui::Text("現在のセグメント数: %d", previousSegmentCount_);
+
 		// デバッグ情報：最初のいくつかのボクセル位置を表示
 		if (children_.size() > 0) {
 			ImGui::Separator();
@@ -172,6 +180,17 @@ bool Lightning::DrawImGui()
 
 void Lightning::RegeneratePath()
 {
+	// セグメント数の妥当性チェック
+	if (config_.segmentCount < 1) {
+		config_.segmentCount = 1;
+	}
+	if (config_.segmentCount > 500) {
+		config_.segmentCount = 500;
+	}
+
+	// 前回のセグメント数を更新
+	previousSegmentCount_ = config_.segmentCount;
+
 	// パスポイントをクリア
 	pathPoints_.clear();
 
@@ -182,12 +201,17 @@ void Lightning::RegeneratePath()
 	// セグメント単位で進む
 	for (int i = 0; i <= config_.segmentCount; ++i) {
 		float t = static_cast<float>(i) / static_cast<float>(config_.segmentCount);
-		
+
 		// 基本的な線形補間位置
 		Vector3 basePos = config_.startPoint + direction * t;
 
-		// パーリンノイズを使って横方向にずらす
-		// 進行方向に垂直な平面上でノイズを適用
+		// 始点（i=0）と終点（i=segmentCount）はオフセットなしで固定
+		if (i == 0 || i == config_.segmentCount) {
+			pathPoints_.push_back(basePos);
+			continue;
+		}
+
+		// 中間点のみパーリンノイズを使って横方向にずらす
 		float noiseX = PerlinNoise3D(
 			t * config_.noiseFrequency + animationTime_,
 			0.0f,
@@ -202,7 +226,7 @@ void Lightning::RegeneratePath()
 		// 進行方向に垂直なベクトルを作成（簡易的に）
 		Vector3 perpendicular1 = { -normalizedDir.y, normalizedDir.x, 0.0f };
 		Vector3 perpendicular2 = MathCore::Vector::Cross(normalizedDir, perpendicular1);
-		
+
 		// 垂直方向が0の場合の対処
 		if (MathCore::Vector::Length(perpendicular1) < 0.001f) {
 			perpendicular1 = { 1.0f, 0.0f, 0.0f };
@@ -214,9 +238,9 @@ void Lightning::RegeneratePath()
 
 		// ノイズによるオフセットを適用
 		Vector3 offset = perpendicular1 * noiseX * config_.noiseStrength +
-		       perpendicular2 * noiseZ * config_.noiseStrength;
-		
-		// 始点と終点ではオフセットを減らす（自然な接続のため）
+			perpendicular2 * noiseZ * config_.noiseStrength;
+
+		// 端に近いほど揺らぎを抑える（自然な接続のため）
 		float edgeFade = std::sin(t * 3.14159265f);
 		offset = offset * edgeFade;
 
@@ -235,16 +259,16 @@ void Lightning::BuildLightningSegments()
 
 	if (pathPoints_.size() < 2) {
 #ifdef _DEBUG
-		std::wstring msg = L"[WARNING] Lightning::BuildLightningSegments: パスポイントが不足しています（" + 
-		 std::to_wstring(pathPoints_.size()) + L"個）\n";
+		std::wstring msg = L"[WARNING] Lightning::BuildLightningSegments: パスポイントが不足しています（" +
+			std::to_wstring(pathPoints_.size()) + L"個）\n";
 		OutputDebugStringW(msg.c_str());
 #endif
 		return;
 	}
 
 #ifdef _DEBUG
-	std::wstring msg = L"[INFO] Lightning::BuildLightningSegments - パスポイント数: " + 
-	  std::to_wstring(pathPoints_.size()) + L"\n";
+	std::wstring msg = L"[INFO] Lightning::BuildLightningSegments - パスポイント数: " +
+		std::to_wstring(pathPoints_.size()) + L"\n";
 	OutputDebugStringW(msg.c_str());
 #endif
 
@@ -254,11 +278,11 @@ void Lightning::BuildLightningSegments()
 		int count = InterpolateVoxels(pathPoints_[i], pathPoints_[i + 1]);
 		totalVoxels += count;
 	}
-	
+
 #ifdef _DEBUG
-	msg = L"[INFO] Lightning::BuildLightningSegments - 生成されたボクセル総数: " + 
-	  std::to_wstring(totalVoxels) + L" (children_.size()=" + 
-	      std::to_wstring(children_.size()) + L")\n";
+	msg = L"[INFO] Lightning::BuildLightningSegments - 生成されたボクセル総数: " +
+		std::to_wstring(totalVoxels) + L" (children_.size()=" +
+		std::to_wstring(children_.size()) + L")\n";
 	OutputDebugStringW(msg.c_str());
 #endif
 }
@@ -292,15 +316,15 @@ int Lightning::InterpolateVoxels(const Vector3& start, const Vector3& end)
 		// ボクセルを作成
 		auto voxel = std::make_unique<Voxel>();
 		voxel->Initialize();
-		
+
 		// 位置を設定
 		voxel->GetTransform().translate = position;
-		
+
 		// スケールは1.0
 		voxel->GetTransform().scale = { 1.0f, 1.0f, 1.0f };
-		
+
 		// 回転処理は削除（不要）
-		
+
 		// children_に追加
 		AddChild(std::move(voxel));
 	}
@@ -381,9 +405,9 @@ float Lightning::Gradient(int hash, float x, float y, float z)
 
 void Lightning::UpdateVoxelPositions()
 {
-	// パスポイントを再計算（RegeneratePathのパスポイント生成部分のみ）
+	// パスポイントを再計算（始点・終点は固定）
 	pathPoints_.clear();
-	
+
 	Vector3 direction = config_.endPoint - config_.startPoint;
 	Vector3 normalizedDir = MathCore::Vector::Normalize(direction);
 
@@ -392,13 +416,19 @@ void Lightning::UpdateVoxelPositions()
 		float t = static_cast<float>(i) / static_cast<float>(config_.segmentCount);
 		Vector3 basePos = config_.startPoint + direction * t;
 
-		// パーリンノイズでオフセット
+		// 始点（t=0）と終点（t=1）はオフセットなし
+		if (i == 0 || i == config_.segmentCount) {
+			pathPoints_.push_back(basePos);
+			continue;
+		}
+
+		// 中間点のみノイズでオフセット
 		float noiseX = PerlinNoise3D(t * config_.noiseFrequency + animationTime_, 0.0f, animationTime_ * 0.5f);
 		float noiseZ = PerlinNoise3D(t * config_.noiseFrequency + animationTime_ + 100.0f, 100.0f, animationTime_ * 0.5f);
 
 		Vector3 perpendicular1 = { -normalizedDir.y, normalizedDir.x, 0.0f };
 		Vector3 perpendicular2 = MathCore::Vector::Cross(normalizedDir, perpendicular1);
-		
+
 		if (MathCore::Vector::Length(perpendicular1) < 0.001f) {
 			perpendicular1 = { 1.0f, 0.0f, 0.0f };
 			perpendicular2 = { 0.0f, 0.0f, 1.0f };
@@ -408,6 +438,8 @@ void Lightning::UpdateVoxelPositions()
 		}
 
 		Vector3 offset = perpendicular1 * noiseX * config_.noiseStrength + perpendicular2 * noiseZ * config_.noiseStrength;
+
+		// edgeFadeは中間点では1に近い値、端に近づくほど0になるように調整
 		float edgeFade = std::sin(t * 3.14159265f);
 		offset = offset * edgeFade;
 
@@ -424,12 +456,11 @@ void Lightning::UpdateExistingVoxelPositions()
 		return;
 	}
 
-	// 既存のボクセル数
+	const float voxelSize = 1.0f;
 	size_t voxelIndex = 0;
-	const float voxelSize = 0.8f;
 
 	// 各パスポイント間でボクセル位置を更新
-	for (size_t i = 0; i < pathPoints_.size() - 1 && voxelIndex < children_.size(); ++i) {
+	for (size_t i = 0; i < pathPoints_.size() - 1; ++i) {
 		Vector3 diff = pathPoints_[i + 1] - pathPoints_[i];
 		float distance = MathCore::Vector::Length(diff);
 
@@ -441,15 +472,30 @@ void Lightning::UpdateExistingVoxelPositions()
 		if (voxelCount < 1) voxelCount = 1;
 
 		// このセグメントのボクセル位置を更新
-		for (int j = 0; j < voxelCount && voxelIndex < children_.size(); ++j) {
+		for (int j = 0; j < voxelCount; ++j) {
+			// ボクセルが足りない場合は抜ける（次フレームで再生成される）
+			if (voxelIndex >= children_.size()) {
+#ifdef _DEBUG
+				OutputDebugStringW(L"[WARNING] UpdateExistingVoxelPositions: ボクセル不足 - 次フレームで再生成\n");
+#endif
+				return;
+			}
+
 			float t = static_cast<float>(j) / static_cast<float>(voxelCount);
 			Vector3 position = pathPoints_[i] + diff * t;
 
-			// ボクセルの位置のみ更新（初期化不要）
+			// ボクセルの位置のみ更新
 			if (auto* voxel = dynamic_cast<Voxel*>(children_[voxelIndex].get())) {
 				voxel->GetTransform().translate = position;
 			}
 			voxelIndex++;
 		}
+	}
+
+	// ボクセルが余っている場合も次フレームで再生成
+	if (voxelIndex < children_.size()) {
+#ifdef _DEBUG
+		OutputDebugStringW(L"[WARNING] UpdateExistingVoxelPositions: ボクセル余剰 - 次フレームで再生成\n");
+#endif
 	}
 }

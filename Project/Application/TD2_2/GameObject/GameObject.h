@@ -2,6 +2,7 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include <unordered_map>
 #include "MathCore.h"
 #include "Object3D.h"
 #include "../Collider/Collider.h"
@@ -55,6 +56,36 @@ public:
 
    void ChangeModelResource(const std::string& path);
 
+   /// @brief モデルリソースを名前で登録
+   /// @param name モデルの識別名
+   /// @param modelPath モデルリソースパス
+   void RegisterModelResource(const std::string& name, const std::string& modelPath);
+
+   /// @brief 登録されたモデルリソースを取得
+   /// @param name モデルの識別名
+   /// @return モデルリソースパス（登録されていない場合は空文字列）
+   std::string GetRegisteredModelPath(const std::string& name) const;
+
+   /// @brief 登録されたモデルに切り替え
+   /// @param name モデルの識別名
+   void ChangeToRegisteredModel(const std::string& name);
+
+   /// @brief 2つの登録されたモデル間でアニメーション（交互に切り替え）
+   /// @param modelName1 モデルの識別名1
+   /// @param modelName2 モデルの識別名2
+   /// @param intervalSeconds 切り替え間隔（秒）
+   /// @param loop ループするかどうか
+   void StartModelSwapAnimation(const std::string& modelName1, const std::string& modelName2, 
+                                 float intervalSeconds, bool loop = true);
+
+   /// @brief モデル切り替えアニメーションを停止
+   void StopModelSwapAnimation();
+
+   /// @brief モデル切り替えアニメーションが動作中か確認
+   /// @return 動作中の場合true
+   bool IsModelSwapAnimationActive() const { return modelSwapTimer_.IsActive(); }
+
+   
 protected:
 
    std::unique_ptr<Collider> collider_;
@@ -84,6 +115,9 @@ protected:
 
    bool UpdateShake();
 
+   /// @brief モデル切り替えアニメーションの更新処理（Updateから呼び出す）
+   void UpdateModelSwapAnimation();
+
 private:
    std::unique_ptr<GameTimer> rotationTimer_;
    Vector3 rotationAxis_ = { 0.0f, 1.0f, 0.0f }; // 回転軸
@@ -100,4 +134,13 @@ private:
 
    Vector3 basePosition_ = { 0.0f, 0.0f, 0.0f };
    float shakeIntensity_ = 0.0f;
+
+   // モデル切り替えアニメーション用
+   GameTimer modelSwapTimer_;
+   std::string modelName1_;
+   std::string modelName2_;
+   bool isShowingModel1_ = true;
+   
+   // モデルリソースの名前とパスのマップ
+   std::unordered_map<std::string, std::string> registeredModels_;
 };

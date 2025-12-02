@@ -105,6 +105,7 @@ private:
 	LightningConfig config_;    // 雷の設定
 	std::vector<Vector3> pathPoints_; // 雷のパスポイント
 	float animationTime_ = 0.0f;          // アニメーション時間
-
+	int previousSegmentCount_ = 0;  // 前フレームのセグメント数（変更検知用）
+	
 	// 注: ボクセルは Object3d::children_ に格納されます
 };
