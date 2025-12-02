@@ -33,6 +33,7 @@ void GameScene::Initialize(EngineSystem* engine) {
    // プレイヤーの生成と初期化
    {
 	  modelManager->LoadModelResource("Resources/Models/Player/Damage", "PlayerDamage.obj");
+	  modelManager->LoadModelResource("Resources/Models/PlayerPropeller", "PlayerPropeller.obj");
 	  auto playerModel = modelManager->CreateStaticModel("Resources/Models/Player/Player.obj");
 	  auto playerTexture = textureManager.Load("Resources/Textures/Player.png");
 	  auto player = std::make_unique<Player>();
@@ -43,6 +44,9 @@ void GameScene::Initialize(EngineSystem* engine) {
 			cameraController_->StartShake(CameraController::ShakeIntensity::Medium);
 		 }
 		 });
+	  player->RegisterModelResource("Damage", "Resources/Models/Player/Damage/PlayerDamage.obj");
+	  player->RegisterModelResource("Player1", "Resources/Models/Player/Player.obj");
+	  player->RegisterModelResource("Player2", "Resources/Models/PlayerPropeller/PlayerPropeller.obj");
 	  player_ = player.get();
 	  gameObjects_.push_back(std::move(player));
    }

@@ -182,3 +182,70 @@ void GameObject::ChangeModelResource(const std::string& path) {
 	  Object3d::ChangeModelResource(newResource);
    }
 }
+
+void GameObject::RegisterModelResource(const std::string& name, const std::string& modelPath) {
+   registeredModels_[name] = modelPath;
+}
+
+std::string GameObject::GetRegisteredModelPath(const std::string& name) const {
+   auto it = registeredModels_.find(name);
+   if (it != registeredModels_.end()) {
+	  return it->second;
+   }
+   return "";
+}
+
+void GameObject::ChangeToRegisteredModel(const std::string& name) {
+   std::string path = GetRegisteredModelPath(name);
+   if (!path.empty()) {
+	  ChangeModelResource(path);
+   }
+}
+
+void GameObject::StartModelSwapAnimation(const std::string& modelName1, const std::string& modelName2, 
+                                          float intervalSeconds, bool loop) {
+   // モデル名を保存
+   modelName1_ = modelName1;
+   modelName2_ = modelName2;
+   
+   // 最初のモデルを表示
+   isShowingModel1_ = true;
+   ChangeToRegisteredModel(modelName1_);
+   
+   // タイマーを開始
+   modelSwapTimer_.Start(intervalSeconds, loop);
+}
+
+void GameObject::StopModelSwapAnimation() {
+   modelSwapTimer_.Stop();
+}
+
+void GameObject::UpdateModelSwapAnimation() {
+   // タイマーが動作していない場合は何もしない
+   if (!modelSwapTimer_.IsActive()) {
+	  return;
+   }
+   
+   // デルタタイムを取得
+   float deltaTime = GameUtils::GetDeltaTime();
+   
+   // タイマーを更新
+   modelSwapTimer_.Update(deltaTime);
+   
+   // タイマーがループした場合にモデルを切り替え
+   if (modelSwapTimer_.HasLooped() || (modelSwapTimer_.IsFinished() && !modelSwapTimer_.IsLoop())) {
+	  // モデルを切り替え
+	  isShowingModel1_ = !isShowingModel1_;
+	  
+	  if (isShowingModel1_) {
+		 ChangeToRegisteredModel(modelName1_);
+	  } else {
+		 ChangeToRegisteredModel(modelName2_);
+	  }
+	  
+	  // ループしない場合は、終了時に2つ目のモデルを表示して停止
+	  if (modelSwapTimer_.IsFinished() && !modelSwapTimer_.IsLoop()) {
+		 modelSwapTimer_.Stop();
+	  }
+   }
+}
