@@ -185,8 +185,8 @@ void Boss::UpdateMovement() {
 
    transform_.translate.z = 0.0f; // Z座標は固定
 
-   transform_.translate.x = std::clamp(transform_.translate.x, -moveableAreaRadius_, moveableAreaRadius_);
-   transform_.translate.y = std::clamp(transform_.translate.y, -moveableAreaRadius_, moveableAreaRadius_);
+   transform_.translate.x = std::clamp(transform_.translate.x, -GameSceneConfig::kMoveableAreaSize.x * 0.5f, GameSceneConfig::kMoveableAreaSize.x * 0.5f);
+   transform_.translate.y = std::clamp(transform_.translate.y, -GameSceneConfig::kMoveableAreaSize.y * 0.5f, GameSceneConfig::kMoveableAreaSize.y * 0.5f);
 
    acceleration_ = { 0.0f, 0.0f };
 }

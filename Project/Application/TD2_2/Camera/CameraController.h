@@ -113,6 +113,12 @@ private:
 	/// @return 中点座標
 	Vector3 CalculateTargetPosition() const;
 
+	/// @brief プレイヤーを優先したターゲット位置を計算（最大距離到達時用）
+	/// @param midpoint 中点座標
+	/// @param cameraDistance カメラの距離
+	/// @return プレイヤー寄りのターゲット位置
+	Vector3 CalculatePlayerPriorityTargetPosition(const Vector3& midpoint, float cameraDistance) const;
+
 	/// @brief オブジェクト間の距離を計算
 	/// @return 2つのオブジェクト間の距離
 	float CalculateObjectDistance() const;
@@ -160,6 +166,12 @@ private:
 	/// @param cameraDistance カメラの距離
 	/// @return ステージ境界内に制限されたターゲット位置
 	Vector3 ClampTargetToStageBounds(const Vector3& targetPos, float cameraDistance) const;
+
+	/// @brief ステージ境界内にカメラ位置を制限（シェイク対応版）
+	/// @param cameraPos 制限前のカメラ位置
+	/// @param cameraDistance カメラの距離
+	/// @return ステージ境界内に制限されたカメラ位置
+	Vector3 ClampCameraToStageBounds(const Vector3& cameraPos, float cameraDistance) const;
 
 	// 制御対象
 	Camera* camera_ = nullptr;              ///< 制御するカメラ

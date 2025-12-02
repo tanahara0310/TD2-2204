@@ -95,13 +95,14 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  cameraController_->Initialize(releaseCamera, player_, boss_);
 
 	  // カメラパラメータの調整（オプション）
-	  cameraController_->SetMinDistance(35.0f);
-	  cameraController_->SetMaxDistance(200.0f);
+	  cameraController_->SetMinDistance(30.0f);
+	  cameraController_->SetMaxDistance(70.0f);
 	  cameraController_->SetDistanceScale(1.8f);
 	  cameraController_->SetHeightOffset(0.0f);
 	  cameraController_->SetPitchAngle(0.0f);
-	  cameraController_->SetSmoothSpeed(50.0f);
+	  cameraController_->SetSmoothSpeed(100.0f);
 	  cameraController_->SetMarginDistance(8.0f);
+	  cameraController_->SetScreenPadding(0.35f);
 
 	  // ステージ境界を設定（フレームの外側まで）
 	  // kStageSize はフレームを含めた全体サイズなので、フレーム1個分外側に広げる
