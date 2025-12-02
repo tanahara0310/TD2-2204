@@ -283,6 +283,7 @@
     <ClCompile Include="Engine\Particle\Modules\ShapeModule.cpp" />
     <ClCompile Include="Engine\Graphics\Render\Line\LineRendererPipeline.cpp" />
     <ClCompile Include="Application\TD2_2\GameObject\Background\Background.cpp" />
+    <ClCompile Include="Application\TD2_2\GameObject\Frame\Frame.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Engine\WinApp\WinApp.h">
@@ -727,6 +728,8 @@
     <ClInclude Include="Engine\Particle\Modules\ShapeModule.h" />
     <ClInclude Include="Engine\Graphics\Render\Line\LineRendererPipeline.h" />
     <ClInclude Include="Application\TD2_2\GameObject\Background\Background.h" />
+    <ClInclude Include="Application\TD2_2\GameObject\Frame\Frame.h" />
+    <ClInclude Include="Application\TD2_2\Scene\Config\GameSceneConfig.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Engine\Particle\README.md">
