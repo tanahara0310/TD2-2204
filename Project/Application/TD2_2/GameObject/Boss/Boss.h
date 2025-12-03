@@ -47,6 +47,7 @@ public:
    // HP取得
    int GetHP() const { return hp_; }
    int GetMaxHP() const { return maxHp_; }
+   float GetHPRatio() const { return static_cast<float>(hp_) / static_cast<float>(maxHp_); }
 
    //======================================================================
    // ビヘイビアツリー関連

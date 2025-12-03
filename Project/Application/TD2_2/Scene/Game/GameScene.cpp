@@ -318,9 +318,13 @@ std::unique_ptr<BehaviorTree> GameScene::CreateBossBehaviorTree() {
 			.Sequence()
 			.Action<FleeFromPlayerAction>(boss_, player_)
 			.Action<ChargeToPlayerAction>(boss_, player_)
-			.Action<ShootEightWayAction>(boss_, [this](const Vector3& pos, const Vector3& direction, float speed) {
+			.WeightedSelector()
+			.WeightedAction<MoveToCenterAction>(0.2f, boss_)
+			.WeightedAction<ShootEightWayAction>(0.3f, boss_, [this](const Vector3& pos, const Vector3& direction, float speed) {
 			CreateBullet(pos, direction, BulletType::ElasticSphere, speed);
 			   })
+			.WeightedAction<ChargeToPlayerAction>(0.5f, boss_, player_)
+			.End()
 			.End()
 			.Action<FleeFromPlayerAction>(boss_, player_)
 			.End();
