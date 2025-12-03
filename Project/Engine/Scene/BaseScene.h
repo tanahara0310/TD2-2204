@@ -53,6 +53,9 @@ private:
    /// @param drawable 描画可能オブジェクト
    void AddDrawableRecursive(RenderManager* renderManager, IDrawable* drawable);
 
+   /// @brief 削除可能なオブジェクトを削除（描画後に呼ばれる）
+   void CleanupGameObjects();
+
 protected:
    // 派生クラスからアクセス可能な共通メンバー
    EngineSystem* engine_ = nullptr;

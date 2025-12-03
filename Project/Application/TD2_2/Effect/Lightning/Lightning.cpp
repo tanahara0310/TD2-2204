@@ -11,12 +11,6 @@
 void Lightning::Initialize(ModelResource* voxelModel, TextureManager::LoadedTexture voxelTexture,
 	const Config& config, const std::string& name)
 {
-	if (!voxelModel) {
-#ifdef _DEBUG
-		OutputDebugStringW(L"[ERROR] Lightning::Initialize: voxelModelがnullptrです\n");
-#endif
-		return;
-	}
 
 	config_ = config;
 	name_ = name;
@@ -211,9 +205,6 @@ void Lightning::GenerateLinearPath()
 	
 	// 方向ベクトルの長さが0または極端に小さい場合は、始点と終点のみ設定
 	if (directionLength < 0.01f) {
-#ifdef _DEBUG
-		OutputDebugStringW(L"[WARNING] Lightning::GenerateLinearPath: 始点と終点が近すぎるため、パス生成をスキップします\n");
-#endif
 		pathPoints_.push_back(config_.startPoint);
 		pathPoints_.push_back(config_.endPoint);
 		return;
@@ -298,9 +289,6 @@ void Lightning::GenerateCircularArcPath()
 	
 	// 半径が0または極端に小さい場合は、始点と終点のみ設定
 	if (startRadius < 0.01f || endRadius < 0.01f) {
-#ifdef _DEBUG
-		OutputDebugStringW(L"[WARNING] Lightning::GenerateCircularArcPath: 半径が小さすぎるため、パス生成をスキップします\n");
-#endif
 		pathPoints_.push_back(config_.startPoint);
 		pathPoints_.push_back(config_.endPoint);
 		return;

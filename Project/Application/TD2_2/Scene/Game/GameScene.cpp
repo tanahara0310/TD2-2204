@@ -87,9 +87,15 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  lightningEffectManager_->Initialize(modelManager, &textureManager);
 	  
 	  // プレイヤーのダメージエフェクト設定
-	  LightningEffectManager::CircularEffectConfig config;
-	  config.radius = 2.5f;
+	  LightningEffectManager::SphericalEffectConfig config;
+	  config.radius = 2.2f;
 	  config.color = { 1.0f, 0.3f, 0.3f, 1.0f };  // 赤色
+	  config.lightningCount = 8;  // 球面配置用の雷の総数
+	  config.visibleCount = 5;    // 常に5本表示
+	  config.arcLength = 0.4f;    // 雷の長さ
+	  config.effectDuration = 0.8f; // エフェクト継続時間
+	  config.enableStagger = true;  // 時間差出現を有効化
+	  config.staggerDelay = 0.05f;  // 各雷の出現間隔（0.05秒 = 50ms）
 	  
 	  // エフェクトを作成
 	  playerDamageEffectId_ = lightningEffectManager_->CreateCircularEffect(

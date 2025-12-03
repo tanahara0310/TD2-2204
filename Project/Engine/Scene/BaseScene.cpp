@@ -145,6 +145,9 @@ void BaseScene::Draw()
 
 	// デバッグ描画（派生クラスでオーバーライド可能）
 	DrawDebug();
+
+	// 描画完了後、削除可能なオブジェクトを安全に削除
+	CleanupGameObjects();
 }
 
 void BaseScene::Finalize()
@@ -165,11 +168,11 @@ void BaseScene::SetupCamera()
 
 	// ===== 3Dカメラの設定 =====
 
-	// リリースカメラを作成して登録（デフォルト設定）
+	// リリースカメラを作成して登録（斜め上から俯瞰する視点）
 	auto releaseCamera = std::make_unique<Camera>();
 	releaseCamera->Initialize(dxCommon->GetDevice());
-	releaseCamera->SetTranslate({ 0.0f, 4.0f, -10.0f });
-	releaseCamera->SetRotate({ 0.26f, 0.0f, 0.0f });
+	releaseCamera->SetTranslate({ 0.0f, 12.0f, -15.0f });
+	releaseCamera->SetRotate({ 0.6f, 0.0f, 0.0f });
 
 	cameraManager_->RegisterCamera("Release", std::move(releaseCamera));
 
@@ -185,7 +188,7 @@ void BaseScene::SetupCamera()
 
 	// 2Dカメラを作成して登録（スクリーンサイズは自動取得）
 	auto camera2D = std::make_unique<Camera2D>();
-	// 2Dカメラの初期位置（画面中央）
+	// 2Dカメラの初期位置：画面中央
 	camera2D->SetPosition(Vector2{ 0.0f, 0.0f });
 	camera2D->SetZoom(1.0f);
 
@@ -218,6 +221,24 @@ void BaseScene::UpdateGameObjects()
 			obj->Update();
 		}
 	}
+	// 削除処理はDrawの後に移動（CleanupGameObjects()で実行）
+}
+
+void BaseScene::CleanupGameObjects()
+{
+	// 削除可能なオブジェクトを削除（メモリリーク防止・パフォーマンス維持）
+	// この処理は描画完了後に実行されるため、ダングリングポインタの問題を回避
+	gameObjects_.erase(
+		std::remove_if(gameObjects_.begin(), gameObjects_.end(),
+			[](const std::unique_ptr<IDrawable>& obj) {
+				if (!obj) return true;
+				
+				// IDrawable::CanBeDeleted()をチェック
+				// 非アクティブで削除可能なオブジェクトを削除
+				return obj->CanBeDeleted();
+			}),
+		gameObjects_.end()
+	);
 }
 
 void BaseScene::DrawGameObjectsImGui()

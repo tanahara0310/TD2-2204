@@ -78,7 +78,8 @@ void RenderManager::DrawAll() {
 	const ICamera* currentCamera = nullptr;
 
 	for (const auto& cmd : drawQueue_) {
-		if (!cmd.object->IsActive()) continue;
+		// オブジェクトのnullチェックと有効性チェック
+		if (!cmd.object || !cmd.object->IsActive()) continue;
 
 		// パスが切り替わったら処理
 		if (cmd.passType != currentPass) {
@@ -106,10 +107,13 @@ void RenderManager::DrawAll() {
 
 		// オブジェクトを描画
 		if (currentRenderer) {
+			// 再度nullチェック（安全性のため）
+			if (!cmd.object) continue;
+			
 			// オブジェクトのDraw()でGPUデータを更新
 			cmd.object->Draw(currentCamera);
 			
-			// パーティクルの場合は、レンダラーに描画コマンド発行を依頼
+			// パーティクルの場合は、レンダラーに描画コマンド発行を委託
 			if (cmd.passType == RenderPassType::Particle) {
 				if (auto* particleRenderer = static_cast<ParticleRenderer*>(currentRenderer)) {
 					auto* particleSystem = static_cast<ParticleSystem*>(cmd.object);
