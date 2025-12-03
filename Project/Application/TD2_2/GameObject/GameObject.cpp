@@ -13,6 +13,11 @@ void GameObject::Initialize(std::unique_ptr<Model> model, TextureManager::Loaded
 	  transform_.SetRotationMode(WorldTransform::RotationMode::Quaternion);
 	  texture_ = texture;
    }
+
+   // マテリアルから元の色を保存
+   if (model_ && model_->GetMaterialManager()) {
+      originalColor_ = model_->GetMaterialManager()->GetColor();
+   }
 }
 
 void GameObject::AttachCollider(std::unique_ptr<Collider> collider) {
@@ -247,5 +252,62 @@ void GameObject::UpdateModelSwapAnimation() {
 	  if (modelSwapTimer_.IsFinished() && !modelSwapTimer_.IsLoop()) {
 		 modelSwapTimer_.Stop();
 	  }
+   }
+}
+
+void GameObject::StartInvincibility(float duration, float blinkInterval) {
+   invincibleTimer_.Start(duration, false);
+   blinkTimer_.Start(blinkInterval, true); // ループさせる
+   blinkInterval_ = blinkInterval;
+   isVisible_ = true;
+   
+   // 現在の色を保存
+   if (model_ && model_->GetMaterialManager()) {
+      originalColor_ = model_->GetMaterialManager()->GetColor();
+   }
+}
+
+void GameObject::UpdateInvincibility() {
+   if (!invincibleTimer_.IsActive()) {
+      // 無敵時間が終了したら、元の色に戻す
+      if (model_ && model_->GetMaterialManager()) {
+         model_->GetMaterialManager()->SetColor(originalColor_);
+         isVisible_ = true;
+      }
+      return;
+   }
+
+   float deltaTime = GameUtils::GetDeltaTime();
+   
+   // 無敵タイマーを更新
+   invincibleTimer_.Update(deltaTime);
+   
+   // 点滅タイマーを更新
+   blinkTimer_.Update(deltaTime);
+   
+   // 点滅処理
+   if (blinkTimer_.HasLooped()) {
+      isVisible_ = !isVisible_;
+      
+      if (model_ && model_->GetMaterialManager()) {
+         if (isVisible_) {
+            // 通常の色
+            model_->GetMaterialManager()->SetColor(originalColor_);
+         } else {
+            // 透明にする
+            Vector4 transparentColor = originalColor_;
+            transparentColor.w = 0.0f; // アルファを0に
+            model_->GetMaterialManager()->SetColor(transparentColor);
+         }
+      }
+   }
+   
+   // 無敵時間が終了したら
+   if (invincibleTimer_.IsFinished()) {
+      blinkTimer_.Stop();
+      if (model_ && model_->GetMaterialManager()) {
+         model_->GetMaterialManager()->SetColor(originalColor_);
+         isVisible_ = true;
+      }
    }
 }

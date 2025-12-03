@@ -65,4 +65,7 @@ private:
    void InitializeMoveState();
 
    void Move();
+
+   // ステージ外で消す
+   void CheckOutOfBounds();
 };

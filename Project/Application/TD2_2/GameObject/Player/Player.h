@@ -36,6 +36,10 @@ public:
    // 衝突反発の最大値設定
    void SetMaxCollisionResponse(float v) { maxCollisionResponse_ = v; }
    float GetMaxCollisionResponse() const { return maxCollisionResponse_; }
+
+   // HP取得
+   int GetHP() const { return hp_; }
+   int GetMaxHP() const { return maxHp_; }
 private:
 
    Vector2 acceleration_ = { 0.0f, 0.0f }; // 加速度ベクトル
@@ -63,6 +67,12 @@ private:
    float stunMaxSpeed_ = 35.0f; // スタン最大速度
    GameTimer stunTimer_;
 
+   // デスポーン・リスポーン
+   float despawnDuration_ = 0.5f; // デスポーン持続時間（秒）
+   float respawnDuration_ = 0.5f; // リスポーン持続時間（秒）
+   GameTimer despawnTimer_;
+   GameTimer respawnTimer_;
+
    // 衝突反発の速度依存スケール
    float collisionResponseScale_ = 50.0f; // 速度に応じて反発力がどれだけ増えるかの係数
 
@@ -81,6 +91,9 @@ private:
 
    // 突進中フラグ
    bool isCharging_ = false;
+
+   int hp_ = 3;
+   int maxHp_ = 3;
    private:
    /// @brief キーコンフィグの初期化
    void InitializeKeyConfig();
@@ -107,6 +120,10 @@ private:
 
    void Damage();
 
+   void Despawn();
+
+   void Respawn();
+
    void InitializeCharge();
 
    void InitializeMove();
@@ -114,4 +131,11 @@ private:
    void InitializeStun();
 
    void InitializeDamage();
+
+   void InitializeDespawn();
+
+   void InitializeRespawn();
+
+   /// @brief ダメージ壁との接触判定
+   void CheckDamageWallCollision();
 };

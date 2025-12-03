@@ -33,8 +33,8 @@ void GameScene::Initialize(EngineSystem* engine) {
 
    // 雷エフェクトマネージャーの初期化
    {
-      lightningManager_ = std::make_unique<LightningEffectManager>();
-      lightningManager_->Initialize(modelManager, &textureManager);
+	  lightningManager_ = std::make_unique<LightningEffectManager>();
+	  lightningManager_->Initialize(modelManager, &textureManager);
    }
 
    // プレイヤーの生成と初期化
@@ -105,6 +105,13 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  collisionManager_ = std::make_unique<CollisionManager>(collisionConfig_.get());
    }
 
+   // ステージ境界を設定（フレームの外側まで）
+   // kStageSize はフレームを含めた全体サイズなので、フレーム1個分外側に広げる
+   float stageHalfWidth = GameSceneConfig::kStageSize.x / 2.0f;
+   float stageHalfHeight = GameSceneConfig::kStageSize.y / 2.0f;
+   float frameWidth = GameSceneConfig::kFrameSize.x * 0.65f;
+   float frameHeight = GameSceneConfig::kFrameSize.y * 0.6f;
+
    // カメラコントローラーの初期化（プレイヤーとボスを追跡）
    {
 	  cameraController_ = std::make_unique<CameraController>();
@@ -121,12 +128,6 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  cameraController_->SetMarginDistance(8.0f);
 	  cameraController_->SetScreenPadding(0.35f);
 
-	  // ステージ境界を設定（フレームの外側まで）
-	  // kStageSize はフレームを含めた全体サイズなので、フレーム1個分外側に広げる
-	  float stageHalfWidth = GameSceneConfig::kStageSize.x / 2.0f;
-	  float stageHalfHeight = GameSceneConfig::kStageSize.y / 2.0f;
-	  float frameWidth = GameSceneConfig::kFrameSize.x * 0.65f;
-	  float frameHeight = GameSceneConfig::kFrameSize.y * 0.6f;
 
 	  cameraController_->SetStageBounds(
 		 GameSceneConfig::kStageCenter.x - stageHalfWidth - frameWidth,
@@ -138,22 +139,47 @@ void GameScene::Initialize(EngineSystem* engine) {
 
    // テスト用：直線雷を1本配置
    {
-      LightningEffectManager::LinearEffectConfig config;
-      config.startOffset = { 0.0f, 5.0f, 0.0f };    // 上から
-      config.endOffset = { 0.0f, -5.0f, 0.0f };     // 下へ
-      config.segmentCount = 20;
-      config.noiseScale = 0.8f;
-      config.noiseSpeed = 10.0f;
-      config.enableAnimation = true;
-      config.color = { 0.5f, 0.8f, 1.0f, 1.0f };   // 青白色
-      config.pathType = Lightning::PathType::Linear;
-      
-      // ステージ中央に固定配置
-      lightningManager_->CreateLinearEffectAtPosition(
-         { 0.0f, 0.0f, 0.0f }, 
-         config, 
-         gameObjects_
-      );
+	  frameWidth = GameSceneConfig::kFrameSize.x;
+	  frameHeight = GameSceneConfig::kFrameSize.y;
+
+	  LightningEffectManager::LinearEffectConfig config;
+	  config.startOffset = { GameSceneConfig::kStageCenter.x - stageHalfWidth - frameWidth, 0.0f, 0.0f };
+	  config.endOffset = { GameSceneConfig::kStageCenter.x + stageHalfWidth + frameWidth, 0.0f, 0.0f };
+	  config.segmentCount = 10;
+	  config.noiseScale = 2.0f;
+	  config.noiseSpeed = 30.0f;
+	  config.enableAnimation = true;
+	  config.color = { 0.5f, 0.8f, 1.0f, 1.0f };   // 青白色
+	  config.pathType = Lightning::PathType::Linear;
+
+	  // ステージ中央に固定配置
+	  lightningManager_->CreateLinearEffectAtPosition(
+		 { 0.0f, -stageHalfHeight + frameHeight, 0.0f },
+		 config,
+		 gameObjects_
+	  );
+
+	  lightningManager_->CreateLinearEffectAtPosition(
+		 { 0.0f,stageHalfHeight - frameHeight, 0.0f },
+		 config,
+		 gameObjects_
+	  );
+
+	  config.startOffset = {0.0f, -stageHalfHeight - frameHeight, 0.0f };
+	  config.endOffset = {0.0f , stageHalfHeight + frameHeight, 0.0f };
+	  config.segmentCount = 5;
+
+	  lightningManager_->CreateLinearEffectAtPosition(
+		 { -stageHalfWidth + frameWidth, 0.0f, 0.0f },
+		 config,
+		 gameObjects_
+	  );
+
+	  lightningManager_->CreateLinearEffectAtPosition(
+		 { stageHalfWidth - frameWidth,0.0f, 0.0f },
+		 config,
+		 gameObjects_
+	  );
    }
 }
 
@@ -168,13 +194,13 @@ void GameScene::Update() {
 
    // 雷エフェクトの更新
    if (lightningManager_) {
-      lightningManager_->UpdateAllEffects();
+	  lightningManager_->UpdateAllEffects();
    }
 
    // 削除予定の弾をリストから削除（gameObjects_からは次のフレームの最初に削除）
    bullets_.remove_if([](Bullet* bullet) {
 	  return bullet == nullptr || !bullet->IsActive();
-   });
+	  });
 
    // 新しいオブジェクトを追加
    if (!newGameObjectsQueue_.empty()) {
@@ -224,13 +250,13 @@ void GameScene::CheckCollisions() {
 std::unique_ptr<BehaviorTree> GameScene::CreateBossBehaviorTree() {
    return BehaviorTreeFactory::Create(
 	  [this](BehaviorTreeBuilder& builder) {
-		 builder.Selector() 
+		 builder.Selector()
 			.Sequence()
 			.Action<FleeFromPlayerAction>(boss_, player_)
-			.Action<ChargeToPlayerAction>(boss_,player_)
+			.Action<ChargeToPlayerAction>(boss_, player_)
 			.Action<ShootEightWayAction>(boss_, [this](const Vector3& pos, const Vector3& direction, float speed) {
-			   CreateBullet(pos, direction, BulletType::ElasticSphere, speed);
-			   })  
+			CreateBullet(pos, direction, BulletType::ElasticSphere, speed);
+			   })
 			.End()
 			.Action<FleeFromPlayerAction>(boss_, player_)
 			.End();
@@ -318,21 +344,21 @@ Bullet* GameScene::CreateBullet(const Vector3& position, const Vector3& directio
    CollisionLayer collisionLayer;
 
    switch (type) {
-   case BulletType::LightningBullet:
-	  modelPath = "Resources/Models/Ball/Ball.obj";
-	  texturePath = "Resources/Textures/Ball.png";
-	  collisionLayer = CollisionLayer::LightningBullet;
-	  break;
-   case BulletType::ElasticSphere:
-	  modelPath = "Resources/Models/Ball/Ball.obj";
-	  texturePath = "Resources/Textures/Ball.png";
-	  collisionLayer = CollisionLayer::ElasticSphere;
-	  break;
-   default:
-	  modelPath = "Resources/Models/Ball/Ball.obj";
-	  texturePath = "Resources/Textures/Ball.png";
-	  collisionLayer = CollisionLayer::LightningBullet;
-	  break;
+	  case BulletType::LightningBullet:
+		 modelPath = "Resources/Models/Ball/Ball.obj";
+		 texturePath = "Resources/Textures/Ball.png";
+		 collisionLayer = CollisionLayer::LightningBullet;
+		 break;
+	  case BulletType::ElasticSphere:
+		 modelPath = "Resources/Models/Ball/Ball.obj";
+		 texturePath = "Resources/Textures/Ball.png";
+		 collisionLayer = CollisionLayer::ElasticSphere;
+		 break;
+	  default:
+		 modelPath = "Resources/Models/Ball/Ball.obj";
+		 texturePath = "Resources/Textures/Ball.png";
+		 collisionLayer = CollisionLayer::LightningBullet;
+		 break;
    }
 
    // 弾のモデルとテクスチャを読み込み
@@ -344,7 +370,7 @@ Bullet* GameScene::CreateBullet(const Vector3& position, const Vector3& directio
    bullet->Initialize(std::move(bulletModel), bulletTexture, direction);
    bullet->SetWorldPosition(position);
    bullet->SetSpeed(speed);
-   
+
    // コライダーレイヤーを設定
    if (bullet->GetCollider()) {
 	  bullet->GetCollider()->SetLayer(collisionLayer);

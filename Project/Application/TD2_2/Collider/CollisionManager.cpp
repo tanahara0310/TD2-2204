@@ -1,4 +1,5 @@
 #include "CollisionManager.h"
+#include "Application/TD2_2/GameObject/GameObject.h"
 #include <algorithm>
 
 namespace {
@@ -25,6 +26,13 @@ void CollisionManager::CheckAllCollisions() {
 
          // マスク判定
          if (!config_->IsCollisionEnabled(a->GetLayer(), b->GetLayer())) continue;
+
+         // 無敵判定：どちらかのGameObjectが無敵状態なら衝突判定をスキップ
+         GameObject* objA = dynamic_cast<GameObject*>(a->GetOwner());
+         GameObject* objB = dynamic_cast<GameObject*>(b->GetOwner());
+         if ((objA && objA->IsInvincible()) || (objB && objB->IsInvincible())) {
+            continue;
+         }
 
          auto pair = MakePair(a, b);
          bool isColliding = a->CheckCollision(b);
