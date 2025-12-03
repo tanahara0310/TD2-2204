@@ -14,6 +14,10 @@
 void ResultScene::Initialize(EngineSystem* engine) {
    BaseScene::Initialize(engine);
 
+   // クリアタイマーを文字列に変換
+   timerDigits_ = FormatTime(currentClearTime_);
+
+   // resultUI
    {
 	   // UI初期化
 	   resultUI_ = std::make_unique<ResultUI>();
@@ -23,12 +27,9 @@ void ResultScene::Initialize(EngineSystem* engine) {
 	   for (auto& sprite : sprites) {
 		   gameObjects_.push_back(std::move(sprite));
 	   }
-   }
 
-   // クリアタイマーを文字列に変換
-   {
-	   timerDigits_ = FormatTime(currentClearTime_);
-
+	   // タイマー文字列を受け取る
+	   resultUI_->SetTimerString(timerDigits_);
    }
 }
 
@@ -36,6 +37,7 @@ void ResultScene::Update() {
    BaseScene::Update();
 
    auto input = engine_->GetComponent<KeyboardInput>();
+   auto gamePad = engine_->GetComponent<GamepadInput>();
    if (!input || !resultUI_) {
 	   return;
    }
@@ -43,17 +45,17 @@ void ResultScene::Update() {
    // 遷移中でなければ入力を受け付ける
    if (!isTitleTransitioning_ || !isGameTransitioning_) {
 	   // 右キーでスタートを選択
-	   if (input->IsKeyTriggered(DIK_RIGHT)) {
+	   if (input->IsKeyTriggered(DIK_RIGHT) || gamePad->IsButtonTriggered(GamepadButton::DPadRight)) {
 		   resultUI_->SetSelectionState(ResultUI::SelectionState::ToTitle);
 	   }
 
 	   // 左キーでQuitを選択
-	   if (input->IsKeyTriggered(DIK_LEFT)) {
+	   if (input->IsKeyTriggered(DIK_LEFT) || gamePad->IsButtonTriggered(GamepadButton::DPadLeft)) {
 		   resultUI_->SetSelectionState(ResultUI::SelectionState::ReStart);
 	   }
 
 	   // スペースキーで決定
-	   if (input->IsKeyTriggered(DIK_SPACE)) {
+	   if (input->IsKeyTriggered(DIK_SPACE) || gamePad->IsButtonTriggered(GamepadButton::A)) {
 		   switch (resultUI_->GetSelectionState()) {
 		   case ResultUI::SelectionState::ToTitle:
 			   // 遷移開始
@@ -98,19 +100,19 @@ void ResultScene::Draw() {
 
 void ResultScene::Finalize() {}
 
-std::string ResultScene::FormatTime(float time) {
-	int totalSeconds = (int)time;
+std::array<int, 6> ResultScene::FormatTime(float time) {
+	int totalMilliSeconds = static_cast<int>(time * 1000);
 
-	int hours = totalSeconds / 3600;
-	int minutes = (totalSeconds % 3600) / 60;
-	int seconds = totalSeconds % 60;
+	int minutes = (totalMilliSeconds / 1000) / 60;
+	int seconds = (totalMilliSeconds / 1000) % 60;
+	int milliseconds = totalMilliSeconds % 1000;
 
-	int h1 = hours / 10;
-	int h2 = hours % 10;
 	int m1 = minutes / 10;
 	int m2 = minutes % 10;
 	int s1 = seconds / 10;
 	int s2 = seconds % 10;
+	int ms1 = (milliseconds / 100) % 10;
+	int ms2 = (milliseconds % 10) % 10;
 
-	return std::to_string(h1) + std::to_string(h2) + std::to_string(m1) + std::to_string(m2) + std::to_string(s1) + std::to_string(s2);
+	return {m1, m2, s1, s2, ms1, ms2};
 }

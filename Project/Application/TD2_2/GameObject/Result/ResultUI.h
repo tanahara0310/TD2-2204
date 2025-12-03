@@ -25,6 +25,9 @@ public:
 	/// @brief 更新
 	void Update();
 
+	/// @brief タイマーの文字列を受け取る
+	void SetTimerString(std::array<int, 6> timerString);
+
 	/// @brief 現在の選択状態を取得
 	/// @return 選択状態
 	SelectionState GetSelectionState() const { return selectionState_; }
@@ -76,13 +79,22 @@ private:
 	SpriteObject* rankingUI_ = nullptr;
 	SpriteObject* arrowUI_ = nullptr;
 	std::vector<SpriteObject*> timerUI_;
+	std::vector<SpriteObject*> timerUIRank1_;
+	std::vector<SpriteObject*> timerUIRank2_;
+	std::vector<SpriteObject*> timerUIRank3_;
 	SpriteObject* colonUI_ = nullptr;
+	SpriteObject* colonUIRank1_ = nullptr;
+	SpriteObject* colonUIRank2_ = nullptr;
+	SpriteObject* colonUIRank3_ = nullptr;
 
 	// 選択状態
 	SelectionState selectionState_ = SelectionState::ToTitle;
 
 	// ステートマシーン
 	StateMachine stateMachine_;
+
+	// タイマー文字列
+	std::array<int, 6> timerDigits_;
 
 	// 矢印の位置（スタートUIのサイズを考慮）
 	static constexpr float kArrowOffsetX_ToTitle = 320.0f;   // リスタートボタン用（X方向に大きいため左寄り）
