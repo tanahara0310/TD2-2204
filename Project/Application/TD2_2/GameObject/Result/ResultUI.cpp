@@ -54,11 +54,86 @@ std::vector<std::unique_ptr<IDrawable>> ResultUI::Initialize([[maybe_unused]] En
 		sprites.push_back(std::move(timer));
 	}
 
+	// タイマー用(1位)のUIを作成
+	for (int i = 0; i < 6; i++) {
+		auto timer = CreateTimerUI();
+
+		// 基本の位置
+		float x = i * 32.0f - 200.0f;
+
+		// iが2の倍数のときに余分なオフセットを加える
+		x += (i / 2) * 128.0f;
+
+		timer->GetTransform().translate = {x, -10.0f, 0.0f};
+		timer->GetTransform().scale = {0.5f, 0.5f, 0.5f};
+		timerUIRank1_.push_back(timer.get());
+		sprites.push_back(std::move(timer));
+	}
+
+	// タイマー用(2位)のUIを作成
+	for (int i = 0; i < 6; i++) {
+		auto timer = CreateTimerUI();
+
+		// 基本の位置
+		float x = i * 32.0f - 200.0f;
+
+		// iが2の倍数のときに余分なオフセットを加える
+		x += (i / 2) * 128.0f;
+
+		timer->GetTransform().translate = {x, -100.0f, 0.0f};
+		timer->GetTransform().scale = {0.5f, 0.5f, 0.5f};
+		timerUIRank1_.push_back(timer.get());
+		sprites.push_back(std::move(timer));
+	}
+
+	// タイマー用(3位)のUIを作成
+	for (int i = 0; i < 6; i++) {
+		auto timer = CreateTimerUI();
+
+		// 基本の位置
+		float x = i * 32.0f - 200.0f;
+
+		// iが2の倍数のときに余分なオフセットを加える
+		x += (i / 2) * 128.0f;
+
+		timer->GetTransform().translate = {x, -190.0f, 0.0f};
+		timer->GetTransform().scale = {0.5f, 0.5f, 0.5f};
+		timerUIRank1_.push_back(timer.get());
+		sprites.push_back(std::move(timer));
+	}
+
 	// コロンUIを作成
 	for (int i = 0; i < 2; i++) {
 		auto colonUI = CreateColonUI();
 		colonUI->GetTransform().translate = {i * 390.0f - 180.0f, 130.0f, 0.0f};
 		colonUI_ = colonUI.get();
+		sprites.push_back(std::move(colonUI));
+	}
+
+	// コロンUI(1位)を作成
+	for (int i = 0; i < 2; i++) {
+		auto colonUI = CreateColonUI();
+		colonUI->GetTransform().translate = {i * 195.0f - 90.0f, -10.0f, 0.0f};
+		colonUI->GetTransform().scale = {0.5f, 0.5f, 0.5f};
+		colonUIRank1_ = colonUI.get();
+		sprites.push_back(std::move(colonUI));
+	}
+
+	// コロンUI(2位)を作成
+	for (int i = 0; i < 2; i++) {
+		auto colonUI = CreateColonUI();
+		colonUI->GetTransform().translate = {i * 195.0f - 90.0f, -100.0f, 0.0f};
+		colonUI->GetTransform().scale = {0.5f, 0.5f, 0.5f};
+		colonUIRank2_ = colonUI.get();
+		sprites.push_back(std::move(colonUI));
+	}
+
+	// コロンUI(3位)を作成
+	for (int i = 0; i < 2; i++) {
+		auto colonUI = CreateColonUI();
+		colonUI->GetTransform().translate = {i * 195.0f - 90.0f, -190.0f, 0.0f};
+		colonUI->GetTransform().scale = {0.5f, 0.5f, 0.5f};
+		colonUIRank3_ = colonUI.get();
 		sprites.push_back(std::move(colonUI));
 	}
 
@@ -74,6 +149,15 @@ std::vector<std::unique_ptr<IDrawable>> ResultUI::Initialize([[maybe_unused]] En
 void ResultUI::Update() {
 	// ステートマシーンの更新
 	stateMachine_.Update();
+}
+
+void ResultUI::SetTimerString(std::array<int, 6> timerString) {
+	timerDigits_ = timerString;
+
+	// タイマー
+	for (int i = 0; i < timerDigits_.size(); ++i) {
+		timerUI_[i]->SetTexture("Resources/GameResources/Result/Numbers/" + std::to_string(timerDigits_[i]) + ".png");
+	}
 }
 
 void ResultUI::SetSelectionState(SelectionState state) {
@@ -170,7 +254,7 @@ std::unique_ptr<SpriteObject> ResultUI::CreateRestartUI() {
 std::unique_ptr<SpriteObject> ResultUI::CreateRankingUI(int num) {
 	auto sprite = std::make_unique<SpriteObject>();
 	sprite->Initialize("Resources/GameResources/Result/Numbers/" + std::to_string(num) + ".png");
-	sprite->GetTransform().translate = {-200.0f, 100.0f - (num * 90.0f), 0.0f};
+	sprite->GetTransform().translate = {-300.0f, 80.0f - (num * 90.0f), 0.0f};
 	sprite->SetAnchor({0.5f, 0.5f});
 
 	return sprite;
@@ -188,7 +272,7 @@ std::unique_ptr<SpriteObject> ResultUI::CreateArrowUI() {
 std::unique_ptr<SpriteObject> ResultUI::CreateTimerUI() {
 	auto sprite = std::make_unique<SpriteObject>();
 	sprite->Initialize("Resources/GameResources/Result/numbers/0.png");
-	sprite->GetTransform().translate = {kArrowOffsetX_ReStart, kToTitleButtonY, 0.0f};
+	sprite->GetTransform().translate = {0.0f, 0.0f, 0.0f};
 	sprite->SetAnchor({0.5f, 0.5f});
 
 	return sprite;
