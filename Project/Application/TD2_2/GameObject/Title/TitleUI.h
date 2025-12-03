@@ -69,7 +69,7 @@ private:
     StateMachine stateMachine_;
 
     // 矢印の位置（スタートUIのサイズを考慮）
-    static constexpr float kArrowOffsetX_Start = -270.0f;  // スタートボタン用（X方向に大きいため左寄り）
+    static constexpr float kArrowOffsetX_Start = -150.0f;  // スタートボタン用（X方向に大きいため左寄り）
     static constexpr float kArrowOffsetX_Quit = -150.0f;   // Quitボタン用（標準サイズ）
     static constexpr float kStartButtonY = -160.0f;         // スタートボタンのY座標
     static constexpr float kQuitButtonY = -260.0f;          // QuitボタンのY座標
