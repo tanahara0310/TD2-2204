@@ -19,6 +19,11 @@ class EngineSystem;
 class CameraManager;
 struct DirectionalLightData;
 
+enum class BulletType {
+   LightningBullet,
+   ElasticSphere
+};
+
 /// @brief ゲームシーンクラス
 class GameScene : public BaseScene {
 public:
@@ -34,12 +39,6 @@ public:
    /// @brief 解放
    void Finalize() override;
 
-   /// @brief 弾を生成
-   /// @param position 生成位置
-   /// @param direction 進行方向
-   /// @param speed 速度（デフォルト: 30.0f）
-   /// @return 生成された弾のポインタ
-   Bullet* CreateBullet(const Vector3& position, const Vector3& direction, float speed = 30.0f);
 
 private:
    Player* player_;
@@ -54,6 +53,8 @@ private:
    std::unique_ptr<BehaviorTree> bossBehaviorTree_;
 
    std::unique_ptr<CameraController> cameraController_;
+
+   std::vector<std::unique_ptr<IDrawable>> newGameObjectsQueue_;
 private:
    void RegisterAllColliders();
 
@@ -62,4 +63,12 @@ private:
    std::unique_ptr<BehaviorTree> CreateBossBehaviorTree();
 
    void InitializeFrames();
+
+   /// @brief 弾を生成
+   /// @param position 生成位置
+   /// @param direction 進行方向
+   /// @param type 弾のタイプ
+   /// @param speed 速度（デフォルト: 30.0f）
+   /// @return 生成された弾のポインタ
+   Bullet* CreateBullet(const Vector3& position, const Vector3& direction, BulletType type, float speed = 30.0f);
 };

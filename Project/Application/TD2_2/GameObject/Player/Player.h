@@ -23,6 +23,10 @@ public:
       damageFunction_ = func;
    }
 
+   void SetHitEnemyFunction(const std::function<void()>& func) {
+      hitEnemyFunction_ = func;
+   }
+
    // 速度取得
    Vector2 GetVelocity() const { return velocity_; }
 
@@ -71,6 +75,8 @@ private:
    std::function<void()> startDamageFunction_;
 
    std::function<void()> damageFunction_;
+
+   std::function<void()> hitEnemyFunction_;
 
    // 突進中フラグ
    bool isCharging_ = false;

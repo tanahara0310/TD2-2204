@@ -8,9 +8,16 @@ BossActionNode::BossActionNode(Boss* boss, const std::string& actionName)
    // ステートマシンの初期化
    stateMachine_ = std::make_unique<StateMachine>();
    SetupStateMachine();
+   firstTick_ = true;
 }
 
 NodeState BossActionNode::Tick() {
+   if (firstTick_) {
+      firstTick_ = false;
+      UpdateState(); // 内部でEnterやExecuteまで進む可能性がある
+      return NodeState::Running; // 強制的にRunningを返す
+   }
+
    UpdateState();
 
    if(!stateMachine_) {
@@ -20,6 +27,8 @@ NodeState BossActionNode::Tick() {
    const std::string& currentState = stateMachine_->GetCurrentState();
 
    if (currentState == "Completed") {
+      stateMachine_->RequestState("Idle", 1);
+      firstTick_ = true;
       return NodeState::Success;
    } else {
       return NodeState::Running;
@@ -32,6 +41,7 @@ void BossActionNode::Reset() {
    }
 
    SetupStateMachine();
+   firstTick_ = true;
 }
 
 void BossActionNode::SetupStateMachine() {
@@ -88,10 +98,9 @@ void BossActionNode::SetupStateMachine() {
    // Completed状態
    stateMachine_->AddState("Completed",
       [this]() {
-         // 完了時の処理
+         // 完了時の処理 - ここで待機し、自動的には遷移しない
       },
       [this]() {
-         stateMachine_->RequestState("Idle", 1);
       }
    );
 

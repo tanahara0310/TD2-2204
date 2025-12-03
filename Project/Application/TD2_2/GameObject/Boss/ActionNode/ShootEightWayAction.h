@@ -10,17 +10,20 @@ public:
    /// @brief 弾生成関数の型定義
    /// @param position 弾の初期位置
    /// @param direction 弾の進行方向
-   using BulletSpawnFunction = std::function<void(const Vector3&, const Vector3&)>;
+   /// @param speed 弾の速度
+   using BulletSpawnFunction = std::function<void(const Vector3&, const Vector3&, float)>;
 
    /// @brief コンストラクタ
    /// @param boss ボスへの参照
    /// @param bulletSpawnFunc 弾生成関数
    /// @param offsetRadius 発射位置のオフセット半径
    /// @param shootInterval 連続発射の間隔（秒）、0なら一斉発射
+   /// @param bulletSpeed 弾の速度（デフォルト: 30.0f）
    ShootEightWayAction(Boss* boss,
                        BulletSpawnFunction bulletSpawnFunc,
                        float offsetRadius = 5.0f,
-                       float shootInterval = 0.0f);
+                       float shootInterval = 0.0f,
+                       float bulletSpeed = 30.0f);
 
    ~ShootEightWayAction() override = default;
 
@@ -44,8 +47,10 @@ private:
    BulletSpawnFunction bulletSpawnFunc_;  // 弾生成関数
    float offsetRadius_;                   // 発射位置のオフセット半径
    float shootInterval_;                  // 発射間隔
+   float bulletSpeed_;                    // 弾の速度
+
+   GameTimer shootTimer_;               // 発射タイマー
    
-   GameTimer shootTimer_;                 // 発射タイマー
    int currentBulletIndex_;               // 現在発射する弾のインデックス
    bool hasStartedShooting_;              // 発射を開始したか
    
