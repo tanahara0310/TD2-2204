@@ -36,6 +36,7 @@ protected:
    Boss* boss_;                          // ボスへの参照
    std::string actionName_;              // アクション名
    std::unique_ptr<StateMachine> stateMachine_;  // 内部ステートマシン
+   bool firstTick_ = true;
 
    /// @brief アクション開始時の処理（派生クラスで実装）
    virtual void OnEnter() {}

@@ -14,25 +14,76 @@
 void ResultScene::Initialize(EngineSystem* engine) {
    BaseScene::Initialize(engine);
 
-   std::vector<std::unique_ptr<IDrawable>> sprites;
+   {
+	   // UI初期化
+	   resultUI_ = std::make_unique<ResultUI>();
+	   auto sprites = resultUI_->Initialize(engine);
 
-   // リザルト画像の生成
-   auto resultSprite = CreateResultSprite();
-
-   resultSprite_ = resultSprite.get();
-   sprites.push_back(std::move(resultSprite));
-
-   for (auto& sprite : sprites) {
-	   gameObjects_.push_back(std::move(sprite));
+	   // スプライトをgameObjects_に追加
+	   for (auto& sprite : sprites) {
+		   gameObjects_.push_back(std::move(sprite));
+	   }
    }
 }
 
 void ResultScene::Update() {
    BaseScene::Update();
 
+   auto input = engine_->GetComponent<KeyboardInput>();
+   if (!input || !resultUI_) {
+	   return;
+   }
+
+   // 遷移中でなければ入力を受け付ける
+   if (!isTitleTransitioning_ || !isGameTransitioning_) {
+	   // 右キーでスタートを選択
+	   if (input->IsKeyTriggered(DIK_RIGHT)) {
+		   resultUI_->SetSelectionState(ResultUI::SelectionState::ToTitle);
+	   }
+
+	   // 左キーでQuitを選択
+	   if (input->IsKeyTriggered(DIK_LEFT)) {
+		   resultUI_->SetSelectionState(ResultUI::SelectionState::ReStart);
+	   }
+
+	   // スペースキーで決定
+	   if (input->IsKeyTriggered(DIK_SPACE)) {
+		   switch (resultUI_->GetSelectionState()) {
+		   case ResultUI::SelectionState::ToTitle:
+			   // 遷移開始
+			   isTitleTransitioning_ = true;
+			   transitionTimer_ = 0.0f;
+			   break;
+		   case ResultUI::SelectionState::ReStart:
+			   // アプリケーション終了
+			   isGameTransitioning_ = true;
+			   transitionTimer_ = 0.0f;
+			   break;
+		   }
+	   }
+   }
+
+   // 遷移処理
+   if (isTitleTransitioning_ || isGameTransitioning_) {
+	   UpdateSceneTransition(1.0f / 60.0f); // 仮のデルタタイム
+   }
+
    // リザルト画像の更新
-   if (resultSprite_)
-	   resultSprite_->Update();
+   if (resultUI_)
+	   resultUI_->Update();
+}
+
+void ResultScene::UpdateSceneTransition(float deltaTime) {
+	transitionTimer_ += deltaTime;
+
+	// 遷移時間が経過したらシーン遷移
+	if (transitionTimer_ >= kTransitionDuration) {
+		if (isTitleTransitioning_) {
+			sceneManager_->ChangeScene("TitleScene");
+		} else if (isGameTransitioning_) {
+			sceneManager_->ChangeScene("GameScene");
+		}
+	}
 }
 
 void ResultScene::Draw() {
@@ -40,12 +91,3 @@ void ResultScene::Draw() {
 }
 
 void ResultScene::Finalize() {}
-
-std::unique_ptr<SpriteObject> ResultScene::CreateResultSprite() { 
-	auto sprite = std::make_unique<SpriteObject>();
-	sprite->Initialize("Resources/Textures/white.png");
-	sprite->GetTransform().translate = {640.0f, 360.0f, 0.0f};
-	sprite->SetAnchor({0.5f, 0.5f});
-
-	return sprite; 
-}

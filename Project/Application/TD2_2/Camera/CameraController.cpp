@@ -122,17 +122,17 @@ void CameraController::StartShake(ShakeIntensity intensity)
 	switch (intensity) {
 	case ShakeIntensity::Small:
 		// 軽い揺れ: 短時間（0.3秒）、小さい振幅、高周波数、速い減衰
-		StartShake(0.3f, 0.1f, 25.0f, 0.85f);
+		StartShake(0.3f, 0.3f, 25.0f, 0.90f);
 		break;
 
 	case ShakeIntensity::Medium:
 		// 中程度の揺れ: 中時間（0.5秒）、中程度の振幅、中周波数、中速減衰
-		StartShake(0.5f, 0.3f, 20.0f, 0.8f);
+		StartShake(0.5f, 0.5f, 20.0f, 0.8f);
 		break;
 
 	case ShakeIntensity::Large:
 		// 激しい揺れ: 長時間（0.8秒）、大きい振幅、低周波数、遅い減衰
-		StartShake(0.8f, 0.6f, 15.0f, 0.75f);
+		StartShake(0.8f, 0.7f, 15.0f, 0.75f);
 		break;
 	}
 }
