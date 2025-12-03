@@ -22,7 +22,7 @@ public:
    ShootEightWayAction(Boss* boss,
                        BulletSpawnFunction bulletSpawnFunc,
                        float offsetRadius = 4.0f,
-                       float shootInterval = 0.0f,
+                       float shootInterval = 0.1f,
                        float bulletSpeed = 7.5f);
 
    ~ShootEightWayAction() override = default;
