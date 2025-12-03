@@ -90,6 +90,24 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  gameObjects_.push_back(std::move(background));
    }
 
+   // HPUIの初期化
+   {
+	  playerHitPointUI_ = std::make_unique<HitPoint>();
+	  auto sprites = playerHitPointUI_->Initialize({ -590.0f, 300.0f }, SettingObject::PLAYER, player_->GetMaxHP());
+
+	  // スプライトをgameObjects_に追加
+	  for (auto& sprite : sprites) {
+		 gameObjects_.push_back(std::move(sprite));
+	  }
+
+	  bossHitPointUI_ = std::make_unique<HitPoint>();
+	  auto bossSprites = bossHitPointUI_->Initialize({ 450.0f, 300.0f }, SettingObject::BOSS, boss_->GetMaxHP());
+	  // スプライトをgameObjects_に追加
+	  for (auto& sprite : bossSprites) {
+		 gameObjects_.push_back(std::move(sprite));
+	  }
+   }
+
    // フレームの初期化
    InitializeFrames();
 
@@ -119,12 +137,12 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  cameraController_->Initialize(releaseCamera, player_, boss_);
 
 	  // カメラパラメータの調整（オプション）
-	  cameraController_->SetMinDistance(30.0f);
+	  cameraController_->SetMinDistance(35.0f);
 	  cameraController_->SetMaxDistance(70.0f);
 	  cameraController_->SetDistanceScale(1.8f);
 	  cameraController_->SetHeightOffset(0.0f);
 	  cameraController_->SetPitchAngle(0.0f);
-	  cameraController_->SetSmoothSpeed(100.0f);
+	  cameraController_->SetSmoothSpeed(20.0f);
 	  cameraController_->SetMarginDistance(8.0f);
 	  cameraController_->SetScreenPadding(0.35f);
 
@@ -145,11 +163,11 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  LightningEffectManager::LinearEffectConfig config;
 	  config.startOffset = { GameSceneConfig::kStageCenter.x - stageHalfWidth - frameWidth, 0.0f, 0.0f };
 	  config.endOffset = { GameSceneConfig::kStageCenter.x + stageHalfWidth + frameWidth, 0.0f, 0.0f };
-	  config.segmentCount = 10;
-	  config.noiseScale = 2.0f;
+	  config.segmentCount = 12;
+	  config.noiseScale = 3.0f;
 	  config.noiseSpeed = 30.0f;
 	  config.enableAnimation = true;
-	  config.color = { 0.5f, 0.8f, 1.0f, 1.0f };   // 青白色
+	  config.color = { 0.3f, 0.6f, 1.0f, 1.0f };   // 青白色
 	  config.pathType = Lightning::PathType::Linear;
 
 	  // ステージ中央に固定配置
@@ -165,9 +183,43 @@ void GameScene::Initialize(EngineSystem* engine) {
 		 gameObjects_
 	  );
 
-	  config.startOffset = {0.0f, -stageHalfHeight - frameHeight, 0.0f };
-	  config.endOffset = {0.0f , stageHalfHeight + frameHeight, 0.0f };
+	  config.segmentCount = 8;
+	  config.noiseSpeed = 20.0f;
+	  config.color = { 0.8f, 1.0f, 1.0f, 1.0f };   // 青白色
+
+	  lightningManager_->CreateLinearEffectAtPosition(
+		 { 0.0f, -stageHalfHeight + frameHeight, 0.0f },
+		 config,
+		 gameObjects_
+	  );
+
+	  lightningManager_->CreateLinearEffectAtPosition(
+		 { 0.0f,stageHalfHeight - frameHeight, 0.0f },
+		 config,
+		 gameObjects_
+	  );
+
+	  config.startOffset = { 0.0f, -stageHalfHeight - frameHeight, 0.0f };
+	  config.endOffset = { 0.0f , stageHalfHeight + frameHeight, 0.0f };
+	  config.segmentCount = 6;
+	  config.color = { 0.3f, 0.6f, 1.0f, 1.0f };   // 青白色
+	  config.noiseSpeed = 30.0f;
+
+	  lightningManager_->CreateLinearEffectAtPosition(
+		 { -stageHalfWidth + frameWidth, 0.0f, 0.0f },
+		 config,
+		 gameObjects_
+	  );
+
+	  lightningManager_->CreateLinearEffectAtPosition(
+		 { stageHalfWidth - frameWidth,0.0f, 0.0f },
+		 config,
+		 gameObjects_
+	  );
+
 	  config.segmentCount = 5;
+	  config.noiseSpeed = 20.0f;
+	  config.color = { 0.8f, 1.0f, 1.0f, 1.0f };   // 青白色
 
 	  lightningManager_->CreateLinearEffectAtPosition(
 		 { -stageHalfWidth + frameWidth, 0.0f, 0.0f },
@@ -208,6 +260,18 @@ void GameScene::Update() {
 		 gameObjects_.push_back(std::move(newObj));
 	  }
 	  newGameObjectsQueue_.clear();
+   }
+
+   if (playerHitPointUI_) {
+	  playerHitPointUI_->SetHP(player_->GetHP());
+   }
+
+   if (bossHitPointUI_) {
+	  bossHitPointUI_->SetHP(boss_->GetHP());
+   }
+
+   if (boss_->GetHP() <= 0 || player_->GetHP() <= 0) {
+	  sceneManager_->ChangeScene("ResultScene");
    }
 
 #ifdef _DEBUG

@@ -15,6 +15,7 @@
 #include "../../Camera/CameraController.h"
 #include "../../AI/BehaviorTree/BehaviorTree.h"
 #include "../../Effect/Lightning/LightningEffectManager.h"
+#include "../../UI/HitPoint/HitPoint.h"
 
 class EngineSystem;
 class CameraManager;
@@ -59,6 +60,9 @@ private:
    std::unique_ptr<LightningEffectManager> lightningManager_;
 
    std::vector<std::unique_ptr<IDrawable>> newGameObjectsQueue_;
+
+   std::unique_ptr<HitPoint> playerHitPointUI_;
+   std::unique_ptr<HitPoint> bossHitPointUI_;
 private:
    void RegisterAllColliders();
 
