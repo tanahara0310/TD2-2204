@@ -45,6 +45,8 @@ void BaseScene::Initialize(EngineSystem* engine)
 
 void BaseScene::Update()
 {
+	// 前フレームで削除可能になったオブジェクトを削除（描画コマンド実行後）
+	CleanupGameObjects();
 
 	// KeyboardInput を直接取得
 	auto keyboard = engine_->GetComponent<KeyboardInput>();
@@ -146,8 +148,8 @@ void BaseScene::Draw()
 	// デバッグ描画（派生クラスでオーバーライド可能）
 	DrawDebug();
 
-	// 描画完了後、削除可能なオブジェクトを安全に削除
-	CleanupGameObjects();
+	// オブジェクトのクリーンアップは次のフレームのUpdate()の最初に移動
+	// これにより、描画コマンド実行後に削除が行われる
 }
 
 void BaseScene::Finalize()

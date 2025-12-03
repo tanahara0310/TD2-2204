@@ -211,6 +211,11 @@ bool ParticleSystem::IsFinished() const
 
 bool ParticleSystem::CanBeDeleted() const
 {
+	// 非アクティブなオブジェクトは削除しない（手動管理）
+	if (!IsActive()) {
+		return false;
+	}
+	
 	// ワンショット（ループなし）の場合、終了したら削除可能
 	const auto& mainData = mainModule_->GetMainData();
 	if (!mainData.looping) {
