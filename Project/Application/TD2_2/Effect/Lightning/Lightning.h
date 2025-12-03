@@ -95,6 +95,7 @@ private:
 	float time_ = 0.0f;                 // アニメーション時間
 	bool needsRegeneration_ = false;    // 再生成フラグ
 	std::string name_ = "Lightning";    // 識別名（ImGui ID用）
+	int animationFrameCounter_ = 0;     // アニメーション更新の間引き用カウンタ
 	
 	// シーン側から渡されるリソース
 	ModelResource* voxelModel_ = nullptr;

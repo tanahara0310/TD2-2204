@@ -8,16 +8,31 @@
 #include <Windows.h>
 #endif
 
+namespace {
+	// 定数をキャッシュ
+	constexpr float kVoxelSpacing = 0.5f;      // 0.3f → 0.5f に変更（配置間隔をさらに広げる）
+	constexpr float kVoxelScale = 3.0f;        // 1.5f → 3.0f に変更（ボクセルを3倍に）
+	constexpr float kMinDistance = kVoxelSpacing * 0.1f;
+	constexpr float kNoiseFrequency = 15.0f;
+	constexpr float kEdgeFadeStart = 0.15f;
+	constexpr float kEdgeFadeEnd = 0.85f;
+	constexpr float kEdgeFadeInvStart = 1.0f / kEdgeFadeStart;
+	constexpr float kEdgeFadeInvEnd = 1.0f / (1.0f - kEdgeFadeEnd);
+	
+	// アニメーション更新の間引き（毎フレームではなく数フレームに1回）
+	constexpr int kAnimationUpdateInterval = 4; // 3 → 4 に変更（4フレームに1回）
+}
+
 void Lightning::Initialize(ModelResource* voxelModel, TextureManager::LoadedTexture voxelTexture,
 	const Config& config, const std::string& name)
 {
-
 	config_ = config;
 	name_ = name;
 	time_ = 0.0f;
 	needsRegeneration_ = false;
 	voxelModel_ = voxelModel;
 	voxelTexture_ = voxelTexture;
+	animationFrameCounter_ = 0;
 
 	// パスを生成してボクセルを配置
 	GeneratePath();
@@ -34,19 +49,28 @@ void Lightning::Update()
 		GeneratePath();
 		GenerateVoxels();
 		needsRegeneration_ = false;
+		animationFrameCounter_ = 0;
 	}
 
 	if (config_.enableAnimation) {
-		// 時間を進める（GetDeltaTime()が0の場合は固定値を使用）
-		float deltaTime = GameUtils::GetDeltaTime();
-		if (deltaTime <= 0.0f) {
-			deltaTime = 1.0f / 60.0f; // 60FPS想定
-		}
-		time_ += config_.noiseSpeed * deltaTime;
+		// フレームカウンタを更新
+		animationFrameCounter_++;
+		
+		// 間引き: N フレームに1回だけ更新
+		if (animationFrameCounter_ >= kAnimationUpdateInterval) {
+			animationFrameCounter_ = 0;
+			
+			// 時間を進める
+			float deltaTime = GameUtils::GetDeltaTime();
+			if (deltaTime <= 0.0f) {
+				deltaTime = 1.0f / 60.0f;
+			}
+			time_ += config_.noiseSpeed * deltaTime;
 
-		// パスを再生成して位置更新
-		GeneratePath();
-		UpdateVoxelPositions();
+			// パスを再生成して位置更新
+			GeneratePath();
+			UpdateVoxelPositions();
+		}
 	}
 
 	// 親の変換行列を更新
@@ -192,79 +216,65 @@ void Lightning::GenerateLinearPath()
 {
 	pathPoints_.clear();
 
-	// セグメント数が2未満の場合は始点と終点のみ
 	if (config_.segmentCount < 2) {
 		pathPoints_.push_back(config_.startPoint);
 		pathPoints_.push_back(config_.endPoint);
 		return;
 	}
 
-	// 始点→終点の方向
+	// 始点→終点の方向（最適化: 一度だけ計算）
 	Vector3 direction = config_.endPoint - config_.startPoint;
-	float directionLength = std::sqrt(direction.x * direction.x + direction.y * direction.y + direction.z * direction.z);
+	float directionLengthSq = direction.x * direction.x + direction.y * direction.y + direction.z * direction.z;
 	
-	// 方向ベクトルの長さが0または極端に小さい場合は、始点と終点のみ設定
-	if (directionLength < 0.01f) {
+	if (directionLengthSq < 0.0001f) {
 		pathPoints_.push_back(config_.startPoint);
 		pathPoints_.push_back(config_.endPoint);
 		return;
 	}
 	
-	Vector3 normalizedDir = MathCore::Vector::Normalize(direction);
+	// 逆数を使用して除算を減らす
+	float invLength = 1.0f / std::sqrt(directionLengthSq);
+	Vector3 normalizedDir = { direction.x * invLength, direction.y * invLength, direction.z * invLength };
 
-	// 進行方向に垂直なベクトルを2つ作成
+	// 垂直ベクトル（キャッシュ）
 	Vector3 perpendicular1, perpendicular2;
-
-	// Y軸方向の場合の特殊処理
 	if (std::abs(normalizedDir.y) > 0.99f) {
 		perpendicular1 = { 1.0f, 0.0f, 0.0f };
 		perpendicular2 = { 0.0f, 0.0f, 1.0f };
-	}
-	else {
-		// 通常の場合
-		perpendicular1 = MathCore::Vector::Normalize(Vector3{ -normalizedDir.y, normalizedDir.x, 0.0f });
+	} else {
+		float invLen = 1.0f / std::sqrt(normalizedDir.y * normalizedDir.y + normalizedDir.x * normalizedDir.x);
+		perpendicular1 = { -normalizedDir.y * invLen, normalizedDir.x * invLen, 0.0f };
 		perpendicular2 = MathCore::Vector::Normalize(MathCore::Vector::Cross(normalizedDir, perpendicular1));
 	}
 
-	// パスポイントを生成（直線補間）
+	// パスポイントを生成
+	float invSegmentCount = 1.0f / static_cast<float>(config_.segmentCount);
+	
 	for (int i = 0; i <= config_.segmentCount; ++i) {
-		float t = static_cast<float>(i) / static_cast<float>(config_.segmentCount);
-
-		// 基本位置（始点→終点の線形補間）
+		float t = static_cast<float>(i) * invSegmentCount;
 		Vector3 basePos = config_.startPoint + direction * t;
 
-		// 始点と終点は完全固定（ノイズなし）
+		// 始点と終点は固定
 		if (i == 0 || i == config_.segmentCount) {
 			pathPoints_.push_back(basePos);
 			continue;
 		}
 
-		// 中間点：ParlineNoise2Dでずらす（X・Z両方向）
-		float noiseFrequency = 15.0f;
-		
-		// 2Dノイズの入力座標（時間でアニメーション）
-		float noiseInputX = t * noiseFrequency;
-		float noiseInputY1 = time_;
-		float noiseInputY2 = time_ + 50.0f;
+		// ノイズ計算
+		float noiseInputX = t * kNoiseFrequency;
+		float noiseX = GameUtils::ParlineNoise2D(noiseInputX, time_);
+		float noiseZ = GameUtils::ParlineNoise2D(noiseInputX, time_ + 50.0f);
 
-		// ParlineNoise2DでX・Z方向のノイズを取得
-		float noiseX = GameUtils::ParlineNoise2D(noiseInputX, noiseInputY1);
-		float noiseZ = GameUtils::ParlineNoise2D(noiseInputX, noiseInputY2);
-
-		// ノイズを垂直方向に適用
-		Vector3 offset = perpendicular1 * noiseX * config_.noiseScale
-			+ perpendicular2 * noiseZ * config_.noiseScale;
-
-		// 端のフェード
+		// 端のフェード（条件分岐を減らす）
 		float edgeFade = 1.0f;
-		if (t < 0.15f) {
-			edgeFade = t / 0.15f;
-		}
-		else if (t > 0.85f) {
-			edgeFade = (1.0f - t) / 0.15f;
+		if (t < kEdgeFadeStart) {
+			edgeFade = t * kEdgeFadeInvStart;
+		} else if (t > kEdgeFadeEnd) {
+			edgeFade = (1.0f - t) * kEdgeFadeInvEnd;
 		}
 		
-		offset = offset * edgeFade;
+		float scaledNoise = config_.noiseScale * edgeFade;
+		Vector3 offset = perpendicular1 * (noiseX * scaledNoise) + perpendicular2 * (noiseZ * scaledNoise);
 
 		pathPoints_.push_back(basePos + offset);
 	}
@@ -274,31 +284,29 @@ void Lightning::GenerateCircularArcPath()
 {
 	pathPoints_.clear();
 
-	// セグメント数が2未満の場合は始点と終点のみ
 	if (config_.segmentCount < 2) {
 		pathPoints_.push_back(config_.startPoint);
 		pathPoints_.push_back(config_.endPoint);
 		return;
 	}
 
-	// 始点と終点から角度と半径を計算
-	float startRadius = std::sqrt(config_.startPoint.x * config_.startPoint.x + 
-								  config_.startPoint.y * config_.startPoint.y);
-	float endRadius = std::sqrt(config_.endPoint.x * config_.endPoint.x + 
-								config_.endPoint.y * config_.endPoint.y);
+	// 半径計算（最適化）
+	float startRadiusSq = config_.startPoint.x * config_.startPoint.x + config_.startPoint.y * config_.startPoint.y;
+	float endRadiusSq = config_.endPoint.x * config_.endPoint.x + config_.endPoint.y * config_.endPoint.y;
 	
-	// 半径が0または極端に小さい場合は、始点と終点のみ設定
-	if (startRadius < 0.01f || endRadius < 0.01f) {
+	if (startRadiusSq < 0.0001f || endRadiusSq < 0.0001f) {
 		pathPoints_.push_back(config_.startPoint);
 		pathPoints_.push_back(config_.endPoint);
 		return;
 	}
 
-	// 始点と終点の角度を計算
+	float startRadius = std::sqrt(startRadiusSq);
+	float endRadius = std::sqrt(endRadiusSq);
+
+	// 角度計算
 	float startAngle = std::atan2(config_.startPoint.y, config_.startPoint.x);
 	float endAngle = std::atan2(config_.endPoint.y, config_.endPoint.x);
 	
-	// 角度差を計算（最短経路）
 	float angleDiff = endAngle - startAngle;
 	if (angleDiff > std::numbers::pi_v<float>) {
 		angleDiff -= 2.0f * std::numbers::pi_v<float>;
@@ -306,71 +314,48 @@ void Lightning::GenerateCircularArcPath()
 		angleDiff += 2.0f * std::numbers::pi_v<float>;
 	}
 
-	// 半径を線形補間（始点から終点へ）
-	// ※通常は両端の半径は同じだが、柔軟性を持たせるために補間
+	float radiusDiff = endRadius - startRadius;
+	float zDiff = config_.endPoint.z - config_.startPoint.z;
+	float invSegmentCount = 1.0f / static_cast<float>(config_.segmentCount);
 
-	// パスポイントを円弧に沿って生成
 	for (int i = 0; i <= config_.segmentCount; ++i) {
-		float t = static_cast<float>(i) / static_cast<float>(config_.segmentCount);
-
-		// 円弧上の角度を計算
+		float t = static_cast<float>(i) * invSegmentCount;
 		float currentAngle = startAngle + angleDiff * t;
+		float currentRadius = startRadius + radiusDiff * t;
 		
-		// 半径を補間
-		float currentRadius = startRadius + (endRadius - startRadius) * t;
+		// 三角関数を一度だけ計算
+		float cosAngle = std::cos(currentAngle);
+		float sinAngle = std::sin(currentAngle);
 		
-		// 円弧上の基本位置
 		Vector3 basePos = {
-			std::cos(currentAngle) * currentRadius,
-			std::sin(currentAngle) * currentRadius,
-			config_.startPoint.z + (config_.endPoint.z - config_.startPoint.z) * t  // Z座標も補間
+			cosAngle * currentRadius,
+			sinAngle * currentRadius,
+			config_.startPoint.z + zDiff * t
 		};
 
-		// 始点と終点は完全固定（ノイズなし）
 		if (i == 0 || i == config_.segmentCount) {
 			pathPoints_.push_back(basePos);
 			continue;
 		}
 
-		// 中間点：ParlineNoise2Dでずらす（円の接線方向と法線方向）
-		float noiseFrequency = 15.0f;
-		
-		// 2Dノイズの入力座標（時間でアニメーション）
-		float noiseInputX = t * noiseFrequency;
-		float noiseInputY1 = time_;
-		float noiseInputY2 = time_ + 50.0f; // 法線方向の時間オフセット
+		// ノイズ
+		float noiseInputX = t * kNoiseFrequency;
+		float noiseTangent = GameUtils::ParlineNoise2D(noiseInputX, time_);
+		float noiseNormal = GameUtils::ParlineNoise2D(noiseInputX, time_ + 50.0f);
 
-		// ParlineNoise2Dでノイズを取得
-		float noiseTangent = GameUtils::ParlineNoise2D(noiseInputX, noiseInputY1);
-		float noiseNormal = GameUtils::ParlineNoise2D(noiseInputX, noiseInputY2);
-
-		// 円の接線方向と法線方向のベクトル
-		Vector3 tangent = {
-			-std::sin(currentAngle),  // 接線方向
-			std::cos(currentAngle),
-			0.0f
-		};
-		
-		Vector3 normal = {
-			std::cos(currentAngle),   // 法線方向（外向き）
-			std::sin(currentAngle),
-			0.0f
-		};
-
-		// ノイズを適用
-		Vector3 offset = tangent * noiseTangent * config_.noiseScale
-			+ normal * noiseNormal * config_.noiseScale;
+		Vector3 tangent = { -sinAngle, cosAngle, 0.0f };
+		Vector3 normal = { cosAngle, sinAngle, 0.0f };
 
 		// 端のフェード
 		float edgeFade = 1.0f;
-		if (t < 0.15f) {
-			edgeFade = t / 0.15f;
-		}
-		else if (t > 0.85f) {
-			edgeFade = (1.0f - t) / 0.15f;
+		if (t < kEdgeFadeStart) {
+			edgeFade = t * kEdgeFadeInvStart;
+		} else if (t > kEdgeFadeEnd) {
+			edgeFade = (1.0f - t) * kEdgeFadeInvEnd;
 		}
 		
-		offset = offset * edgeFade;
+		float scaledNoise = config_.noiseScale * edgeFade;
+		Vector3 offset = tangent * (noiseTangent * scaledNoise) + normal * (noiseNormal * scaledNoise);
 
 		pathPoints_.push_back(basePos + offset);
 	}
@@ -394,83 +379,75 @@ void Lightning::GenerateVoxels()
 	// 最後のパスポイント（終点）にもボクセルを配置して完全な線にする
 	auto finalVoxel = GetVoxelFromPool();
 	finalVoxel->GetTransform().translate = pathPoints_.back();
-	finalVoxel->GetTransform().scale = { 1.0f, 1.0f, 1.0f };
+	finalVoxel->GetTransform().scale = { kVoxelScale, kVoxelScale, kVoxelScale }; // スケールを大きく
 	AddChild(std::move(finalVoxel));
 }
 
 void Lightning::UpdateVoxelPositions()
 {
-	// パスポイントが不足または子オブジェクトが空の場合は何もしない
 	if (pathPoints_.size() < 2 || children_.empty()) {
 		return;
 	}
 
-	// 必要なボクセル総数を事前計算
+	// 必要数の事前計算（最適化: sqrt呼び出しを減らす）
 	size_t requiredVoxels = 0;
-	const float voxelSpacing = 0.3f; // PlaceVoxelsBetweenと同じ間隔（完全に隙間なし）
 	
 	for (size_t i = 0; i < pathPoints_.size() - 1; ++i) {
 		Vector3 diff = pathPoints_[i + 1] - pathPoints_[i];
-		float distance = MathCore::Vector::Length(diff);
+		float distanceSq = diff.x * diff.x + diff.y * diff.y + diff.z * diff.z;
 		
-		if (distance >= voxelSpacing * 0.1f) {
-			int voxelCount = static_cast<int>(std::ceil(distance / voxelSpacing));
+		if (distanceSq >= kMinDistance * kMinDistance) {
+			// sqrt を ceilf の中でのみ使用
+			int voxelCount = static_cast<int>(std::ceilf(std::sqrt(distanceSq) / kVoxelSpacing));
 			requiredVoxels += voxelCount;
 		}
 	}
-	
-	// 最後のボクセル（終点）も数に含める
 	requiredVoxels += 1;
 	
-	// ボクセル数が大きく異なる場合のみ再生成
+	// 許容範囲を広げる（スケールが大きくなったため）
 	int voxelDiff = static_cast<int>(requiredVoxels) - static_cast<int>(children_.size());
-	if (std::abs(voxelDiff) > 5) { // 許容範囲を広げる（密度が高いため）
+	if (std::abs(voxelDiff) > 3) { // 5 → 3 に変更（スケールが大きいので厳しめに）
 		RequestRegeneration();
 		return;
 	}
 
-	// ボクセルインデックス
 	size_t voxelIndex = 0;
 
-	// パスポイント間でボクセル位置を更新
 	for (size_t i = 0; i < pathPoints_.size() - 1; ++i) {
 		Vector3 start = pathPoints_[i];
 		Vector3 end = pathPoints_[i + 1];
 		Vector3 segmentDiff = end - start;
-		float distance = MathCore::Vector::Length(segmentDiff);
+		float distanceSq = segmentDiff.x * segmentDiff.x + segmentDiff.y * segmentDiff.y + segmentDiff.z * segmentDiff.z;
 
-		// 距離が短すぎる場合はスキップ
-		if (distance < voxelSpacing * 0.1f) {
+		if (distanceSq < kMinDistance * kMinDistance) {
 			continue;
 		}
 
-		// 必要なボクセル数
-		int voxelCount = static_cast<int>(std::ceil(distance / voxelSpacing));
+		float distance = std::sqrt(distanceSq);
+		int voxelCount = static_cast<int>(std::ceilf(distance / kVoxelSpacing));
+		float invVoxelCount = 1.0f / static_cast<float>(voxelCount);
 
-		// このセグメントのボクセル位置を更新
 		for (int j = 0; j < voxelCount; ++j) {
-			// ボクセルが足りない場合は抜ける
 			if (voxelIndex >= children_.size()) {
 				return;
 			}
 
-			// 位置計算
-			float t = static_cast<float>(j) / static_cast<float>(voxelCount);
+			float t = static_cast<float>(j) * invVoxelCount;
 			Vector3 position = start + segmentDiff * t;
 
-			// ボクセルの位置を更新
-			if (auto* voxel = dynamic_cast<Voxel*>(children_[voxelIndex].get())) {
+			// Voxelにキャスト（子オブジェクトは全てVoxelと仮定）
+			if (auto* voxel = static_cast<Voxel*>(children_[voxelIndex].get())) {
 				voxel->GetTransform().translate = position;
+				// スケールは変更しない（GenerateVoxelsで既に設定済み）
 			}
-
 			voxelIndex++;
 		}
 	}
 	
-	// 最後のボクセル（終点）の位置を更新
 	if (voxelIndex < children_.size()) {
-		if (auto* voxel = dynamic_cast<Voxel*>(children_[voxelIndex].get())) {
+		if (auto* voxel = static_cast<Voxel*>(children_[voxelIndex].get())) {
 			voxel->GetTransform().translate = pathPoints_.back();
+			// スケールは変更しない
 		}
 	}
 }
@@ -478,32 +455,33 @@ void Lightning::UpdateVoxelPositions()
 void Lightning::PlaceVoxelsBetween(const Vector3& start, const Vector3& end)
 {
 	Vector3 diff = end - start;
-	float distance = MathCore::Vector::Length(diff);
+	float distanceSq = diff.x * diff.x + diff.y * diff.y + diff.z * diff.z;
 
-	// ボクセル配置間隔を極小にして完全に隙間をなくす
-	const float voxelSpacing = 0.2f;
-
-	// 距離が短すぎる場合は配置しない
-	if (distance < voxelSpacing * 0.1f) {
+	// 距離が短すぎる場合は配置しない（最適化)
+	if (distanceSq < kMinDistance * kMinDistance) {
 		return;
 	}
 
-	// 必要なボクセル数（密に配置して完全に埋める）
-	int voxelCount = static_cast<int>(std::ceil(distance / voxelSpacing));
+	float distance = std::sqrt(distanceSq);
+
+	// 必要なボクセル数（配置間隔を広げて数を削減）
+	int voxelCount = static_cast<int>(std::ceilf(distance / kVoxelSpacing));
 	if (voxelCount < 1) {
 		voxelCount = 1;
 	}
 
+	float invVoxelCount = 1.0f / static_cast<float>(voxelCount);
+
 	// ボクセルを配置（プールから再利用）
 	for (int i = 0; i < voxelCount; ++i) {
-		// 位置計算（完全に隙間なく配置）
-		float t = static_cast<float>(i) / static_cast<float>(voxelCount);
+		// 位置計算
+		float t = static_cast<float>(i) * invVoxelCount;
 		Vector3 position = start + diff * t;
 
 		// プールからボクセルを取得（再利用）
 		auto voxel = GetVoxelFromPool();
 		voxel->GetTransform().translate = position;
-		voxel->GetTransform().scale = { 1.0f, 1.0f, 1.0f };
+		voxel->GetTransform().scale = { kVoxelScale, kVoxelScale, kVoxelScale }; // スケールを大きく
 
 		// 子オブジェクトとして追加
 		AddChild(std::move(voxel));
