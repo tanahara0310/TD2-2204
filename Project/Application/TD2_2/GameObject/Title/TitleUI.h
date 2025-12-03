@@ -34,6 +34,9 @@ public:
     /// @param state 新しい選択状態
     void SetSelectionState(SelectionState state);
 
+    /// @brief 決定ボタンが押された時のアニメーション開始
+    void OnConfirm();
+
     /// @brief ステートマシーンを取得
     StateMachine& GetStateMachine() { return stateMachine_; }
 
@@ -56,6 +59,9 @@ private:
     /// @brief ステートマシーンの初期化
     void InitializeStateMachine();
 
+    /// @brief 決定時のアニメーションを更新
+    void UpdateConfirmAnimation(float deltaTime);
+
     // UI要素のポインタ（所有権はgameObjects_が持つ）
     SpriteObject* titleLogo_ = nullptr;
 	SpriteObject* startButtonUI_ = nullptr;
@@ -67,6 +73,13 @@ private:
 
     // ステートマシーン
     StateMachine stateMachine_;
+
+    // 決定アニメーション用
+    bool isConfirmAnimating_ = false;
+    float confirmAnimationTimer_ = 0.0f;
+    static constexpr float kConfirmAnimationDuration = 0.3f;  // アニメーション時間
+    static constexpr float kButtonScaleMax = 1.15f;           // ボタンの最大スケール
+    static constexpr float kArrowBlinkSpeed = 15.0f;          // 矢印の点滅速度
 
     // 矢印の位置（スタートUIのサイズを考慮）
     static constexpr float kArrowOffsetX_Start = -150.0f;  // スタートボタン用（X方向に大きいため左寄り）

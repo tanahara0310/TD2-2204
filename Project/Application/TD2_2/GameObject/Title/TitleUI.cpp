@@ -2,6 +2,7 @@
 #include "EngineSystem/EngineSystem.h"
 #include "ObjectCommon/IDrawable.h"
 #include "Input/KeyboardInput.h"
+#include <cmath>
 
 std::vector<std::unique_ptr<IDrawable>> TitleUI::Initialize(EngineSystem* engine) {
 	(void)engine;
@@ -44,6 +45,11 @@ void TitleUI::Update() {
 
 	// ステートマシーンの更新
 	stateMachine_.Update();
+
+	// 決定アニメーションの更新
+	if (isConfirmAnimating_) {
+		UpdateConfirmAnimation(1.0f / 60.0f);  // 60FPS想定
+	}
 }
 
 void TitleUI::SetSelectionState(SelectionState state) {
@@ -58,6 +64,12 @@ void TitleUI::SetSelectionState(SelectionState state) {
 		stateMachine_.RequestState("Quit", 100);
 		break;
 	}
+}
+
+void TitleUI::OnConfirm() {
+	// アニメーション開始
+	isConfirmAnimating_ = true;
+	confirmAnimationTimer_ = 0.0f;
 }
 
 void TitleUI::InitializeStateMachine() {
@@ -106,6 +118,71 @@ void TitleUI::UpdateArrowPosition() {
 	case SelectionState::Quit:
 		arrowUI_->GetTransform().translate = { kArrowOffsetX_Quit, kQuitButtonY, 0.0f };
 		break;
+	}
+}
+
+void TitleUI::UpdateConfirmAnimation(float deltaTime) {
+	confirmAnimationTimer_ += deltaTime;
+
+	// アニメーション時間を正規化（0.0～1.0）
+	float t = confirmAnimationTimer_ / kConfirmAnimationDuration;
+
+	if (t >= 1.0f) {
+		// アニメーション終了
+		isConfirmAnimating_ = false;
+		confirmAnimationTimer_ = 0.0f;
+		t = 1.0f;
+
+		// スケールとカラーをリセット
+		if (startButtonUI_) {
+			startButtonUI_->GetTransform().scale = { 1.0f, 1.0f, 1.0f };
+			startButtonUI_->SetColor({ 1.0f, 1.0f, 1.0f, 1.0f });
+		}
+		if (quitButtonUI_) {
+			quitButtonUI_->GetTransform().scale = { 1.0f, 1.0f, 1.0f };
+			quitButtonUI_->SetColor({ 1.0f, 1.0f, 1.0f, 1.0f });
+		}
+		if (arrowUI_) {
+			arrowUI_->SetColor({ 1.0f, 1.0f, 1.0f, 1.0f });
+		}
+		return;
+	}
+
+	// イージング（EaseOutBack風：少し跳ね返る）
+	float scale = 1.0f;
+	if (t < 0.5f) {
+		// 前半：拡大
+		float t1 = t * 2.0f;
+		scale = 1.0f + (kButtonScaleMax - 1.0f) * t1;
+	} else {
+		// 後半：縮小して元に戻る
+		float t2 = (t - 0.5f) * 2.0f;
+		scale = kButtonScaleMax - (kButtonScaleMax - 1.0f) * t2;
+	}
+
+	// 選択中のボタンにスケールを適用
+	SpriteObject* selectedButton = nullptr;
+	switch (selectionState_) {
+	case SelectionState::Start:
+		selectedButton = startButtonUI_;
+		break;
+	case SelectionState::Quit:
+		selectedButton = quitButtonUI_;
+		break;
+	}
+
+	if (selectedButton) {
+		selectedButton->GetTransform().scale = { scale, scale, 1.0f };
+		
+		// 明るさを変化（パルス効果）
+		float brightness = 1.0f + 0.3f * std::sin(t * 3.14159f * 4.0f);
+		selectedButton->SetColor({ brightness, brightness, brightness, 1.0f });
+	}
+
+	// 矢印の点滅
+	if (arrowUI_) {
+		float alpha = 0.5f + 0.5f * std::sin(confirmAnimationTimer_ * kArrowBlinkSpeed);
+		arrowUI_->SetColor({ 1.0f, 1.0f, 1.0f, alpha });
 	}
 }
 
