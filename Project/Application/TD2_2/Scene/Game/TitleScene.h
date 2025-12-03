@@ -43,6 +43,10 @@ private:
 	// パーティクルシステム
 	ParticleSystem* electricParticle_ = nullptr;
 	
+	// 共有リソース（Lightning用）
+	ModelResource* voxelModelResource_ = nullptr;
+	TextureManager::LoadedTexture voxelTexture_;
+	
 	// シーン遷移フラグとタイマー
 	bool isTransitioning_ = false;
 	float transitionTimer_ = 0.0f;
