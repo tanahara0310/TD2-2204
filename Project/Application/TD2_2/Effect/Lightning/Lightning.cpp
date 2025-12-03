@@ -5,6 +5,7 @@
 
 #ifdef _DEBUG
 #include <imgui.h>
+#include <Windows.h>
 #endif
 
 void Lightning::Initialize(ModelResource* voxelModel, TextureManager::LoadedTexture voxelTexture,
@@ -54,7 +55,10 @@ void Lightning::Update()
 		UpdateVoxelPositions();
 	}
 
-	// 親クラスの更新
+	// 親の変換行列を更新
+	transform_.TransferMatrix();
+
+	// 親クラスの更新（子オブジェクトの更新を含む）
 	Object3d::Update();
 }
 
@@ -120,6 +124,18 @@ bool Lightning::DrawImGui()
 			changed = true;
 		}
 
+		// パスタイプの選択
+		const char* pathTypeNames[] = { "直線", "円弧" };
+		int currentPathType = static_cast<int>(config_.pathType);
+		if (ImGui::Combo("パスタイプ", &currentPathType, pathTypeNames, IM_ARRAYSIZE(pathTypeNames))) {
+			config_.pathType = static_cast<PathType>(currentPathType);
+			RequestRegeneration();
+			changed = true;
+		}
+		if (ImGui::IsItemHovered()) {
+			ImGui::SetTooltip("始点と終点の補間方法\n直線: 一直線に補間\n円弧: 円弧状に補間");
+		}
+
 		ImGui::Spacing();
 		ImGui::Text("アニメーション");
 		ImGui::Separator();
@@ -164,6 +180,22 @@ bool Lightning::DrawImGui()
 
 void Lightning::GeneratePath()
 {
+	// PathTypeに応じて補間方法を切り替え
+	switch (config_.pathType) {
+	case PathType::Linear:
+		GenerateLinearPath();
+		break;
+	case PathType::CircularArc:
+		GenerateCircularArcPath();
+		break;
+	default:
+		GenerateLinearPath();
+		break;
+	}
+}
+
+void Lightning::GenerateLinearPath()
+{
 	pathPoints_.clear();
 
 	// セグメント数が2未満の場合は始点と終点のみ
@@ -175,6 +207,18 @@ void Lightning::GeneratePath()
 
 	// 始点→終点の方向
 	Vector3 direction = config_.endPoint - config_.startPoint;
+	float directionLength = std::sqrt(direction.x * direction.x + direction.y * direction.y + direction.z * direction.z);
+	
+	// 方向ベクトルの長さが0または極端に小さい場合は、始点と終点のみ設定
+	if (directionLength < 0.01f) {
+#ifdef _DEBUG
+		OutputDebugStringW(L"[WARNING] Lightning::GenerateLinearPath: 始点と終点が近すぎるため、パス生成をスキップします\n");
+#endif
+		pathPoints_.push_back(config_.startPoint);
+		pathPoints_.push_back(config_.endPoint);
+		return;
+	}
+	
 	Vector3 normalizedDir = MathCore::Vector::Normalize(direction);
 
 	// 進行方向に垂直なベクトルを2つ作成
@@ -191,7 +235,7 @@ void Lightning::GeneratePath()
 		perpendicular2 = MathCore::Vector::Normalize(MathCore::Vector::Cross(normalizedDir, perpendicular1));
 	}
 
-	// パスポイントを生成
+	// パスポイントを生成（直線補間）
 	for (int i = 0; i <= config_.segmentCount; ++i) {
 		float t = static_cast<float>(i) / static_cast<float>(config_.segmentCount);
 
@@ -205,30 +249,136 @@ void Lightning::GeneratePath()
 		}
 
 		// 中間点：ParlineNoise2Dでずらす（X・Z両方向）
-		// 周波数を上げて波形を荒くする（鋸歯状）
 		float noiseFrequency = 15.0f;
 		
 		// 2Dノイズの入力座標（時間でアニメーション）
 		float noiseInputX = t * noiseFrequency;
-		float noiseInputY1 = time_; // X方向の時間オフセット
-		float noiseInputY2 = time_ + 50.0f; // Z方向の時間オフセット
+		float noiseInputY1 = time_;
+		float noiseInputY2 = time_ + 50.0f;
 
 		// ParlineNoise2DでX・Z方向のノイズを取得
 		float noiseX = GameUtils::ParlineNoise2D(noiseInputX, noiseInputY1);
 		float noiseZ = GameUtils::ParlineNoise2D(noiseInputX, noiseInputY2);
 
-		// ノイズを垂直方向に適用（X・Z両方向）
+		// ノイズを垂直方向に適用
 		Vector3 offset = perpendicular1 * noiseX * config_.noiseScale
 			+ perpendicular2 * noiseZ * config_.noiseScale;
 
-		// 端のフェードを正しく計算（始点と終点で確実に0になる）
+		// 端のフェード
 		float edgeFade = 1.0f;
 		if (t < 0.15f) {
-			// 始点付近：0→1に線形補間
 			edgeFade = t / 0.15f;
 		}
 		else if (t > 0.85f) {
-			// 終点付近：1→0に線形補間
+			edgeFade = (1.0f - t) / 0.15f;
+		}
+		
+		offset = offset * edgeFade;
+
+		pathPoints_.push_back(basePos + offset);
+	}
+}
+
+void Lightning::GenerateCircularArcPath()
+{
+	pathPoints_.clear();
+
+	// セグメント数が2未満の場合は始点と終点のみ
+	if (config_.segmentCount < 2) {
+		pathPoints_.push_back(config_.startPoint);
+		pathPoints_.push_back(config_.endPoint);
+		return;
+	}
+
+	// 始点と終点から角度と半径を計算
+	float startRadius = std::sqrt(config_.startPoint.x * config_.startPoint.x + 
+								  config_.startPoint.y * config_.startPoint.y);
+	float endRadius = std::sqrt(config_.endPoint.x * config_.endPoint.x + 
+								config_.endPoint.y * config_.endPoint.y);
+	
+	// 半径が0または極端に小さい場合は、始点と終点のみ設定
+	if (startRadius < 0.01f || endRadius < 0.01f) {
+#ifdef _DEBUG
+		OutputDebugStringW(L"[WARNING] Lightning::GenerateCircularArcPath: 半径が小さすぎるため、パス生成をスキップします\n");
+#endif
+		pathPoints_.push_back(config_.startPoint);
+		pathPoints_.push_back(config_.endPoint);
+		return;
+	}
+
+	// 始点と終点の角度を計算
+	float startAngle = std::atan2(config_.startPoint.y, config_.startPoint.x);
+	float endAngle = std::atan2(config_.endPoint.y, config_.endPoint.x);
+	
+	// 角度差を計算（最短経路）
+	float angleDiff = endAngle - startAngle;
+	if (angleDiff > std::numbers::pi_v<float>) {
+		angleDiff -= 2.0f * std::numbers::pi_v<float>;
+	} else if (angleDiff < -std::numbers::pi_v<float>) {
+		angleDiff += 2.0f * std::numbers::pi_v<float>;
+	}
+
+	// 半径を線形補間（始点から終点へ）
+	// ※通常は両端の半径は同じだが、柔軟性を持たせるために補間
+
+	// パスポイントを円弧に沿って生成
+	for (int i = 0; i <= config_.segmentCount; ++i) {
+		float t = static_cast<float>(i) / static_cast<float>(config_.segmentCount);
+
+		// 円弧上の角度を計算
+		float currentAngle = startAngle + angleDiff * t;
+		
+		// 半径を補間
+		float currentRadius = startRadius + (endRadius - startRadius) * t;
+		
+		// 円弧上の基本位置
+		Vector3 basePos = {
+			std::cos(currentAngle) * currentRadius,
+			std::sin(currentAngle) * currentRadius,
+			config_.startPoint.z + (config_.endPoint.z - config_.startPoint.z) * t  // Z座標も補間
+		};
+
+		// 始点と終点は完全固定（ノイズなし）
+		if (i == 0 || i == config_.segmentCount) {
+			pathPoints_.push_back(basePos);
+			continue;
+		}
+
+		// 中間点：ParlineNoise2Dでずらす（円の接線方向と法線方向）
+		float noiseFrequency = 15.0f;
+		
+		// 2Dノイズの入力座標（時間でアニメーション）
+		float noiseInputX = t * noiseFrequency;
+		float noiseInputY1 = time_;
+		float noiseInputY2 = time_ + 50.0f; // 法線方向の時間オフセット
+
+		// ParlineNoise2Dでノイズを取得
+		float noiseTangent = GameUtils::ParlineNoise2D(noiseInputX, noiseInputY1);
+		float noiseNormal = GameUtils::ParlineNoise2D(noiseInputX, noiseInputY2);
+
+		// 円の接線方向と法線方向のベクトル
+		Vector3 tangent = {
+			-std::sin(currentAngle),  // 接線方向
+			std::cos(currentAngle),
+			0.0f
+		};
+		
+		Vector3 normal = {
+			std::cos(currentAngle),   // 法線方向（外向き）
+			std::sin(currentAngle),
+			0.0f
+		};
+
+		// ノイズを適用
+		Vector3 offset = tangent * noiseTangent * config_.noiseScale
+			+ normal * noiseNormal * config_.noiseScale;
+
+		// 端のフェード
+		float edgeFade = 1.0f;
+		if (t < 0.15f) {
+			edgeFade = t / 0.15f;
+		}
+		else if (t > 0.85f) {
 			edgeFade = (1.0f - t) / 0.15f;
 		}
 		
@@ -384,6 +534,8 @@ void Lightning::ClearDeferredDeletions()
 	for (auto& obj : deferredDeletions_) {
 		if (auto* voxel = dynamic_cast<Voxel*>(obj.get())) {
 			// Voxelの場合はプールに返却（所有権を移動）
+			// 親の参照をクリア
+			voxel->GetTransform().SetParent(nullptr);
 			voxelPool_.push_back(std::unique_ptr<Voxel>(voxel));
 			obj.release(); // 所有権を手放す
 		}
@@ -401,6 +553,8 @@ std::unique_ptr<Voxel> Lightning::GetVoxelFromPool()
 		voxelPool_.pop_back();
 		// 色を設定
 		voxel->SetColor(config_.color);
+		// 親を設定（Lightningのワールド変換を継承）
+		voxel->GetTransform().SetParent(&transform_);
 		return voxel;
 	}
 	
@@ -408,6 +562,8 @@ std::unique_ptr<Voxel> Lightning::GetVoxelFromPool()
 	auto voxel = std::make_unique<Voxel>();
 	voxel->Initialize(voxelModel_, voxelTexture_); // モデルとテクスチャを渡す
 	voxel->SetColor(config_.color); // 色を設定
+	// 親を設定（Lightningのワールド変換を継承）
+	voxel->GetTransform().SetParent(&transform_);
 	return voxel;
 }
 
@@ -416,6 +572,8 @@ void Lightning::ReturnVoxelsToPool()
 	// 現在のボクセルをプールに返却
 	for (auto& child : children_) {
 		if (auto* voxel = dynamic_cast<Voxel*>(child.get())) {
+			// 親の参照をクリア
+			voxel->GetTransform().SetParent(nullptr);
 			voxelPool_.push_back(std::unique_ptr<Voxel>(voxel));
 			child.release();
 		}

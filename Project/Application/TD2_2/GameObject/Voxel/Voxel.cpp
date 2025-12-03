@@ -42,7 +42,7 @@ void Voxel::Initialize(ModelResource* modelResource, TextureManager::LoadedTextu
 
 void Voxel::Update()
 {
-	// トランスフォームの更新
+	// トランスフォームの更新（親の変換も含めて計算）
 	transform_.TransferMatrix();
 }
 

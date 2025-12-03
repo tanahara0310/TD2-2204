@@ -286,7 +286,7 @@
     <ClCompile Include="Application\TD2_2\GameObject\Title\TitleUI.cpp" />
     <ClCompile Include="Application\TD2_2\GameObject\Background\Background.cpp" />
     <ClCompile Include="Application\TD2_2\GameObject\Frame\Frame.cpp" />
-    <ClCompile Include="Application\TD2_2\GameObject\Lightning\Lightning.cpp" />
+    <ClCompile Include="Application\TD2_2\Effect\Lightning\Lightning.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Engine\WinApp\WinApp.h">
@@ -731,7 +731,7 @@
     <ClInclude Include="Engine\Particle\Modules\ShapeModule.h" />
     <ClInclude Include="Engine\Graphics\Render\Line\LineRendererPipeline.h" />
     <ClInclude Include="Application\TD2_2\GameObject\Voxel\Voxel.h" />
-    <ClInclude Include="Application\TD2_2\GameObject\Lightning\Lightning.h" />
+    <ClInclude Include="Application\TD2_2\Effect\Lightning\Lightning.h" />
     <ClInclude Include="Application\TD2_2\GameObject\Title\TitleUI.h" />
     <ClInclude Include="Application\TD2_2\GameObject\Background\Background.h" />
     <ClInclude Include="Application\TD2_2\GameObject\Frame\Frame.h" />

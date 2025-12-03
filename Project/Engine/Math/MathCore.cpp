@@ -30,7 +30,12 @@ namespace MathCore {
 
 		Vector3 Normalize(const Vector3& v) {
 			float length = Length(v);
-			assert(length != 0.0f);
+
+			// 長さが0の場合はそのまま返す（ゼロ除算防止）
+			if (length == 0.0f) {
+				return v;
+			}
+
 			return { v.x / length, v.y / length, v.z / length };
 		}
 
@@ -217,7 +222,7 @@ namespace MathCore {
 		  scale.x * (-sinY),
 		   0.0f,
 
-	        scale.y * (sinX * sinY * cosZ - cosX * sinZ),
+			scale.y * (sinX * sinY * cosZ - cosX * sinZ),
 	 scale.y * (sinX * sinY * sinZ + cosX * cosZ),
 	scale.y * (sinX * cosY),
 			  0.0f,

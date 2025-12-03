@@ -11,6 +11,12 @@ class Voxel;
 /// 始点から終点までパーリンノイズで揺らぐ電撃をボクセルで表現
 class Lightning : public GameObject {
 public:
+	/// @brief パスの補間方法
+	enum class PathType {
+		Linear,      // 直線補間
+		CircularArc  // 円弧補間
+	};
+
 	/// @brief 雷の設定
 	struct Config {
 		Vector3 startPoint = { 0.0f, 5.0f, 0.0f };  // 始点（固定）
@@ -20,6 +26,7 @@ public:
 		float noiseSpeed = 1.0f;        // ノイズアニメーション速度
 		bool enableAnimation = true;    // アニメーション有効
 		Vector4 color = { 1.0f, 1.0f, 1.0f, 1.0f }; // 雷の色（RGBA）
+		PathType pathType = PathType::Linear;  // パスの補間方法
 	};
 
 	Lightning() = default;
@@ -52,6 +59,12 @@ public:
 private:
 	/// @brief パスポイントを生成
 	void GeneratePath();
+
+	/// @brief 直線補間でパスを生成
+	void GenerateLinearPath();
+
+	/// @brief 円弧補間でパスを生成
+	void GenerateCircularArcPath();
 
 	/// @brief ボクセルを生成・配置（プールから再利用）
 	void GenerateVoxels();
