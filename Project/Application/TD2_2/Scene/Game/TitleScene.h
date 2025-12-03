@@ -6,7 +6,7 @@
 //ゲームオブジェクトのインクルード
 #include "Object3d.h"
 #include "../../GameObject/Voxel/Voxel.h"
-#include "../../GameObject/Lightning/Lightning.h"
+#include "../../Effect/Lightning/Lightning.h"
 #include "../../GameObject/Title/TitleUI.h"
 
 // パーティクルシステム
