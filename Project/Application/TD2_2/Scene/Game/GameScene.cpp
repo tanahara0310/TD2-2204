@@ -43,6 +43,10 @@ void GameScene::Initialize(EngineSystem* engine) {
 			// プリセット版は継続時間も事前設定されている
 			cameraController_->StartShake(CameraController::ShakeIntensity::Medium);
 		 }
+		 // ダメージエフェクトを開始
+		 if (lightningEffectManager_ && playerDamageEffectId_ >= 0) {
+			lightningEffectManager_->StartEffect(playerDamageEffectId_);
+		 }
 		 });
 	  player->RegisterModelResource("Damage", "Resources/Models/Player/Damage/PlayerDamage.obj");
 	  player->RegisterModelResource("Player1", "Resources/Models/Player/Player.obj");
@@ -76,6 +80,24 @@ void GameScene::Initialize(EngineSystem* engine) {
 
    // フレームの初期化
    InitializeFrames();
+
+   // 雷エフェクトマネージャーの初期化
+   {
+	  lightningEffectManager_ = std::make_unique<LightningEffectManager>();
+	  lightningEffectManager_->Initialize(modelManager, &textureManager);
+	  
+	  // プレイヤーのダメージエフェクト設定
+	  LightningEffectManager::CircularEffectConfig config;
+	  config.radius = 2.5f;
+	  config.color = { 1.0f, 0.3f, 0.3f, 1.0f };  // 赤色
+	  
+	  // エフェクトを作成
+	  playerDamageEffectId_ = lightningEffectManager_->CreateCircularEffect(
+		 player_, 
+		 config,
+		 gameObjects_
+	  );
+   }
 
    // 衝突設定の初期化
    {
@@ -126,6 +148,18 @@ void GameScene::Update() {
    // カメラコントローラーの更新
    if (cameraController_) {
 	  cameraController_->Update();
+   }
+
+   // 雷エフェクトの更新
+   if (lightningEffectManager_) {
+	  lightningEffectManager_->UpdateAllEffects();
+	  
+#ifdef _DEBUG
+	  // デバッグUI表示
+	  if (playerDamageEffectId_ >= 0) {
+		 lightningEffectManager_->DrawDebugUI(playerDamageEffectId_, "Player Damage Effect");
+	  }
+#endif
    }
 
 #ifdef _DEBUG

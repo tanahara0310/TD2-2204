@@ -287,6 +287,7 @@
     <ClCompile Include="Application\TD2_2\GameObject\Background\Background.cpp" />
     <ClCompile Include="Application\TD2_2\GameObject\Frame\Frame.cpp" />
     <ClCompile Include="Application\TD2_2\Effect\Lightning\Lightning.cpp" />
+    <ClCompile Include="Application\TD2_2\Effect\Lightning\LightningEffectManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Engine\WinApp\WinApp.h">
@@ -736,6 +737,7 @@
     <ClInclude Include="Application\TD2_2\GameObject\Background\Background.h" />
     <ClInclude Include="Application\TD2_2\GameObject\Frame\Frame.h" />
     <ClInclude Include="Application\TD2_2\Scene\Config\GameSceneConfig.h" />
+    <ClInclude Include="Application\TD2_2\Effect\Lightning\LightningEffectManager.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Engine\Particle\README.md">

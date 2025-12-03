@@ -14,6 +14,7 @@
 #include "../../Collider/CollisionConfig.h"
 #include "../../Camera/CameraController.h"
 #include "../../AI/BehaviorTree/BehaviorTree.h"
+#include "../../Effect/Lightning/LightningEffectManager.h"
 
 class EngineSystem;
 class CameraManager;
@@ -54,6 +55,11 @@ private:
    std::unique_ptr<BehaviorTree> bossBehaviorTree_;
 
    std::unique_ptr<CameraController> cameraController_;
+   
+   // 雷エフェクトマネージャー
+   std::unique_ptr<LightningEffectManager> lightningEffectManager_;
+   int playerDamageEffectId_ = -1;
+
 private:
    void RegisterAllColliders();
 

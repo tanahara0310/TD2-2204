@@ -269,121 +269,121 @@ void TestScene::Update()
 	  }
    }
 
-   //if (ImGui::Begin("クォータニオンデバッグ表示")) {
+   if (ImGui::Begin("クォータニオンデバッグ表示")) {
 
-   //	// クォータニオンの回転を行列に変換して表示
-   //	Vector3 axis = MathCore::Vector::Normalize({ 1.0f,1.0f,1.0f });
-   //	float angle = 0.44f;
-   //	Matrix4x4 rotateMatrix = Matrix::MakeRotateAxisAngle(axis, angle);
-   //	ImGui::Text("rotateMatrix");
-   //	ImGui::Text("%.3f %.3f %.3f %.3f", rotateMatrix.m[0][0], rotateMatrix.m[0][1], rotateMatrix.m[0][2], rotateMatrix.m[0][3]);
-   //	ImGui::Text("%.3f %.3f %.3f %.3f", rotateMatrix.m[1][0], rotateMatrix.m[1][1], rotateMatrix.m[1][2], rotateMatrix.m[1][3]);
-   //	ImGui::Text("%.3f %.3f %.3f %.3f", rotateMatrix.m[2][0], rotateMatrix.m[2][1], rotateMatrix.m[2][2], rotateMatrix.m[2][3]);
-   //	ImGui::Text("%.3f %.3f %.3f %.3f", rotateMatrix.m[3][0], rotateMatrix.m[3][1], rotateMatrix.m[3][2], rotateMatrix.m[3][3]);
+   	// クォータニオンの回転を行列に変換して表示
+   	Vector3 axis = MathCore::Vector::Normalize({ 1.0f,1.0f,1.0f });
+   	float angle = 0.44f;
+   	Matrix4x4 rotateMatrix = Matrix::MakeRotateAxisAngle(axis, angle);
+   	ImGui::Text("rotateMatrix");
+   	ImGui::Text("%.3f %.3f %.3f %.3f", rotateMatrix.m[0][0], rotateMatrix.m[0][1], rotateMatrix.m[0][2], rotateMatrix.m[0][3]);
+   	ImGui::Text("%.3f %.3f %.3f %.3f", rotateMatrix.m[1][0], rotateMatrix.m[1][1], rotateMatrix.m[1][2], rotateMatrix.m[1][3]);
+   	ImGui::Text("%.3f %.3f %.3f %.3f", rotateMatrix.m[2][0], rotateMatrix.m[2][1], rotateMatrix.m[2][2], rotateMatrix.m[2][3]);
+   	ImGui::Text("%.3f %.3f %.3f %.3f", rotateMatrix.m[3][0], rotateMatrix.m[3][1], rotateMatrix.m[3][2], rotateMatrix.m[3][3]);
 
-   //	//ある方向からある方向への回転を行列に変換して表示
-   //	Vector3 from0 = Vector::Normalize({ 1.0f,0.7f,0.5f });
-   //	Vector3 to0 = -from0;
-   //	Vector3 from1 = Vector::Normalize({ -0.6f,0.9f, 0.2f });
-   //	Vector3 to1 = Vector::Normalize({ 0.4f,0.7f,-0.5f });
+   	////ある方向からある方向への回転を行列に変換して表示
+   	//Vector3 from0 = Vector::Normalize({ 1.0f,0.7f,0.5f });
+   	//Vector3 to0 = -from0;
+   	//Vector3 from1 = Vector::Normalize({ -0.6f,0.9f, 0.2f });
+   	//Vector3 to1 = Vector::Normalize({ 0.4f,0.7f,-0.5f });
 
-   //	Matrix4x4 rotateMatrix0 = Matrix::DirectionToDirection(Vector::Normalize({ 1.0f,0.0f,0.0f }),
-   //		Vector::Normalize({ -1.0f, 0.0f, 0.0f }));
-   //	Matrix4x4 rotateMatrix1 = Matrix::DirectionToDirection(from0, to0);
-   //	Matrix4x4 rotateMatrix2 = Matrix::DirectionToDirection(from1, to1);
+   /*	Matrix4x4 rotateMatrix0 = Matrix::DirectionToDirection(Vector::Normalize({ 1.0f,0.0f,0.0f }),
+   		Vector::Normalize({ -1.0f, 0.0f, 0.0f }));
+   	Matrix4x4 rotateMatrix1 = Matrix::DirectionToDirection(from0, to0);
+   	Matrix4x4 rotateMatrix2 = Matrix::DirectionToDirection(from1, to1);
 
-   //	ImGui::Text("DirectionToDirection");
-   //	ImGui::Text("rotateMatrix0");
-   //	ImGui::Text("%.3f %.3f %.3f %.3f", rotateMatrix0.m[0][0], rotateMatrix0.m[0][1], rotateMatrix0.m[0][2], rotateMatrix0.m[0][3]);
-   //	ImGui::Text("%.3f %.3f %.3f %.3f", rotateMatrix0.m[1][0], rotateMatrix0.m[1][1], rotateMatrix0.m[1][2], rotateMatrix0.m[1][3]);
-   //	ImGui::Text("%.3f %.3f %.3f %.3f", rotateMatrix0.m[2][0], rotateMatrix0.m[2][1], rotateMatrix0.m[2][2], rotateMatrix0.m[2][3]);
-   //	ImGui::Text("%.3f %.3f %.3f %.3f", rotateMatrix0.m[3][0], rotateMatrix0.m[3][1], rotateMatrix0.m[3][2], rotateMatrix0.m[3][3]);
-   //	ImGui::Text("rotateMatrix1");
-   //	ImGui::Text("%.3f %.3f %.3f %.3f", rotateMatrix1.m[0][0], rotateMatrix1.m[0][1], rotateMatrix1.m[0][2], rotateMatrix1.m[0][3]);
-   //	ImGui::Text("%.3f %.3f %.3f %.3f", rotateMatrix1.m[1][0], rotateMatrix1.m[1][1], rotateMatrix1.m[1][2], rotateMatrix1.m[1][3]);
-   //	ImGui::Text("%.3f %.3f %.3f %.3f", rotateMatrix1.m[2][0], rotateMatrix1.m[2][1], rotateMatrix1.m[2][2], rotateMatrix1.m[2][3]);
-   //	ImGui::Text("%.3f %.3f %.3f %.3f", rotateMatrix1.m[3][0], rotateMatrix1.m[3][1], rotateMatrix1.m[3][2], rotateMatrix1.m[3][3]);
-   //	ImGui::Text("rotateMatrix2");
-   //	ImGui::Text("%.3f %.3f %.3f %.3f", rotateMatrix2.m[0][0], rotateMatrix2.m[0][1], rotateMatrix2.m[0][2], rotateMatrix2.m[0][3]);
-   //	ImGui::Text("%.3f %.3f %.3f %.3f", rotateMatrix2.m[1][0], rotateMatrix2.m[1][1], rotateMatrix2.m[1][2], rotateMatrix2.m[1][3]);
-   //	ImGui::Text("%.3f %.3f %.3f %.3f", rotateMatrix2.m[2][0], rotateMatrix2.m[2][1], rotateMatrix2.m[2][2], rotateMatrix2.m[2][3]);
-   //	ImGui::Text("%.3f %.3f %.3f %.3f", rotateMatrix2.m[3][0], rotateMatrix2.m[3][1], rotateMatrix2.m[3][2], rotateMatrix2.m[3][3]);
-   //
-   //	//クォータニオンの計算
-   //	Quaternion q1 = { 2.0f, 3.0f, 4.0f, 1.0f };
-   //	Quaternion q2 = { 1.0f, 3.0f, 5.0f, 2.0f };
-   //	Quaternion identity = QuaternionMath::Identity();
-   //	Quaternion conj = QuaternionMath::Conjugate(q1);
-   //	Quaternion inv = QuaternionMath::Inverse(q1);
-   //	Quaternion normal = QuaternionMath::Normalize(q1);
-   //	Quaternion mult1 = QuaternionMath::Multiply(q1, q2);
-   //	Quaternion mult2 = QuaternionMath::Multiply(q2, q1);
-   //	float norm = QuaternionMath::Norm(q1);
+   	ImGui::Text("DirectionToDirection");
+   	ImGui::Text("rotateMatrix0");
+   	ImGui::Text("%.3f %.3f %.3f %.3f", rotateMatrix0.m[0][0], rotateMatrix0.m[0][1], rotateMatrix0.m[0][2], rotateMatrix0.m[0][3]);
+   	ImGui::Text("%.3f %.3f %.3f %.3f", rotateMatrix0.m[1][0], rotateMatrix0.m[1][1], rotateMatrix0.m[1][2], rotateMatrix0.m[1][3]);
+   	ImGui::Text("%.3f %.3f %.3f %.3f", rotateMatrix0.m[2][0], rotateMatrix0.m[2][1], rotateMatrix0.m[2][2], rotateMatrix0.m[2][3]);
+   	ImGui::Text("%.3f %.3f %.3f %.3f", rotateMatrix0.m[3][0], rotateMatrix0.m[3][1], rotateMatrix0.m[3][2], rotateMatrix0.m[3][3]);
+   	ImGui::Text("rotateMatrix1");
+   	ImGui::Text("%.3f %.3f %.3f %.3f", rotateMatrix1.m[0][0], rotateMatrix1.m[0][1], rotateMatrix1.m[0][2], rotateMatrix1.m[0][3]);
+   	ImGui::Text("%.3f %.3f %.3f %.3f", rotateMatrix1.m[1][0], rotateMatrix1.m[1][1], rotateMatrix1.m[1][2], rotateMatrix1.m[1][3]);
+   	ImGui::Text("%.3f %.3f %.3f %.3f", rotateMatrix1.m[2][0], rotateMatrix1.m[2][1], rotateMatrix1.m[2][2], rotateMatrix1.m[2][3]);
+   	ImGui::Text("%.3f %.3f %.3f %.3f", rotateMatrix1.m[3][0], rotateMatrix1.m[3][1], rotateMatrix1.m[3][2], rotateMatrix1.m[3][3]);
+   	ImGui::Text("rotateMatrix2");
+   	ImGui::Text("%.3f %.3f %.3f %.3f", rotateMatrix2.m[0][0], rotateMatrix2.m[0][1], rotateMatrix2.m[0][2], rotateMatrix2.m[0][3]);
+   	ImGui::Text("%.3f %.3f %.3f %.3f", rotateMatrix2.m[1][0], rotateMatrix2.m[1][1], rotateMatrix2.m[1][2], rotateMatrix2.m[1][3]);
+   	ImGui::Text("%.3f %.3f %.3f %.3f", rotateMatrix2.m[2][0], rotateMatrix2.m[2][1], rotateMatrix2.m[2][2], rotateMatrix2.m[2][3]);
+   	ImGui::Text("%.3f %.3f %.3f %.3f", rotateMatrix2.m[3][0], rotateMatrix2.m[3][1], rotateMatrix2.m[3][2], rotateMatrix2.m[3][3]);
+   */
+   	////クォータニオンの計算
+   	//Quaternion q1 = { 2.0f, 3.0f, 4.0f, 1.0f };
+   	//Quaternion q2 = { 1.0f, 3.0f, 5.0f, 2.0f };
+   	//Quaternion identity = QuaternionMath::Identity();
+   	//Quaternion conj = QuaternionMath::Conjugate(q1);
+   	//Quaternion inv = QuaternionMath::Inverse(q1);
+   	//Quaternion normal = QuaternionMath::Normalize(q1);
+   	//Quaternion mult1 = QuaternionMath::Multiply(q1, q2);
+   	//Quaternion mult2 = QuaternionMath::Multiply(q2, q1);
+   	//float norm = QuaternionMath::Norm(q1);
 
-   //	ImGui::Text("Quaternion");
-   //	ImGui::Text("Identity");
-   //	ImGui::Text("x:%.2f y:%.2f z:%.2f w:%.2f", identity.x, identity.y, identity.z, identity.w);
-   //	ImGui::Text("Conjugate");
-   //	ImGui::Text("x:%.2f y:%.2f z:%.2f w:%.2f", conj.x, conj.y, conj.z, conj.w);
-   //	ImGui::Text("Inverse");
-   //	ImGui::Text("x:%.2f y:%.2f z:%.2f w:%.2f", inv.x, inv.y, inv.z, inv.w);
-   //	ImGui::Text("Normalize");
-   //	ImGui::Text("x:%.2f y:%.2f z:%.2f w:%.2f", normal.x, normal.y, normal.z, normal.w);
-   //	ImGui::Text("Multiply(q1,q2)");
-   //	ImGui::Text("x:%.2f y:%.2f z:%.2f w:%.2f", mult1.x, mult1.y, mult1.z, mult1.w);
-   //	ImGui::Text("Multiply(q2,q1)");
-   //	ImGui::Text("x:%.2f y:%.2f z:%.2f w:%.2f", mult2.x, mult2.y, mult2.w);
-   //	ImGui::Text("Norm");
-   //	ImGui::Text("%.2f", norm);
+   	//ImGui::Text("Quaternion");
+   	//ImGui::Text("Identity");
+   	//ImGui::Text("x:%.2f y:%.2f z:%.2f w:%.2f", identity.x, identity.y, identity.z, identity.w);
+   	//ImGui::Text("Conjugate");
+   	//ImGui::Text("x:%.2f y:%.2f z:%.2f w:%.2f", conj.x, conj.y, conj.z, conj.w);
+   	//ImGui::Text("Inverse");
+   	//ImGui::Text("x:%.2f y:%.2f z:%.2f w:%.2f", inv.x, inv.y, inv.z, inv.w);
+   	//ImGui::Text("Normalize");
+   	//ImGui::Text("x:%.2f y:%.2f z:%.2f w:%.2f", normal.x, normal.y, normal.z, normal.w);
+   	//ImGui::Text("Multiply(q1,q2)");
+   	//ImGui::Text("x:%.2f y:%.2f z:%.2f w:%.2f", mult1.x, mult1.y, mult1.z, mult1.w);
+   	//ImGui::Text("Multiply(q2,q1)");
+   	//ImGui::Text("x:%.2f y:%.2f z:%.2f w:%.2f", mult2.x, mult2.y, mult2.w);
+   	//ImGui::Text("Norm");
+   	//ImGui::Text("%.2f", norm);
 
-   //	//クォータニオンによるベクトルの回転
-   //	Quaternion rotation = QuaternionMath::MakeRotateAxisAngle(Vector::Normalize({ 1.0f, 0.4f, -0.2f }),
-   //		0.45f);
+   	////クォータニオンによるベクトルの回転
+   	//Quaternion rotation = QuaternionMath::MakeRotateAxisAngle(Vector::Normalize({ 1.0f, 0.4f, -0.2f }),
+   	//	0.45f);
 
-   //	Vector3 pointY = { 2.1f, -0.9f, 1.3f };
-   //	Matrix4x4 rotateMatrix = QuaternionMath::MakeRotateMatrix(rotation);
-   //	Vector3 rotateByQuaternion = QuaternionMath::RotateVector(pointY, rotation);
-   //	Vector3 rotateByMatrix = CoordinateTransform::TransformCoord(pointY, rotateMatrix);
+   	//Vector3 pointY = { 2.1f, -0.9f, 1.3f };
+   	//Matrix4x4 rotateMatrix = QuaternionMath::MakeRotateMatrix(rotation);
+   	//Vector3 rotateByQuaternion = QuaternionMath::RotateVector(pointY, rotation);
+   	//Vector3 rotateByMatrix = CoordinateTransform::TransformCoord(pointY, rotateMatrix);
 
-   //	ImGui::Text("Quaternion Rotate Vector");
-   //	ImGui::Text("rotation");
-   //	ImGui::Text("x:%.2f y:%.2f z:%.2f w:%.2f", rotation.x, rotation.y, rotation.z, rotation.w);
-   //	ImGui::Text("rotateMatrix");
-   //	ImGui::Text("%.3f %.3f %.3f %.3f", rotateMatrix.m[0][0], rotateMatrix.m[0][1], rotateMatrix.m[0][2], rotateMatrix.m[0][3]);
-   //	ImGui::Text("%.3f %.3f %.3f %.3f", rotateMatrix.m[1][0], rotateMatrix.m[1][1], rotateMatrix.m[1][2], rotateMatrix.m[1][3]);
-   //	ImGui::Text("%.3f %.3f %.3f %.3f", rotateMatrix.m[2][0], rotateMatrix.m[2][1], rotateMatrix.m[2][2], rotateMatrix.m[2][3]);
-   //	ImGui::Text("%.3f %.3f %.3f %.3f", rotateMatrix.m[3][0], rotateMatrix.m[3][1], rotateMatrix.m[3][2], rotateMatrix.m[3][3]);
-   //	ImGui::Text("rotateByQuaternion");
-   //	ImGui::Text("x:%.2f y:%.2f z:%.2f", rotateByQuaternion.x, rotateByQuaternion.y, rotateByQuaternion.z);
-   //	ImGui::Text("rotateByMatrix");
-   //	ImGui::Text("x:%.2f y:%.2f z:%.2f", rotateByMatrix.x, rotateByMatrix.y, rotateByMatrix.z);
-
-
-   //	//球面線形補間
-   //	Quaternion rotation0 = QuaternionMath::MakeRotateAxisAngle({ 0.71f, 0.71f, 0.0f }, 0.3f);
-   //	Quaternion rotation1 = QuaternionMath::MakeRotateAxisAngle({ 0.71f, 0.0f, 0.71f }, std::numbers::pi_v<float>);
-
-   //	Quaternion interpolated0 = QuaternionMath::Slerp(rotation0, rotation1, 0.0f);
-   //	Quaternion interpolated1 = QuaternionMath::Slerp(rotation0, rotation1, 0.3f);
-   //	Quaternion interpolated2 = QuaternionMath::Slerp(rotation0, rotation1, 0.5f);
-   //	Quaternion interpolated3 = QuaternionMath::Slerp(rotation0, rotation1, 0.7f);
-   //	Quaternion interpolated4 = QuaternionMath::Slerp(rotation0, rotation1, 1.0f);
-
-   //	ImGui::Text("Quaternion Slerp");
-   //	ImGui::Text("interpolated0 (t=0.0)");
-   //	ImGui::Text("x:%.2f y:%.2f z:%.2f w:%.2f", interpolated0.x, interpolated0.y, interpolated0.z, interpolated0.w);
-   //	ImGui::Text("interpolated1 (t=0.3)");
-   //	ImGui::Text("x:%.2f y:%.2f z:%.2f w:%.2f", interpolated1.x, interpolated1.y, interpolated1.z, interpolated1.w);
-   //	ImGui::Text("interpolated2 (t=0.5)");
-   //	ImGui::Text("x:%.2f y:%.2f z:%.2f w:%.2f", interpolated2.x, interpolated2.y, interpolated2.z, interpolated2.w);
-   //	ImGui::Text("interpolated3 (t=0.7)");
-   //	ImGui::Text("x:%.2f y:%.2f z:%.2f w:%.2f", interpolated3.x, interpolated3.y, interpolated3.z, interpolated3.w);
-   //	ImGui::Text("interpolated4 (t=1.0)");
-   //	ImGui::Text("x:%.2f y:%.2f z:%.2f w:%.2f", interpolated4.x, interpolated4.y, interpolated4.z, interpolated4.w);
+   	//ImGui::Text("Quaternion Rotate Vector");
+   	//ImGui::Text("rotation");
+   	//ImGui::Text("x:%.2f y:%.2f z:%.2f w:%.2f", rotation.x, rotation.y, rotation.z, rotation.w);
+   	//ImGui::Text("rotateMatrix");
+   	//ImGui::Text("%.3f %.3f %.3f %.3f", rotateMatrix.m[0][0], rotateMatrix.m[0][1], rotateMatrix.m[0][2], rotateMatrix.m[0][3]);
+   	//ImGui::Text("%.3f %.3f %.3f %.3f", rotateMatrix.m[1][0], rotateMatrix.m[1][1], rotateMatrix.m[1][2], rotateMatrix.m[1][3]);
+   	//ImGui::Text("%.3f %.3f %.3f %.3f", rotateMatrix.m[2][0], rotateMatrix.m[2][1], rotateMatrix.m[2][2], rotateMatrix.m[2][3]);
+   	//ImGui::Text("%.3f %.3f %.3f %.3f", rotateMatrix.m[3][0], rotateMatrix.m[3][1], rotateMatrix.m[3][2], rotateMatrix.m[3][3]);
+   	//ImGui::Text("rotateByQuaternion");
+   	//ImGui::Text("x:%.2f y:%.2f z:%.2f", rotateByQuaternion.x, rotateByQuaternion.y, rotateByQuaternion.z);
+   	//ImGui::Text("rotateByMatrix");
+   	//ImGui::Text("x:%.2f y:%.2f z:%.2f", rotateByMatrix.x, rotateByMatrix.y, rotateByMatrix.z);
 
 
-   //}
-   //ImGui::End();
+   	////球面線形補間
+   	//Quaternion rotation0 = QuaternionMath::MakeRotateAxisAngle({ 0.71f, 0.71f, 0.0f }, 0.3f);
+   	//Quaternion rotation1 = QuaternionMath::MakeRotateAxisAngle({ 0.71f, 0.0f, 0.71f }, std::numbers::pi_v<float>);
+
+   	//Quaternion interpolated0 = QuaternionMath::Slerp(rotation0, rotation1, 0.0f);
+   	//Quaternion interpolated1 = QuaternionMath::Slerp(rotation0, rotation1, 0.3f);
+   	//Quaternion interpolated2 = QuaternionMath::Slerp(rotation0, rotation1, 0.5f);
+   	//Quaternion interpolated3 = QuaternionMath::Slerp(rotation0, rotation1, 0.7f);
+   	//Quaternion interpolated4 = QuaternionMath::Slerp(rotation0, rotation1, 1.0f);
+
+   	//ImGui::Text("Quaternion Slerp");
+   	//ImGui::Text("interpolated0 (t=0.0)");
+   	//ImGui::Text("x:%.2f y:%.2f z:%.2f w:%.2f", interpolated0.x, interpolated0.y, interpolated0.z, interpolated0.w);
+   	//ImGui::Text("interpolated1 (t=0.3)");
+   	//ImGui::Text("x:%.2f y:%.2f z:%.2f w:%.2f", interpolated1.x, interpolated1.y, interpolated1.z, interpolated1.w);
+   	//ImGui::Text("interpolated2 (t=0.5)");
+   	//ImGui::Text("x:%.2f y:%.2f z:%.2f w:%.2f", interpolated2.x, interpolated2.y, interpolated2.z, interpolated2.w);
+   	//ImGui::Text("interpolated3 (t=0.7)");
+   	//ImGui::Text("x:%.2f y:%.2f z:%.2f w:%.2f", interpolated3.x, interpolated3.y, interpolated3.z, interpolated3.w);
+   	//ImGui::Text("interpolated4 (t=1.0)");
+   	//ImGui::Text("x:%.2f y:%.2f z:%.2f w:%.2f", interpolated4.x, interpolated4.y, interpolated4.z, interpolated4.w);
+
+
+   }
+   ImGui::End();
 
 
    // カメラマネージャーのImGui（統一されたウィンドウ）
