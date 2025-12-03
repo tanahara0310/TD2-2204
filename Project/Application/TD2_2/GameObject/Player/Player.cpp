@@ -63,6 +63,11 @@ void Player::Draw(const ICamera* camera) {
 }
 
 void Player::OnCollisionEnter(GameObject* other) {
+
+   if (hitEnemyFunction_) {
+	  hitEnemyFunction_();
+   }
+
    // 反発
    Vector3 toOther3 = other->GetWorldPosition() - GetWorldPosition();
 
@@ -107,6 +112,10 @@ void Player::OnCollisionEnter(GameObject* other) {
 }
 
 void Player::OnCollisionStay(GameObject* other) {
+   if (hitEnemyFunction_) {
+	  hitEnemyFunction_();
+   }
+
    // 反発
    Vector3 toOther3 = other->GetWorldPosition() - GetWorldPosition();
 

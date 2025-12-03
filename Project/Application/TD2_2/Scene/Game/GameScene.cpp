@@ -16,6 +16,7 @@
 #include "../../GameObject/Boss/ActionNode/MoveAction.h"
 #include "../../GameObject/Boss/ActionNode/MoveToCenterAction.h"
 #include "../../GameObject/Boss/ActionNode/FleeFromPlayerAction.h"
+#include "../../GameObject/Boss/ActionNode/ShootEightWayAction.h"
 #include "../../GameObject/Bullet/Bullet.h"
 #include "../Config/GameSceneConfig.h"
 
@@ -41,6 +42,11 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  player->SetStartDamageFunction([this]() {
 		 if (cameraController_) {
 			// プリセット版は継続時間も事前設定されている
+			cameraController_->StartShake(CameraController::ShakeIntensity::Large);
+		 }
+		 });
+	  player->SetHitEnemyFunction([this]() {
+		 if (cameraController_) {
 			cameraController_->StartShake(CameraController::ShakeIntensity::Medium);
 		 }
 		 });
@@ -85,9 +91,9 @@ void GameScene::Initialize(EngineSystem* engine) {
    {
 	  collisionConfig_ = std::make_unique<CollisionConfig>();
 	  collisionConfig_->SetCollisionEnabled(CollisionLayer::Player, CollisionLayer::Boss, true);
-	  collisionConfig_->SetCollisionEnabled(CollisionLayer::Player, CollisionLayer::BossBullet, true);
+	  collisionConfig_->SetCollisionEnabled(CollisionLayer::Player, CollisionLayer::LightningBullet, true);
 	  collisionConfig_->SetCollisionEnabled(CollisionLayer::Player, CollisionLayer::ElasticSphere, true);
-	  collisionConfig_->SetCollisionEnabled(CollisionLayer::Boss, CollisionLayer::BossBullet, false);
+	  collisionConfig_->SetCollisionEnabled(CollisionLayer::Boss, CollisionLayer::LightningBullet, false);
 	  collisionConfig_->SetCollisionEnabled(CollisionLayer::Boss, CollisionLayer::ElasticSphere, false);
 	  collisionManager_ = std::make_unique<CollisionManager>(collisionConfig_.get());
    }
@@ -112,9 +118,9 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  // kStageSize はフレームを含めた全体サイズなので、フレーム1個分外側に広げる
 	  float stageHalfWidth = GameSceneConfig::kStageSize.x / 2.0f;
 	  float stageHalfHeight = GameSceneConfig::kStageSize.y / 2.0f;
-	  float frameWidth = GameSceneConfig::kFrameSize.x*0.65f;
-	  float frameHeight = GameSceneConfig::kFrameSize.y*0.6f;
-	  
+	  float frameWidth = GameSceneConfig::kFrameSize.x * 0.65f;
+	  float frameHeight = GameSceneConfig::kFrameSize.y * 0.6f;
+
 	  cameraController_->SetStageBounds(
 		 GameSceneConfig::kStageCenter.x - stageHalfWidth - frameWidth,
 		 GameSceneConfig::kStageCenter.x + stageHalfWidth + frameWidth,
@@ -130,6 +136,19 @@ void GameScene::Update() {
    // カメラコントローラーの更新
    if (cameraController_) {
 	  cameraController_->Update();
+   }
+
+   // 削除予定の弾をリストから削除（gameObjects_からは描画後に削除）
+   bullets_.remove_if([](Bullet* bullet) {
+	  return bullet == nullptr || !bullet->IsActive();
+   });
+
+   // 新しいオブジェクトを追加
+   if (!newGameObjectsQueue_.empty()) {
+	  for (auto& newObj : newGameObjectsQueue_) {
+		 gameObjects_.push_back(std::move(newObj));
+	  }
+	  newGameObjectsQueue_.clear();
    }
 
 #ifdef _DEBUG
@@ -172,11 +191,15 @@ void GameScene::CheckCollisions() {
 std::unique_ptr<BehaviorTree> GameScene::CreateBossBehaviorTree() {
    return BehaviorTreeFactory::Create(
 	  [this](BehaviorTreeBuilder& builder) {
-		 builder.Selector()
+		 builder.Selector() 
 			.Sequence()
 			.Action<FleeFromPlayerAction>(boss_, player_)
-			.Action<ChargeToPlayerAction>(boss_, player_)
+			.Action<ChargeToPlayerAction>(boss_,player_)
+			/*.Action<ShootEightWayAction>(boss_, [this](const Vector3& pos, const Vector3& direction, float speed) {
+			   CreateBullet(pos, direction, BulletType::ElasticSphere, speed);
+			   })  */
 			.End()
+			.Action<FleeFromPlayerAction>(boss_, player_)
 			.End();
 	  },
 	  "BossMainAI"
@@ -252,23 +275,51 @@ void GameScene::InitializeFrames() {
    }
 }
 
-Bullet* GameScene::CreateBullet(const Vector3& position, const Vector3& direction, float speed) {
+Bullet* GameScene::CreateBullet(const Vector3& position, const Vector3& direction, BulletType type, float speed) {
    auto modelManager = engine_->GetComponent<ModelManager>();
    auto& textureManager = TextureManager::GetInstance();
 
+   // タイプに応じたモデルとテクスチャのパス
+   std::string modelPath;
+   std::string texturePath;
+   CollisionLayer collisionLayer;
+
+   switch (type) {
+   case BulletType::LightningBullet:
+	  modelPath = "Resources/Models/Ball/Ball.obj";
+	  texturePath = "Resources/Textures/Ball.png";
+	  collisionLayer = CollisionLayer::LightningBullet;
+	  break;
+   case BulletType::ElasticSphere:
+	  modelPath = "Resources/Models/Ball/Ball.obj";
+	  texturePath = "Resources/Textures/Ball.png";
+	  collisionLayer = CollisionLayer::ElasticSphere;
+	  break;
+   default:
+	  modelPath = "Resources/Models/Ball/Ball.obj";
+	  texturePath = "Resources/Textures/Ball.png";
+	  collisionLayer = CollisionLayer::LightningBullet;
+	  break;
+   }
+
    // 弾のモデルとテクスチャを読み込み
-   auto bulletModel = modelManager->CreateStaticModel("Resources/Models/Bullet/Bullet.obj");
-   auto bulletTexture = textureManager.Load("Resources/Textures/Bullet.png");
+   auto bulletModel = modelManager->CreateStaticModel(modelPath);
+   auto bulletTexture = textureManager.Load(texturePath);
 
    // 弾を生成
    auto bullet = std::make_unique<Bullet>();
    bullet->Initialize(std::move(bulletModel), bulletTexture, direction);
    bullet->SetWorldPosition(position);
    bullet->SetSpeed(speed);
+   
+   // コライダーレイヤーを設定
+   if (bullet->GetCollider()) {
+	  bullet->GetCollider()->SetLayer(collisionLayer);
+   }
 
    Bullet* bulletPtr = bullet.get();
    bullets_.push_back(bulletPtr);
-   gameObjects_.push_back(std::move(bullet));
+   newGameObjectsQueue_.push_back(std::move(bullet));
 
    return bulletPtr;
 }

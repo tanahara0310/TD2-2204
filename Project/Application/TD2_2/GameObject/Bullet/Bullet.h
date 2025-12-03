@@ -4,6 +4,11 @@
 /// @brief 弾クラス
 class Bullet : public GameObject {
 public:
+   enum class Type {
+	  Lightning,
+	  ElasticSphere,
+   };
+
    Bullet() = default;
    ~Bullet() = default;
 
@@ -15,6 +20,10 @@ public:
 
    /// @brief 更新処理
    void Update() override;
+
+   /// @brief 描画処理
+   /// @param camera カメラ
+   void Draw(const ICamera* camera) override;
 
    /// @brief オブジェクト名を取得
    const char* GetObjectName() const override { return "Bullet"; }
@@ -36,9 +45,21 @@ private:
    GameTimer lifetimeTimer_; // 生存時間タイマー
    
    // 初期化時のタイマー
-   GameTimer initTimer_;
+   GameTimer scaleUpTimer_;
+
+   float initialScale_ = 0.0f; // 初期スケール
 
 private:
    /// @brief コライダーの初期化
    void InitializeCollider();
+
+   void InitializeStateMachine();
+
+   void InitializeScaleUpState();
+
+   void ScaleUp();
+
+   void InitializeMoveState();
+
+   void Move();
 };

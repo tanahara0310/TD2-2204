@@ -5,7 +5,7 @@ enum class CollisionLayer {
    Default = 0,
    Player,
    Boss,
-   BossBullet,
+   LightningBullet,
    ElasticSphere,
    Count
 };
