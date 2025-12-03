@@ -122,7 +122,7 @@ std::unique_ptr<SpriteObject> TitleUI::CreateStartButtonUI()
 {
 	auto sprite = std::make_unique<SpriteObject>();
 	sprite->Initialize("Resources/GameResources/Title/titleStart.png");
-	sprite->GetTransform().translate = { 17.0f, kStartButtonY, 0.0f };
+	sprite->GetTransform().translate = { 6.0f, kStartButtonY, 0.0f };
 	sprite->SetAnchor({ 0.5f, 0.5f });
 
 	return sprite;

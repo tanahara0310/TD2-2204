@@ -8,7 +8,7 @@
 
 namespace {
 	// 黄金角（ゴールデンアングル）
-	const float kGoldenAngle = std::numbers::pi_v<float> * (3.0f - std::sqrt(5.0f));
+	const float kGoldenAngle = std::numbers::pi_v<float> *(3.0f - std::sqrt(5.0f));
 }
 
 void LightningEffectManager::Initialize(ModelManager* modelManager, TextureManager* textureManager)
@@ -29,17 +29,17 @@ std::vector<Vector3> LightningEffectManager::GenerateSphericalPoints(int count, 
 	for (int i = 0; i < count; ++i) {
 		// Y座標（高さ）を計算：-1から1の範囲
 		float y = 1.0f - (i / static_cast<float>(count - 1)) * 2.0f;
-		
+
 		// Y座標から半径を計算
 		float radiusAtY = std::sqrt(1.0f - y * y);
-		
+
 		// 黄金角を使用して角度を計算
 		float theta = kGoldenAngle * i;
-		
+
 		// XZ平面上の座標を計算
 		float x = std::cos(theta) * radiusAtY;
 		float z = std::sin(theta) * radiusAtY;
-		
+
 		// 半径を適用
 		points.push_back({ x * radius, y * radius, z * radius });
 	}
@@ -67,7 +67,7 @@ int LightningEffectManager::CreateCircularEffect(GameObject* target, const Spher
 	// 雷を生成
 	for (int i = 0; i < config.lightningCount; ++i) {
 		const Vector3& startPos = effectData.sphericalPositions[i];
-		
+
 		// 終点：始点から球の中心方向に少し進んだ位置（円弧を作る）
 		Vector3 toCenter = -MathCore::Vector::Normalize(startPos);
 		float arcDistance = config.arcLength * config.radius;
@@ -192,7 +192,7 @@ void LightningEffectManager::UpdateAllEffects()
 		if (effect.type == EffectType::Spherical && effect.isActive) {
 			// 時間差出現を更新
 			UpdateStaggeredSpawns(effect);
-			
+
 			// エフェクトタイマーを更新
 			UpdateEffectTimer(effect);
 		}
@@ -211,8 +211,8 @@ void LightningEffectManager::StartEffect(int effectId)
 	effect.currentSpawnIndex = 0;
 
 	const int lightningCount = static_cast<int>(effect.lightnings.size());
-	const int visibleCount = (effect.config.visibleCount < lightningCount) 
-		? effect.config.visibleCount 
+	const int visibleCount = (effect.config.visibleCount < lightningCount)
+		? effect.config.visibleCount
 		: lightningCount;
 
 	// 全ての雷を非表示にしてからリセット
@@ -234,7 +234,7 @@ void LightningEffectManager::StartEffect(int effectId)
 	// 出現時刻を計算
 	effect.spawnTimes.clear();
 	effect.spawnTimes.reserve(visibleCount);
-	
+
 	if (effect.config.enableStagger) {
 		// 時間差出現が有効な場合
 		for (int i = 0; i < visibleCount; ++i) {
@@ -292,6 +292,8 @@ LightningEffectManager::LinearEffectConfig& LightningEffectManager::GetLinearEff
 
 void LightningEffectManager::DrawDebugUI(int effectId, const char* windowName)
 {
+	(void)windowName;
+	(void)effectId;
 #ifdef _DEBUG
 	if (effectId < 0 || effectId >= static_cast<int>(effects_.size())) {
 		return;
@@ -321,7 +323,7 @@ void LightningEffectManager::DrawDebugUI(int effectId, const char* windowName)
 			ImGui::DragFloat("Radius", &effect.config.radius, 0.1f, 0.5f, 10.0f);
 			if (oldRadius != effect.config.radius) {
 				effect.sphericalPositions = GenerateSphericalPoints(
-					static_cast<int>(effect.lightnings.size()), 
+					static_cast<int>(effect.lightnings.size()),
 					effect.config.radius
 				);
 			}
@@ -342,7 +344,7 @@ void LightningEffectManager::DrawDebugUI(int effectId, const char* windowName)
 
 			ImGui::Separator();
 			ImGui::Text("Timing Settings");
-			
+
 			ImGui::DragFloat("Duration", &effect.config.effectDuration, 0.01f, 0.1f, 2.0f);
 			if (ImGui::IsItemHovered()) {
 				ImGui::SetTooltip("エフェクト全体の継続時間");
@@ -362,18 +364,18 @@ void LightningEffectManager::DrawDebugUI(int effectId, const char* windowName)
 
 			ImGui::Separator();
 			ImGui::Text("Visual Settings");
-			
+
 			ImGui::DragFloat("Noise Scale", &effect.config.noiseScale, 0.01f, 0.0f, 2.0f);
 			ImGui::DragFloat("Noise Speed", &effect.config.noiseSpeed, 0.1f, 0.0f, 30.0f);
 
 			ImGui::Separator();
 			ImGui::Text("Debug Info");
-			
+
 			ImGui::Text("Total Lightnings: %zu", effect.lightnings.size());
 			ImGui::Text("Target Visible: %d", effect.config.visibleCount);
 			ImGui::Text("Currently Spawned: %d", effect.currentSpawnIndex);
 			ImGui::Text("Timer: %.2f / %.2f", effect.timer, effect.config.effectDuration);
-			
+
 			if (effect.config.enableStagger && !effect.spawnTimes.empty()) {
 				float totalStaggerTime = effect.spawnTimes.back();
 				ImGui::Text("Total Stagger Time: %.3f sec", totalStaggerTime);
@@ -458,47 +460,47 @@ void LightningEffectManager::UpdateLinearEffectPosition(EffectData& effect)
 	lightning->GetTransform().translate = targetPos;
 
 	auto& config = lightning->GetConfig();
-	
+
 	// 設定が変更されたかチェック
 	bool needsUpdate = false;
-	
+
 	if (config.startPoint.x != effect.linearConfig.startOffset.x ||
 		config.startPoint.y != effect.linearConfig.startOffset.y ||
 		config.startPoint.z != effect.linearConfig.startOffset.z) {
 		config.startPoint = effect.linearConfig.startOffset;
 		needsUpdate = true;
 	}
-	
+
 	if (config.endPoint.x != effect.linearConfig.endOffset.x ||
 		config.endPoint.y != effect.linearConfig.endOffset.y ||
 		config.endPoint.z != effect.linearConfig.endOffset.z) {
 		config.endPoint = effect.linearConfig.endOffset;
 		needsUpdate = true;
 	}
-	
+
 	if (config.noiseScale != effect.linearConfig.noiseScale) {
 		config.noiseScale = effect.linearConfig.noiseScale;
 		needsUpdate = true;
 	}
-	
+
 	if (config.noiseSpeed != effect.linearConfig.noiseSpeed) {
 		config.noiseSpeed = effect.linearConfig.noiseSpeed;
 	}
-	
+
 	if (config.segmentCount != effect.linearConfig.segmentCount) {
 		config.segmentCount = effect.linearConfig.segmentCount;
 		needsUpdate = true;
 	}
-	
+
 	if (config.enableAnimation != effect.linearConfig.enableAnimation) {
 		config.enableAnimation = effect.linearConfig.enableAnimation;
 	}
-	
+
 	if (config.pathType != effect.linearConfig.pathType) {
 		config.pathType = effect.linearConfig.pathType;
 		needsUpdate = true;
 	}
-	
+
 	// 変更があった場合は再生成をリクエスト
 	if (needsUpdate) {
 		lightning->ApplyConfigChanges();
@@ -508,7 +510,7 @@ void LightningEffectManager::UpdateLinearEffectPosition(EffectData& effect)
 void LightningEffectManager::UpdateStaggeredSpawns(EffectData& effect)
 {
 	// 時間差出現が無効または全て出現済みの場合は何もしない
-	if (!effect.config.enableStagger || 
+	if (!effect.config.enableStagger ||
 		effect.currentSpawnIndex >= static_cast<int>(effect.spawnTimes.size())) {
 		return;
 	}
@@ -516,7 +518,7 @@ void LightningEffectManager::UpdateStaggeredSpawns(EffectData& effect)
 	// 現在の時刻で出現すべき雷を表示
 	while (effect.currentSpawnIndex < static_cast<int>(effect.spawnTimes.size())) {
 		float spawnTime = effect.spawnTimes[effect.currentSpawnIndex];
-		
+
 		// まだ出現時刻に達していない場合は終了
 		if (effect.timer < spawnTime) {
 			break;
@@ -525,7 +527,7 @@ void LightningEffectManager::UpdateStaggeredSpawns(EffectData& effect)
 		// 雷を表示
 		int lightningIndex = effect.spawnOrder[effect.currentSpawnIndex];
 		SetLightningVisibility(effect, lightningIndex, true);
-		
+
 		effect.currentSpawnIndex++;
 	}
 }

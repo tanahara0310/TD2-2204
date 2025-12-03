@@ -6,11 +6,9 @@
 //ゲームオブジェクトのインクルード
 #include "Object3d.h"
 #include "../../GameObject/Voxel/Voxel.h"
-#include "../../Effect/Lightning/LightningEffectManager.h"
 #include "../../GameObject/Title/TitleUI.h"
+#include "../../Utility/KeyConfig.h"
 
-// パーティクルシステム
-#include "Engine/Particle/ParticleSystem.h"
 
 class EngineSystem;
 class CameraManager;
@@ -31,8 +29,8 @@ public:
 	void Finalize() override;
 
 private:
-	/// @brief 電気パーティクルエフェクトを作成
-	void CreateElectricParticleEffect();
+	// /// @brief 電気パーティクルエフェクトを作成
+	// void CreateElectricParticleEffect();
 
 	/// @brief シーン遷移の処理
 	void UpdateSceneTransition(float deltaTime);
@@ -40,11 +38,9 @@ private:
 private:
 	std::unique_ptr<TitleUI> titleUI_;
 	
-	// パーティクルシステム
-	ParticleSystem* electricParticle_ = nullptr;
+	// キーコンフィグ
+	KeyConfig keyConfig_;
 	
-	// 雷エフェクトマネージャー
-	std::unique_ptr<LightningEffectManager> lightningManager_;
 	
 	// シーン遷移フラグとタイマー
 	bool isTransitioning_ = false;
