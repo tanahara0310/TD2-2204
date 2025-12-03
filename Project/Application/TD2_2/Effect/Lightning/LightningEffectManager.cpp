@@ -56,6 +56,7 @@ int LightningEffectManager::CreateCircularEffect(GameObject* target, const Spher
 
 	// エフェクトデータを作成
 	EffectData effectData;
+	effectData.type = EffectType::Spherical;
 	effectData.target = target;
 	effectData.config = config;
 	effectData.visibility.resize(config.lightningCount, false);
@@ -97,16 +98,98 @@ int LightningEffectManager::CreateCircularEffect(GameObject* target, const Spher
 	return effectId;
 }
 
+int LightningEffectManager::CreateLinearEffect(GameObject* target, const LinearEffectConfig& config,
+	std::vector<std::unique_ptr<IDrawable>>& gameObjects)
+{
+	if (!target || !voxelModelResource_) {
+		return -1;
+	}
+
+	// エフェクトデータを作成
+	EffectData effectData;
+	effectData.type = EffectType::Linear;
+	effectData.target = target;
+	effectData.linearConfig = config;
+	effectData.visibility.resize(1, false);
+
+	// 雷の設定
+	Lightning::Config lightningConfig;
+	lightningConfig.startPoint = config.startOffset;
+	lightningConfig.endPoint = config.endOffset;
+	lightningConfig.segmentCount = config.segmentCount;
+	lightningConfig.noiseScale = config.noiseScale;
+	lightningConfig.noiseSpeed = config.noiseSpeed;
+	lightningConfig.enableAnimation = config.enableAnimation;
+	lightningConfig.color = config.color;
+	lightningConfig.pathType = config.pathType;
+
+	auto lightning = std::make_unique<Lightning>();
+	lightning->Initialize(voxelModelResource_, voxelTexture_, lightningConfig,
+		"Lightning_Linear_" + std::to_string(nextEffectId_));
+	lightning->SetActive(true);
+
+	effectData.lightnings.push_back(lightning.get());
+	gameObjects.push_back(std::move(lightning));
+
+	int effectId = nextEffectId_++;
+	effects_.push_back(std::move(effectData));
+	return effectId;
+}
+
+int LightningEffectManager::CreateLinearEffectAtPosition(const Vector3& position, const LinearEffectConfig& config,
+	std::vector<std::unique_ptr<IDrawable>>& gameObjects)
+{
+	if (!voxelModelResource_) {
+		return -1;
+	}
+
+	// エフェクトデータを作成（targetはnullptr、固定座標を使用）
+	EffectData effectData;
+	effectData.type = EffectType::Linear;
+	effectData.target = nullptr;
+	effectData.fixedPosition = position;
+	effectData.linearConfig = config;
+	effectData.visibility.resize(1, false);
+
+	// 雷の設定
+	Lightning::Config lightningConfig;
+	lightningConfig.startPoint = config.startOffset;
+	lightningConfig.endPoint = config.endOffset;
+	lightningConfig.segmentCount = config.segmentCount;
+	lightningConfig.noiseScale = config.noiseScale;
+	lightningConfig.noiseSpeed = config.noiseSpeed;
+	lightningConfig.enableAnimation = config.enableAnimation;
+	lightningConfig.color = config.color;
+	lightningConfig.pathType = config.pathType;
+
+	auto lightning = std::make_unique<Lightning>();
+	lightning->Initialize(voxelModelResource_, voxelTexture_, lightningConfig,
+		"Lightning_Fixed_" + std::to_string(nextEffectId_));
+	lightning->SetActive(true);
+	lightning->GetTransform().translate = position;
+
+	effectData.lightnings.push_back(lightning.get());
+	gameObjects.push_back(std::move(lightning));
+
+	int effectId = nextEffectId_++;
+	effects_.push_back(std::move(effectData));
+	return effectId;
+}
+
 void LightningEffectManager::UpdateAllEffects()
 {
 	for (auto& effect : effects_) {
 		if (!effect.target) continue;
 
 		// 位置を更新
-		UpdateEffectPosition(effect);
+		if (effect.type == EffectType::Spherical) {
+			UpdateEffectPosition(effect);
+		} else if (effect.type == EffectType::Linear) {
+			UpdateLinearEffectPosition(effect);
+		}
 
-		// タイマーを更新
-		if (effect.isActive) {
+		// タイマーを更新（球面エフェクトのみ）
+		if (effect.type == EffectType::Spherical && effect.isActive) {
 			// 時間差出現を更新
 			UpdateStaggeredSpawns(effect);
 			
@@ -198,6 +281,15 @@ LightningEffectManager::SphericalEffectConfig& LightningEffectManager::GetEffect
 	return effects_[effectId].config;
 }
 
+LightningEffectManager::LinearEffectConfig& LightningEffectManager::GetLinearEffectConfig(int effectId)
+{
+	static LinearEffectConfig dummy;
+	if (effectId < 0 || effectId >= static_cast<int>(effects_.size())) {
+		return dummy;
+	}
+	return effects_[effectId].linearConfig;
+}
+
 void LightningEffectManager::DrawDebugUI(int effectId, const char* windowName)
 {
 #ifdef _DEBUG
@@ -208,76 +300,118 @@ void LightningEffectManager::DrawDebugUI(int effectId, const char* windowName)
 	EffectData& effect = effects_[effectId];
 
 	if (ImGui::Begin(windowName)) {
-		if (ImGui::Button("Test Effect")) {
-			StartEffect(effectId);
-		}
-
-		ImGui::Text("Active: %s", effect.isActive ? "Yes" : "No");
+		// エフェクトタイプを表示
+		const char* typeStr = (effect.type == EffectType::Spherical) ? "Spherical" : "Linear";
+		ImGui::Text("Effect Type: %s", typeStr);
 		ImGui::Text("Effect ID: %d", effectId);
-
 		ImGui::Separator();
 
-		// 半径変更時は球面位置を再計算
-		float oldRadius = effect.config.radius;
-		ImGui::DragFloat("Radius", &effect.config.radius, 0.1f, 0.5f, 10.0f);
-		if (oldRadius != effect.config.radius) {
-			effect.sphericalPositions = GenerateSphericalPoints(
-				static_cast<int>(effect.lightnings.size()), 
-				effect.config.radius
-			);
-		}
-
-		if (ImGui::ColorEdit4("Color", &effect.config.color.x)) {
-			UpdateLightningColors(effect);
-		}
-
-		ImGui::DragFloat("Arc Length", &effect.config.arcLength, 0.01f, 0.1f, 2.0f);
-		if (ImGui::IsItemHovered()) {
-			ImGui::SetTooltip("雷の長さ（半径に対する比率）");
-		}
-
-		ImGui::DragInt("Visible Count", &effect.config.visibleCount, 1.0f, 0, effect.config.lightningCount);
-		if (ImGui::IsItemHovered()) {
-			ImGui::SetTooltip("表示する雷の数（常に一定）");
-		}
-
-		ImGui::Separator();
-		ImGui::Text("Timing Settings");
-		
-		ImGui::DragFloat("Duration", &effect.config.effectDuration, 0.01f, 0.1f, 2.0f);
-		if (ImGui::IsItemHovered()) {
-			ImGui::SetTooltip("エフェクト全体の継続時間");
-		}
-
-		ImGui::Checkbox("Enable Stagger", &effect.config.enableStagger);
-		if (ImGui::IsItemHovered()) {
-			ImGui::SetTooltip("雷を時間差で出現させる");
-		}
-
-		if (effect.config.enableStagger) {
-			ImGui::DragFloat("Stagger Delay", &effect.config.staggerDelay, 0.01f, 0.0f, 0.5f);
-			if (ImGui::IsItemHovered()) {
-				ImGui::SetTooltip("各雷の出現間隔（秒）");
+		if (effect.type == EffectType::Spherical) {
+			// 球面エフェクトのUI
+			if (ImGui::Button("Test Effect")) {
+				StartEffect(effectId);
 			}
-		}
 
-		ImGui::Separator();
-		ImGui::Text("Visual Settings");
-		
-		ImGui::DragFloat("Noise Scale", &effect.config.noiseScale, 0.01f, 0.0f, 2.0f);
-		ImGui::DragFloat("Noise Speed", &effect.config.noiseSpeed, 0.1f, 0.0f, 30.0f);
+			ImGui::Text("Active: %s", effect.isActive ? "Yes" : "No");
 
-		ImGui::Separator();
-		ImGui::Text("Debug Info");
-		
-		ImGui::Text("Total Lightnings: %zu", effect.lightnings.size());
-		ImGui::Text("Target Visible: %d", effect.config.visibleCount);
-		ImGui::Text("Currently Spawned: %d", effect.currentSpawnIndex);
-		ImGui::Text("Timer: %.2f / %.2f", effect.timer, effect.config.effectDuration);
-		
-		if (effect.config.enableStagger && !effect.spawnTimes.empty()) {
-			float totalStaggerTime = effect.spawnTimes.back();
-			ImGui::Text("Total Stagger Time: %.3f sec", totalStaggerTime);
+			ImGui::Separator();
+
+			// 半径変更時は球面位置を再計算
+			float oldRadius = effect.config.radius;
+			ImGui::DragFloat("Radius", &effect.config.radius, 0.1f, 0.5f, 10.0f);
+			if (oldRadius != effect.config.radius) {
+				effect.sphericalPositions = GenerateSphericalPoints(
+					static_cast<int>(effect.lightnings.size()), 
+					effect.config.radius
+				);
+			}
+
+			if (ImGui::ColorEdit4("Color", &effect.config.color.x)) {
+				UpdateLightningColors(effect);
+			}
+
+			ImGui::DragFloat("Arc Length", &effect.config.arcLength, 0.01f, 0.1f, 2.0f);
+			if (ImGui::IsItemHovered()) {
+				ImGui::SetTooltip("雷の長さ（半径に対する比率）");
+			}
+
+			ImGui::DragInt("Visible Count", &effect.config.visibleCount, 1.0f, 0, effect.config.lightningCount);
+			if (ImGui::IsItemHovered()) {
+				ImGui::SetTooltip("表示する雷の数（常に一定）");
+			}
+
+			ImGui::Separator();
+			ImGui::Text("Timing Settings");
+			
+			ImGui::DragFloat("Duration", &effect.config.effectDuration, 0.01f, 0.1f, 2.0f);
+			if (ImGui::IsItemHovered()) {
+				ImGui::SetTooltip("エフェクト全体の継続時間");
+			}
+
+			ImGui::Checkbox("Enable Stagger", &effect.config.enableStagger);
+			if (ImGui::IsItemHovered()) {
+				ImGui::SetTooltip("雷を時間差で出現させる");
+			}
+
+			if (effect.config.enableStagger) {
+				ImGui::DragFloat("Stagger Delay", &effect.config.staggerDelay, 0.01f, 0.0f, 0.5f);
+				if (ImGui::IsItemHovered()) {
+					ImGui::SetTooltip("各雷の出現間隔（秒）");
+				}
+			}
+
+			ImGui::Separator();
+			ImGui::Text("Visual Settings");
+			
+			ImGui::DragFloat("Noise Scale", &effect.config.noiseScale, 0.01f, 0.0f, 2.0f);
+			ImGui::DragFloat("Noise Speed", &effect.config.noiseSpeed, 0.1f, 0.0f, 30.0f);
+
+			ImGui::Separator();
+			ImGui::Text("Debug Info");
+			
+			ImGui::Text("Total Lightnings: %zu", effect.lightnings.size());
+			ImGui::Text("Target Visible: %d", effect.config.visibleCount);
+			ImGui::Text("Currently Spawned: %d", effect.currentSpawnIndex);
+			ImGui::Text("Timer: %.2f / %.2f", effect.timer, effect.config.effectDuration);
+			
+			if (effect.config.enableStagger && !effect.spawnTimes.empty()) {
+				float totalStaggerTime = effect.spawnTimes.back();
+				ImGui::Text("Total Stagger Time: %.3f sec", totalStaggerTime);
+			}
+		} else if (effect.type == EffectType::Linear) {
+			// 直線エフェクトのUI
+			if (ImGui::DragFloat3("Start Offset", &effect.linearConfig.startOffset.x, 0.1f)) {
+				UpdateLinearEffectPosition(effect);
+			}
+
+			if (ImGui::DragFloat3("End Offset", &effect.linearConfig.endOffset.x, 0.1f)) {
+				UpdateLinearEffectPosition(effect);
+			}
+
+			if (ImGui::ColorEdit4("Color", &effect.linearConfig.color.x)) {
+				if (!effect.lightnings.empty() && effect.lightnings[0]) {
+					effect.lightnings[0]->GetConfig().color = effect.linearConfig.color;
+				}
+			}
+
+			ImGui::DragFloat("Noise Scale", &effect.linearConfig.noiseScale, 0.01f, 0.0f, 2.0f);
+			ImGui::DragFloat("Noise Speed", &effect.linearConfig.noiseSpeed, 0.1f, 0.0f, 30.0f);
+			ImGui::DragInt("Segment Count", &effect.linearConfig.segmentCount, 1.0f, 2, 50);
+
+			const char* pathTypes[] = { "Linear", "CircularArc" };
+			int currentType = static_cast<int>(effect.linearConfig.pathType);
+			if (ImGui::Combo("Path Type", &currentType, pathTypes, 2)) {
+				effect.linearConfig.pathType = static_cast<Lightning::PathType>(currentType);
+				if (!effect.lightnings.empty() && effect.lightnings[0]) {
+					effect.lightnings[0]->GetConfig().pathType = effect.linearConfig.pathType;
+				}
+			}
+
+			ImGui::Checkbox("Enable Animation", &effect.linearConfig.enableAnimation);
+
+			ImGui::Separator();
+			ImGui::Text("Debug Info");
+			ImGui::Text("Total Lightnings: %zu", effect.lightnings.size());
 		}
 	}
 	ImGui::End();
@@ -308,6 +442,66 @@ void LightningEffectManager::UpdateEffectPosition(EffectData& effect)
 		auto& config = lightning->GetConfig();
 		config.startPoint = startPos;
 		config.endPoint = endPos;
+	}
+}
+
+void LightningEffectManager::UpdateLinearEffectPosition(EffectData& effect)
+{
+	if (effect.lightnings.empty() || !effect.lightnings[0]) {
+		return;
+	}
+
+	// 位置の取得（targetがあればその位置、なければ固定座標）
+	Vector3 targetPos = effect.target ? effect.target->GetWorldPosition() : effect.fixedPosition;
+
+	auto* lightning = effect.lightnings[0];
+	lightning->GetTransform().translate = targetPos;
+
+	auto& config = lightning->GetConfig();
+	
+	// 設定が変更されたかチェック
+	bool needsUpdate = false;
+	
+	if (config.startPoint.x != effect.linearConfig.startOffset.x ||
+		config.startPoint.y != effect.linearConfig.startOffset.y ||
+		config.startPoint.z != effect.linearConfig.startOffset.z) {
+		config.startPoint = effect.linearConfig.startOffset;
+		needsUpdate = true;
+	}
+	
+	if (config.endPoint.x != effect.linearConfig.endOffset.x ||
+		config.endPoint.y != effect.linearConfig.endOffset.y ||
+		config.endPoint.z != effect.linearConfig.endOffset.z) {
+		config.endPoint = effect.linearConfig.endOffset;
+		needsUpdate = true;
+	}
+	
+	if (config.noiseScale != effect.linearConfig.noiseScale) {
+		config.noiseScale = effect.linearConfig.noiseScale;
+		needsUpdate = true;
+	}
+	
+	if (config.noiseSpeed != effect.linearConfig.noiseSpeed) {
+		config.noiseSpeed = effect.linearConfig.noiseSpeed;
+	}
+	
+	if (config.segmentCount != effect.linearConfig.segmentCount) {
+		config.segmentCount = effect.linearConfig.segmentCount;
+		needsUpdate = true;
+	}
+	
+	if (config.enableAnimation != effect.linearConfig.enableAnimation) {
+		config.enableAnimation = effect.linearConfig.enableAnimation;
+	}
+	
+	if (config.pathType != effect.linearConfig.pathType) {
+		config.pathType = effect.linearConfig.pathType;
+		needsUpdate = true;
+	}
+	
+	// 変更があった場合は再生成をリクエスト
+	if (needsUpdate) {
+		lightning->ApplyConfigChanges();
 	}
 }
 

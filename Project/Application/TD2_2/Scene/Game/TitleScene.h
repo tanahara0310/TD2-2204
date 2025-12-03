@@ -6,7 +6,7 @@
 //ゲームオブジェクトのインクルード
 #include "Object3d.h"
 #include "../../GameObject/Voxel/Voxel.h"
-#include "../../Effect/Lightning/Lightning.h"
+#include "../../Effect/Lightning/LightningEffectManager.h"
 #include "../../GameObject/Title/TitleUI.h"
 
 // パーティクルシステム
@@ -43,9 +43,8 @@ private:
 	// パーティクルシステム
 	ParticleSystem* electricParticle_ = nullptr;
 	
-	// 共有リソース（Lightning用）
-	ModelResource* voxelModelResource_ = nullptr;
-	TextureManager::LoadedTexture voxelTexture_;
+	// 雷エフェクトマネージャー
+	std::unique_ptr<LightningEffectManager> lightningManager_;
 	
 	// シーン遷移フラグとタイマー
 	bool isTransitioning_ = false;

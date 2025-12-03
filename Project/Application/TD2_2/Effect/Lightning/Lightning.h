@@ -56,6 +56,9 @@ public:
 	Config& GetConfig() { return config_; }
 	const Config& GetConfig() const { return config_; }
 
+	/// @brief 設定変更を反映（再生成をトリガー）
+	void ApplyConfigChanges() { RequestRegeneration(); }
+
 private:
 	/// @brief パスポイントを生成
 	void GeneratePath();
