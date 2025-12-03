@@ -14,6 +14,7 @@
 #include "../../Collider/CollisionConfig.h"
 #include "../../Camera/CameraController.h"
 #include "../../AI/BehaviorTree/BehaviorTree.h"
+#include "../../Effect/Lightning/LightningEffectManager.h"
 
 class EngineSystem;
 class CameraManager;

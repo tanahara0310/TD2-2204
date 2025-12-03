@@ -289,6 +289,7 @@
     <ClCompile Include="Application\TD2_2\UI\HitPoint\HitPoint.cpp" />
     <ClCompile Include="Application\TD2_2\GameObject\Result\ResultUI.cpp" />
     <ClCompile Include="Application\TD2_2\Effect\Lightning\Lightning.cpp" />
+    <ClCompile Include="Application\TD2_2\Effect\Lightning\LightningEffectManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Engine\WinApp\WinApp.h">
@@ -738,6 +739,7 @@
     <ClInclude Include="Application\TD2_2\GameObject\Background\Background.h" />
     <ClInclude Include="Application\TD2_2\GameObject\Frame\Frame.h" />
     <ClInclude Include="Application\TD2_2\Scene\Config\GameSceneConfig.h" />
+    <ClInclude Include="Application\TD2_2\Effect\Lightning\LightningEffectManager.h" />
     <ClInclude Include="Application\TD2_2\UI\HitPoint\HitPoint.h" />
     <ClInclude Include="Application\TD2_2\GameObject\Result\ResultUI.h" />
   </ItemGroup>
