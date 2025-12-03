@@ -44,6 +44,10 @@ public:
    void SetMaxCollisionResponse(float v) { maxCollisionResponse_ = v; }
    float GetMaxCollisionResponse() const { return maxCollisionResponse_; }
 
+   // HP取得
+   int GetHP() const { return hp_; }
+   int GetMaxHP() const { return maxHp_; }
+
    //======================================================================
    // ビヘイビアツリー関連
    //======================================================================
@@ -77,6 +81,12 @@ private:
    float stunMaxSpeed_ = 35.0f;     // スタン最大速度
    GameTimer stunTimer_;            // スタンタイマー
 
+   // デスポーン・リスポーン
+   float despawnDuration_ = 0.5f; // デスポーン持続時間（秒）
+   float respawnDuration_ = 0.5f; // リスポーン持続時間（秒）
+   GameTimer despawnTimer_;
+   GameTimer respawnTimer_;
+
    // ノックバックによる中心バイアス増加
    GameTimer knockbackBiasTimer_;
    float knockbackBiasMultiplier_ = 1.0f; // 1.0 = 通常, 小さいほど中心バイアスが強くなる
@@ -86,6 +96,9 @@ private:
    
    // ビヘイビアツリー
    std::unique_ptr<BehaviorTree> behaviorTree_;
+
+   int hp_ = 3;
+   int maxHp_ = 3;
 
 private:
    /// @brief コライダーの初期化
@@ -109,4 +122,25 @@ private:
 
    /// @brief 通常状態の処理
    void Normal();
+
+   /// @brief ダメージ処理
+   void Damage();
+
+   /// @brief ダメージ初期化
+   void InitializeDamage();
+
+   /// @brief デスポーン処理
+   void Despawn();
+
+   /// @brief デスポーン初期化
+   void InitializeDespawn();
+
+   /// @brief リスポーン処理
+   void Respawn();
+
+   /// @brief リスポーン初期化
+   void InitializeRespawn();
+
+   /// @brief ダメージ壁との接触判定
+   void CheckDamageWallCollision();
 };

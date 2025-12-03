@@ -18,12 +18,12 @@ public:
    /// @param bulletSpawnFunc 弾生成関数
    /// @param offsetRadius 発射位置のオフセット半径
    /// @param shootInterval 連続発射の間隔（秒）、0なら一斉発射
-   /// @param bulletSpeed 弾の速度（デフォルト: 30.0f）
+   /// @param bulletSpeed 弾の速度（デフォルト: 20.0f）
    ShootEightWayAction(Boss* boss,
                        BulletSpawnFunction bulletSpawnFunc,
-                       float offsetRadius = 5.0f,
+                       float offsetRadius = 4.0f,
                        float shootInterval = 0.0f,
-                       float bulletSpeed = 30.0f);
+                       float bulletSpeed = 20.0f);
 
    ~ShootEightWayAction() override = default;
 

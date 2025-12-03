@@ -9,6 +9,8 @@ void Bullet::Initialize(std::unique_ptr<Model> model, TextureManager::LoadedText
 
    transform_.scale = { initialScale_, initialScale_, initialScale_ }; // 最初は小さく始める
 
+   transform_.TransferMatrix();
+
    // 方向ベクトルを正規化して速度ベクトルを設定
    float length = std::sqrt(direction.x * direction.x + direction.y * direction.y + direction.z * direction.z);
    if (length > 0.0f) {
@@ -51,6 +53,8 @@ void Bullet::Update() {
 		 isActive_ = false;
 	  }
    }
+
+   CheckOutOfBounds();
 
    // トランスフォームの更新
    transform_.TransferMatrix();
@@ -95,7 +99,7 @@ void Bullet::InitializeStateMachine() {
 }
 
 void Bullet::InitializeScaleUpState() {
-   scaleUpTimer_.Start(0.3f, false);
+   scaleUpTimer_.Start(0.5f, false);
 }
 
 void Bullet::ScaleUp() {
@@ -118,4 +122,13 @@ void Bullet::Move() {
    // 位置を更新
    transform_.translate.x += velocity_.x * GameUtils::GetDeltaTime();
    transform_.translate.y += velocity_.y * GameUtils::GetDeltaTime();
+}
+
+void Bullet::CheckOutOfBounds() {
+   // 画面外に出たら非アクティブにする
+   const float kOutOfBoundsMargin = 0.0f; // 余裕を持たせる
+   if (std::abs(transform_.translate.x) > GameSceneConfig::kMoveableAreaSize.x * 0.5f + kOutOfBoundsMargin ||
+	   std::abs(transform_.translate.y) > GameSceneConfig::kMoveableAreaSize.y * 0.5f + kOutOfBoundsMargin) {
+	  isActive_ = false;
+   }
 }

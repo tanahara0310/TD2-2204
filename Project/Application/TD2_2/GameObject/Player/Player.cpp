@@ -42,9 +42,20 @@ void Player::Update() {
 	  stateMachine_->RequestState("Damage", 1);
    }
 
+   // ダメージ壁との接触判定（ダメージ状態以外、かつ無敵時間でない場合のみ）
+   if (stateMachine_->GetCurrentState() != "Damage" &&
+       stateMachine_->GetCurrentState() != "Despawn" &&
+       stateMachine_->GetCurrentState() != "Respawn" &&
+       !IsInvincible()) {
+      CheckDamageWallCollision();
+   }
+
    stateMachine_->Update();
 
    GameObject::UpdateModelSwapAnimation();
+
+   // 無敵時間の更新
+   GameObject::UpdateInvincibility();
 
    UpdateRotation();
 
@@ -63,6 +74,11 @@ void Player::Draw(const ICamera* camera) {
 }
 
 void Player::OnCollisionEnter(GameObject* other) {
+
+   // 無敵時間中は衝突処理をスキップ
+   if (IsInvincible()) {
+      return;
+   }
 
    if (hitEnemyFunction_) {
 	  hitEnemyFunction_();
@@ -112,6 +128,11 @@ void Player::OnCollisionEnter(GameObject* other) {
 }
 
 void Player::OnCollisionStay(GameObject* other) {
+   // 無敵時間中は衝突処理をスキップ
+   if (IsInvincible()) {
+      return;
+   }
+
    if (hitEnemyFunction_) {
 	  hitEnemyFunction_();
    }
@@ -185,11 +206,15 @@ void Player::InitializeStateMachine() {
    stateMachine_->AddState("Move", std::bind(&Player::InitializeMove, this), std::bind(&Player::Move, this));
    stateMachine_->AddState("Stun", std::bind(&Player::InitializeStun, this), std::bind(&Player::Stun, this));
    stateMachine_->AddState("Damage", std::bind(&Player::InitializeDamage, this), std::bind(&Player::Damage, this));
+   stateMachine_->AddState("Despawn", std::bind(&Player::InitializeDespawn, this), std::bind(&Player::Despawn, this));
+   stateMachine_->AddState("Respawn", std::bind(&Player::InitializeRespawn, this), std::bind(&Player::Respawn, this));
 
    stateMachine_->AddTransitionRule("Charge", { "Move" ,"Stun" ,"Damage" });
    stateMachine_->AddTransitionRule("Move", { "Charge" ,"Stun" ,"Damage" });
    stateMachine_->AddTransitionRule("Stun", { "Move" ,"Damage" });
-   stateMachine_->AddTransitionRule("Damage", { "Move" });
+   stateMachine_->AddTransitionRule("Damage", { "Despawn" });
+   stateMachine_->AddTransitionRule("Despawn", { "Respawn" });
+   stateMachine_->AddTransitionRule("Respawn", { "Move" });
 }
 
 void Player::InitializeCollider() {
@@ -270,7 +295,9 @@ void Player::Damage() {
 
    if (GameObject::UpdateShake()) return;
 
-   stateMachine_->RequestState("Move", 0);
+   // HPを減らしてデスポーンステートに遷移
+   hp_--;
+   stateMachine_->RequestState("Despawn", 0);
 }
 
 void Player::InitializeCharge() {
@@ -322,4 +349,68 @@ void Player::InitializeDamage() {
    ChangeToRegisteredModel("Damage");
 
    isCharging_ = false;
+}
+
+void Player::InitializeDespawn() {
+   despawnTimer_.Start(despawnDuration_, false);
+   velocity_ = { 0.0f, 0.0f };
+   acceleration_ = { 0.0f, 0.0f };
+   
+   StopModelSwapAnimation();
+   ChangeToRegisteredModel("Damage");
+   
+   isCharging_ = false;
+}
+
+void Player::Despawn() {
+   despawnTimer_.Update(GameUtils::GetDeltaTime());
+   
+   // スケールを0にイージング
+   float progress = despawnTimer_.GetEasedProgress(EasingUtil::Type::EaseInCubic);
+   float scale = GameUtils::Lerp(1.0f, 0.0f, progress);
+   transform_.scale = { scale, scale, scale };
+   
+   if (despawnTimer_.IsFinished()) {
+      stateMachine_->RequestState("Respawn", 0);
+   }
+}
+
+void Player::InitializeRespawn() {
+   respawnTimer_.Start(respawnDuration_, false);
+   
+   // ポジションをステージ中央に設定
+   transform_.translate = { 0.0f, 0.0f, 0.0f };
+   
+   velocity_ = { 0.0f, 0.0f };
+   acceleration_ = { 0.0f, 0.0f };
+
+   StartModelSwapAnimation("Player1", "Player2", 0.02f, true);
+}
+
+void Player::Respawn() {
+   respawnTimer_.Update(GameUtils::GetDeltaTime());
+   
+   // スケールを1に戻すイージング
+   float progress = respawnTimer_.GetEasedProgress(EasingUtil::Type::EaseOutCubic);
+   float scale = GameUtils::Lerp(0.0f, 1.0f, progress);
+   transform_.scale = { scale, scale, scale };
+   
+   if (respawnTimer_.IsFinished()) {
+      // リスポーン完了時に無敵時間を開始（2秒間、0.1秒間隔で点滅）
+      StartInvincibility(2.0f, 0.1f);
+      stateMachine_->RequestState("Move", 0);
+   }
+}
+
+void Player::CheckDamageWallCollision() {
+   // ダメージ壁の範囲を計算（フレームより1ブロック内側）
+   float damageWallHalfWidth = (GameSceneConfig::kMoveableAreaSize.x * 0.5f) - GameSceneConfig::kFrameSize.x;
+   float damageWallHalfHeight = (GameSceneConfig::kMoveableAreaSize.y * 0.5f) - GameSceneConfig::kFrameSize.y;
+   
+   // プレイヤーがダメージ壁に接触したか判定
+   if (std::abs(transform_.translate.x) >= damageWallHalfWidth ||
+       std::abs(transform_.translate.y) >= damageWallHalfHeight) {
+      // ダメージステートに遷移
+      stateMachine_->RequestState("Damage", 1);
+   }
 }

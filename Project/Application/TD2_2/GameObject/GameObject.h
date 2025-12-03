@@ -44,6 +44,15 @@ public:
    /// @return コライダーポインタ
    Collider* GetCollider() const { return collider_.get(); }
 
+   /// @brief 無敵状態かどうかを取得
+   /// @return 無敵状態ならtrue
+   bool IsInvincible() const { return invincibleTimer_.IsActive(); }
+
+   /// @brief 無敵時間を開始
+   /// @param duration 無敵時間（秒）
+   /// @param blinkInterval 点滅間隔（秒）
+   void StartInvincibility(float duration, float blinkInterval = 0.1f);
+
    /// @brief 方向に応じて軸を傾ける（滑らかに補間）
    /// @param dir 方向ベクトル（x: 左右, y: 前後）
    void TiltByVelocity(const Vector2& dir);
@@ -116,6 +125,9 @@ protected:
 
    bool UpdateShake();
 
+   /// @brief 無敵時間と点滅の更新処理（Updateから呼び出す）
+   void UpdateInvincibility();
+
    /// @brief モデル切り替えアニメーションの更新処理（Updateから呼び出す）
    void UpdateModelSwapAnimation();
 
@@ -135,6 +147,13 @@ private:
 
    Vector3 basePosition_ = { 0.0f, 0.0f, 0.0f };
    float shakeIntensity_ = 0.0f;
+
+   // 無敵時間システム
+   GameTimer invincibleTimer_;
+   GameTimer blinkTimer_;
+   float blinkInterval_ = 0.1f;
+   bool isVisible_ = true;
+   Vector4 originalColor_ = { 1.0f, 1.0f, 1.0f, 1.0f };
 
    // モデル切り替えアニメーション用
    GameTimer modelSwapTimer_;
