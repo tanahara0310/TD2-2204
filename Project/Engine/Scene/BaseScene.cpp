@@ -183,8 +183,13 @@ void BaseScene::SetupCamera()
 	debugCamera->Initialize(engine_, dxCommon->GetDevice());
 	cameraManager_->RegisterCamera("Debug", std::move(debugCamera));
 
-	// デフォルトでデバッグカメラをアクティブに設定
+#ifdef _DEBUG
+	// デバッグビルドではデバッグカメラをアクティブに設定
 	cameraManager_->SetActiveCamera("Debug", CameraType::Camera3D);
+#else
+	// リリースビルドではリリースカメラをアクティブに設定
+	cameraManager_->SetActiveCamera("Release", CameraType::Camera3D);
+#endif
 
 	// ===== 2Dカメラの設定 =====
 

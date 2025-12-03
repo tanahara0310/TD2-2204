@@ -80,6 +80,9 @@ void TitleScene::Update() {
 
 		// 決定ボタン（キーボード or ゲームパッド）
 		if (keyConfig_.GetDown("Confirm")) {
+			// 決定アニメーション開始
+			titleUI_->OnConfirm();
+
 			switch (titleUI_->GetSelectionState()) {
 			case TitleUI::SelectionState::Start:
 				// 遷移開始
