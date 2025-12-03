@@ -20,58 +20,52 @@
 void TitleScene::Initialize(EngineSystem* engine) {
 	BaseScene::Initialize(engine);
 
-	// 共有リソースの読み込み（Lightning用）
+	// 雷エフェクトマネージャーの初期化
 	{
 		auto modelManager = engine->GetComponent<ModelManager>();
 		auto& textureManager = TextureManager::GetInstance();
 
-		// ボクセルモデルリソースを取得（事前読み込み）
-		modelManager->LoadModelResource("Resources/Models/Voxel/", "voxel.obj");
-		voxelModelResource_ = modelManager->GetModelResource("Resources/Models/Voxel/voxel.obj");
-		voxelTexture_ = textureManager.Load("Resources/SampleResources/white1x1.png");
-
+		lightningManager_ = std::make_unique<LightningEffectManager>();
+		lightningManager_->Initialize(modelManager, &textureManager);
 	}
 
 	// ゲームオブジェクトの初期化
 	{
 		// 雷エフェクト1本目（左側・青色）
-		auto lightning1 = std::make_unique<Lightning>();
-		Lightning::Config config1;
-		config1.startPoint = { -3.0f, 5.0f, 0.0f };
-		config1.endPoint = { -3.0f, 0.0f, 0.0f };
+		LightningEffectManager::LinearEffectConfig config1;
+		config1.startOffset = { 0.0f, 5.0f, 0.0f };
+		config1.endOffset = { 0.0f, 0.0f, 0.0f };
 		config1.segmentCount = 15;
 		config1.noiseScale = 0.6f;
 		config1.noiseSpeed = 1.5f;
 		config1.enableAnimation = true;
 		config1.color = { 0.3f, 0.5f, 1.0f, 1.0f };
-		lightning1->Initialize(voxelModelResource_, voxelTexture_, config1, "Lightning_Left_Blue");
-		gameObjects_.push_back(std::move(lightning1));
+		config1.pathType = Lightning::PathType::Linear;
+		lightningManager_->CreateLinearEffectAtPosition({ -3.0f, 0.0f, 0.0f }, config1, gameObjects_);
 
 		// 雷エフェクト2本目（中央・赤色）
-		auto lightning2 = std::make_unique<Lightning>();
-		Lightning::Config config2;
-		config2.startPoint = { 0.0f, 5.0f, 0.0f };
-		config2.endPoint = { 0.0f, 0.0f, 0.0f };
+		LightningEffectManager::LinearEffectConfig config2;
+		config2.startOffset = { 0.0f, 5.0f, 0.0f };
+		config2.endOffset = { 0.0f, 0.0f, 0.0f };
 		config2.segmentCount = 20;
 		config2.noiseScale = 0.4f;
 		config2.noiseSpeed = 2.5f;
 		config2.enableAnimation = true;
 		config2.color = { 1.0f, 0.3f, 0.3f, 1.0f };
-		lightning2->Initialize(voxelModelResource_, voxelTexture_, config2, "Lightning_Center_Red");
-		gameObjects_.push_back(std::move(lightning2));
+		config2.pathType = Lightning::PathType::Linear;
+		lightningManager_->CreateLinearEffectAtPosition({ 0.0f, 0.0f, 0.0f }, config2, gameObjects_);
 
 		// 雷エフェクト3本目（右側・緑色）
-		auto lightning3 = std::make_unique<Lightning>();
-		Lightning::Config config3;
-		config3.startPoint = { 3.0f, 5.0f, 0.0f };
-		config3.endPoint = { 3.0f, 0.0f, 0.0f };
+		LightningEffectManager::LinearEffectConfig config3;
+		config3.startOffset = { 0.0f, 5.0f, 0.0f };
+		config3.endOffset = { 0.0f, 0.0f, 0.0f };
 		config3.segmentCount = 12;
 		config3.noiseScale = 0.8f;
 		config3.noiseSpeed = 1.0f;
 		config3.enableAnimation = true;
 		config3.color = { 0.3f, 1.0f, 0.5f, 1.0f };
-		lightning3->Initialize(voxelModelResource_, voxelTexture_, config3, "Lightning_Right_Green");
-		gameObjects_.push_back(std::move(lightning3));
+		config3.pathType = Lightning::PathType::Linear;
+		lightningManager_->CreateLinearEffectAtPosition({ 3.0f, 0.0f, 0.0f }, config3, gameObjects_);
 	}
 
 	{
@@ -91,6 +85,11 @@ void TitleScene::Initialize(EngineSystem* engine) {
 
 void TitleScene::Update() {
 	BaseScene::Update();
+
+	// 雷エフェクトの更新
+	if (lightningManager_) {
+		lightningManager_->UpdateAllEffects();
+	}
 
 	auto input = engine_->GetComponent<KeyboardInput>();
 	if (!input || !titleUI_) {

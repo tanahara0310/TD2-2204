@@ -31,6 +31,12 @@ void GameScene::Initialize(EngineSystem* engine) {
    auto modelManager = engine_->GetComponent<ModelManager>();
    auto& textureManager = TextureManager::GetInstance();
 
+   // 雷エフェクトマネージャーの初期化
+   {
+      lightningManager_ = std::make_unique<LightningEffectManager>();
+      lightningManager_->Initialize(modelManager, &textureManager);
+   }
+
    // プレイヤーの生成と初期化
    {
 	  modelManager->LoadModelResource("Resources/Models/Player/Damage", "PlayerDamage.obj");
@@ -129,6 +135,26 @@ void GameScene::Initialize(EngineSystem* engine) {
 		 GameSceneConfig::kStageCenter.y + stageHalfHeight + frameHeight
 	  );
    }
+
+   // テスト用：直線雷を1本配置
+   {
+      LightningEffectManager::LinearEffectConfig config;
+      config.startOffset = { 0.0f, 5.0f, 0.0f };    // 上から
+      config.endOffset = { 0.0f, -5.0f, 0.0f };     // 下へ
+      config.segmentCount = 20;
+      config.noiseScale = 0.8f;
+      config.noiseSpeed = 10.0f;
+      config.enableAnimation = true;
+      config.color = { 0.5f, 0.8f, 1.0f, 1.0f };   // 青白色
+      config.pathType = Lightning::PathType::Linear;
+      
+      // ステージ中央に固定配置
+      lightningManager_->CreateLinearEffectAtPosition(
+         { 0.0f, 0.0f, 0.0f }, 
+         config, 
+         gameObjects_
+      );
+   }
 }
 
 void GameScene::Update() {
@@ -140,6 +166,10 @@ void GameScene::Update() {
 	  cameraController_->Update();
    }
 
+   // 雷エフェクトの更新
+   if (lightningManager_) {
+      lightningManager_->UpdateAllEffects();
+   }
 
    // 削除予定の弾をリストから削除（gameObjects_からは次のフレームの最初に削除）
    bullets_.remove_if([](Bullet* bullet) {
