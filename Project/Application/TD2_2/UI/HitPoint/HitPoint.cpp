@@ -26,22 +26,29 @@ std::vector<std::unique_ptr<IDrawable>> HitPoint::Initialize(Vector2 pivot, Sett
 void HitPoint::Update() {}
 
 void HitPoint::SetHP(int currentHPCount) {
-	if ((currentHPCount >= maxHPCount_) || (currentHPCount_ <= 0))
-		return;
+	// 範囲チェック 
+	if (currentHPCount > maxHPCount_ || currentHPCount < 0) return;
+
+	// HP更新
+	currentHPCount_ = currentHPCount;
 
 	if (setObj_ == SettingObject::PLAYER) { // プレイヤーの場合
-		currentHPCount_ = currentHPCount;   // HP更新
-
-		// HPに応じてアイコンのテクスチャを変更する
+		// ダメージアイコンに変更（減った分）
 		for (int i = maxHPCount_ - 1; i >= currentHPCount_; i--) {
 			hpIcon_[i]->SetTexture(playerDamageIconFilePath_);
 		}
+		// 通常アイコンに戻す（回復した分）
+		for (int i = 0; i < currentHPCount_; i++) {
+			hpIcon_[i]->SetTexture(playerIconFilePath_);
+		}
 	} else if (setObj_ == SettingObject::BOSS) { // 敵の場合
-		currentHPCount_ = currentHPCount;        // HP更新
-
-		// HPに応じてアイコンのテクスチャを変更する
+		// ダメージアイコンに変更（減った分）
 		for (int i = 0; i < maxHPCount_ - currentHPCount_; i++) {
 			hpIcon_[i]->SetTexture(bossDamageIconFilePath_);
+		}
+		// 通常アイコンに戻す（回復した分）
+		for (int i = maxHPCount_ - currentHPCount_; i < maxHPCount_; i++) {
+			hpIcon_[i]->SetTexture(bossIconFilePath_);
 		}
 	}
 }

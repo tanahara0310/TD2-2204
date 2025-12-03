@@ -30,12 +30,16 @@ private:
 	/// @brief シーン遷移の処理
 	void UpdateSceneTransition(float deltaTime);
 
+	/// @brief クリアタイマーを時:分:秒に分解する
+	/// @param time クリアタイマー
+	std::string FormatTime(float time); 
+
 private:
 	// クリア時間　上位3つ
 	float clearTimes_[3]{};
 
 	// 今回のクリアタイム
-	float currentClearTime_ = 0.0f;
+	float currentClearTime_ = 3661.0f;
 
 	// リザルト画像
 	SpriteObject* resultSprite_ = nullptr;
@@ -57,4 +61,7 @@ private:
 	bool isGameTransitioning_ = false;
 	float transitionTimer_ = 0.0f;
 	static constexpr float kTransitionDuration = 1.0f; // 1秒で遷移
+
+	// タイマーの6要素(00:00:00)を格納する変数
+	std::string timerDigits_;
 };

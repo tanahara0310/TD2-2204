@@ -1,5 +1,6 @@
 #pragma once
 #include "../GameObject.h"
+#include "../../UI/GaugeUI.h"
 
 class Player : public GameObject {
 public:
@@ -80,7 +81,7 @@ private:
 
    // 突進中フラグ
    bool isCharging_ = false;
-private:
+   private:
    /// @brief キーコンフィグの初期化
    void InitializeKeyConfig();
 

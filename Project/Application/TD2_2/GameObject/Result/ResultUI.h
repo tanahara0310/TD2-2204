@@ -36,6 +36,10 @@ public:
 	/// @brief ステートマシーンを取得
 	StateMachine& GetStateMachine() { return stateMachine_; }
 
+	/// @brief リザルトテクスチャのセッター
+	/// @param filePath リザルトテクスチャのファイルパス
+	void SetResult(std::string filePath) { result_->SetTexture(filePath); }
+
 private:
 	// リザルトを作成
 	std::unique_ptr<SpriteObject> CreateResult();
@@ -52,6 +56,12 @@ private:
 	// 矢印UI
 	std::unique_ptr<SpriteObject> CreateArrowUI();
 
+	// タイマーui
+	std::unique_ptr<SpriteObject> CreateTimerUI();
+
+	// コロンui
+	std::unique_ptr<SpriteObject> CreateColonUI();
+
 	/// @brief 選択状態に応じて矢印の位置を更新
 	void UpdateArrowPosition();
 
@@ -65,6 +75,8 @@ private:
 	SpriteObject* restartUI_ = nullptr;
 	SpriteObject* rankingUI_ = nullptr;
 	SpriteObject* arrowUI_ = nullptr;
+	std::vector<SpriteObject*> timerUI_;
+	SpriteObject* colonUI_ = nullptr;
 
 	// 選択状態
 	SelectionState selectionState_ = SelectionState::ToTitle;

@@ -4,31 +4,63 @@ std::vector<std::unique_ptr<IDrawable>> ResultUI::Initialize([[maybe_unused]] En
 	std::vector<std::unique_ptr<IDrawable>> sprites;
 
 	// リザルトを作成
-	auto result = CreateResult();
-	result_ = result.get();
-	sprites.push_back(std::move(result));
+	{
+		auto result = CreateResult();
+		result_ = result.get();
+		sprites.push_back(std::move(result));
+	}
 
 	// 「タイトルへ」UIを作成
-	auto toTitleUI = CreateToTitleUI();
-	toTitleUI_ = toTitleUI.get();
-	sprites.push_back(std::move(toTitleUI));
+	{
+		auto toTitleUI = CreateToTitleUI();
+		toTitleUI_ = toTitleUI.get();
+		sprites.push_back(std::move(toTitleUI));
+	}
 
 	// 「リスタート」UIを作成
-	auto restartUI = CreateRestartUI();
-	restartUI_ = restartUI.get();
-	sprites.push_back(std::move(restartUI));
+	{
+		auto restartUI = CreateRestartUI();
+		restartUI_ = restartUI.get();
+		sprites.push_back(std::move(restartUI));
+	}
 
 	// 順位用のUIを作成
 	for (int i = 1; i <= 3; i++) {
 		auto ranking = CreateRankingUI(i);
+		ranking->GetTransform().scale = {0.5f, 0.5f, 0.5f};
 		rankingUI_ = ranking.get();
 		sprites.push_back(std::move(ranking));
 	}
 
 	// 矢印UIを作成
-	auto arrowUI = CreateArrowUI();
-	arrowUI_ = arrowUI.get();
-	sprites.push_back(std::move(arrowUI));
+	{
+		auto arrowUI = CreateArrowUI();
+		arrowUI_ = arrowUI.get();
+		sprites.push_back(std::move(arrowUI));
+	}
+
+	// タイマー用のUIを作成
+	for (int i = 0; i < 6; i++) {
+		auto timer = CreateTimerUI();
+
+		// 基本の位置
+		float x = i * 64.0f - 400.0f;
+
+		// iが2の倍数のときに余分なオフセットを加える
+		x += (i / 2) * 256.0f;
+
+		timer->GetTransform().translate = {x, 140.0f, 0.0f};
+		timerUI_.push_back(timer.get());
+		sprites.push_back(std::move(timer));
+	}
+
+	// コロンUIを作成
+	for (int i = 0; i < 2; i++) {
+		auto colonUI = CreateColonUI();
+		colonUI->GetTransform().translate = {i * 390.0f - 180.0f, 130.0f, 0.0f};
+		colonUI_ = colonUI.get();
+		sprites.push_back(std::move(colonUI));
+	}
 
 	// ステートマシーンの初期化
 	InitializeStateMachine();
@@ -138,7 +170,7 @@ std::unique_ptr<SpriteObject> ResultUI::CreateRestartUI() {
 std::unique_ptr<SpriteObject> ResultUI::CreateRankingUI(int num) {
 	auto sprite = std::make_unique<SpriteObject>();
 	sprite->Initialize("Resources/GameResources/Result/Numbers/" + std::to_string(num) + ".png");
-	sprite->GetTransform().translate = {-500.0f, 280.0f - (num * 140.0f), 0.0f};
+	sprite->GetTransform().translate = {-200.0f, 100.0f - (num * 90.0f), 0.0f};
 	sprite->SetAnchor({0.5f, 0.5f});
 
 	return sprite;
@@ -147,8 +179,25 @@ std::unique_ptr<SpriteObject> ResultUI::CreateRankingUI(int num) {
 std::unique_ptr<SpriteObject> ResultUI::CreateArrowUI() {
 	auto sprite = std::make_unique<SpriteObject>();
 	sprite->Initialize("Resources/GameResources/Result/arrowLeft.png");
-	sprite->GetTransform().translate = { kArrowOffsetX_ReStart, kToTitleButtonY, 0.0f };
-	sprite->SetAnchor({ 0.5f, 0.5f });
+	sprite->GetTransform().translate = {kArrowOffsetX_ReStart, kToTitleButtonY, 0.0f};
+	sprite->SetAnchor({0.5f, 0.5f});
+
+	return sprite;
+}
+
+std::unique_ptr<SpriteObject> ResultUI::CreateTimerUI() {
+	auto sprite = std::make_unique<SpriteObject>();
+	sprite->Initialize("Resources/GameResources/Result/numbers/0.png");
+	sprite->GetTransform().translate = {kArrowOffsetX_ReStart, kToTitleButtonY, 0.0f};
+	sprite->SetAnchor({0.5f, 0.5f});
+
+	return sprite;
+}
+
+std::unique_ptr<SpriteObject> ResultUI::CreateColonUI() {
+	auto sprite = std::make_unique<SpriteObject>();
+	sprite->Initialize("Resources/GameResources/Result/Colon.png");
+	sprite->SetAnchor({0.5f, 0.5f});
 
 	return sprite;
 }

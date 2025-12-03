@@ -2,6 +2,7 @@
 #include "Engine/Graphics/Sprite/Sprite.h"
 #include "Engine/Graphics/TextureManager.h"
 #include "MathCore.h"
+#include "Engine/ObjectCommon/SpriteObject.h"
 #include <memory>
 #include <string>
 
@@ -17,12 +18,8 @@ public:
 	/// <summary>
 	/// 初期化関数
 	/// </summary>
-	/// <param name="fill">前面スプライト</param>
-	/// <param name="bg">背景スプライト</param>
-	/// <param name="segment">セグメントスプライト</param>
 	/// <param name="cameraManager">カメラマネージャー</param>
-	/// <param name="divisions">ゲージの分割数</param>
-	void Initialize(Sprite* fill, Sprite* bg, Sprite* segment, CameraManager* cameraManager);
+	std::vector<std::unique_ptr<IDrawable>> Initialize(CameraManager* cameraManager);
 
 	// 追従対象を設定
 	void SetTarget(GameObject* target) { target_ = target; }
@@ -33,18 +30,21 @@ public:
 	// 毎フレーム呼ぶ
 	void Update();
 
-	// 描画
-	void Draw();
+private:
+	// Fillを作成
+	std::unique_ptr<SpriteObject> CreateFill();
+
+	// BGを作成
+	std::unique_ptr<SpriteObject> CreateBG();
+
+	// Segmentを作成
+	std::unique_ptr<SpriteObject> CreateSegment();
 
 private:
 	// ゲームシーンからSpriteを借りてくる
-	Sprite* spriteFill_ = nullptr;    // 実際のHP
-	Sprite* spriteBG_ = nullptr;      // 背景
-	Sprite* spriteSegment_ = nullptr; // ブロック
-
-	TextureManager::LoadedTexture handleFill_;
-	TextureManager::LoadedTexture handleBG_;
-	TextureManager::LoadedTexture handleSegment_;
+	SpriteObject* spriteFill_ = nullptr; // 実際のHP
+	SpriteObject* spriteBG_ = nullptr;   // 背景
+	SpriteObject* spriteSegment_ = nullptr; // ブロック
 
 	CameraManager* cameraManager_ = nullptr;
 	GameObject* target_ = nullptr;
@@ -65,7 +65,6 @@ private:
 
 	// 位置オフセット
 	Vector2 screenOffset_ = {0.0f, -100.0f};
-	float drawDepth_ = 0.0f;
 
 	// ゲージの最大サイズ
 	Vector2 maxSpriteSize_ = {};
