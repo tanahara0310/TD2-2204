@@ -5,6 +5,7 @@
 #include "Engine/Graphics/Sprite/Sprite.h"
 #include "Engine/Graphics/TextureManager.h"
 #include "Engine/ObjectCommon/SpriteObject.h"
+#include "../../GameObject/Result/ResultUI.h"
 
 class EngineSystem;
 class CameraManager;
@@ -26,6 +27,10 @@ public:
 	void Finalize() override;
 
 private:
+	/// @brief シーン遷移の処理
+	void UpdateSceneTransition(float deltaTime);
+
+private:
 	// クリア時間　上位3つ
 	float clearTimes_[3]{};
 
@@ -44,6 +49,12 @@ private:
 	// タイマー画像
 	std::unique_ptr<Sprite> curretTimeSprite_;
 
-private:
-	std::unique_ptr<SpriteObject> CreateResultSprite();
+	// リザルトUI
+	std::unique_ptr<ResultUI> resultUI_;
+
+	// シーン遷移フラグとタイマー
+	bool isTitleTransitioning_ = false;
+	bool isGameTransitioning_ = false;
+	float transitionTimer_ = 0.0f;
+	static constexpr float kTransitionDuration = 1.0f; // 1秒で遷移
 };
