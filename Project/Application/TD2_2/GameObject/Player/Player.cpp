@@ -38,10 +38,6 @@ void Player::Update() {
 	  }
    }
 
-   if (keyConfig_->Get<bool>("Damage")) {
-	  stateMachine_->RequestState("Damage", 1);
-   }
-
    // ダメージ壁との接触判定（ダメージ状態以外、かつ無敵時間でない場合のみ）
    if (stateMachine_->GetCurrentState() != "Damage" &&
        stateMachine_->GetCurrentState() != "Despawn" &&
@@ -192,10 +188,6 @@ void Player::InitializeKeyConfig() {
    ActionBuilder(keyConfig_->GetAction("Charge"))
 	  .BindKey(DIK_SPACE)
 	  .BindGamepadButton(GamepadButton::A);
-
-   keyConfig_->AddAction("Damage", ActionType::Bool);
-   ActionBuilder(keyConfig_->GetAction("Damage"))
-	  .BindKey(DIK_0);
 }
 
 void Player::InitializeStateMachine() {
