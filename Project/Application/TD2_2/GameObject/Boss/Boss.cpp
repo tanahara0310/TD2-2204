@@ -21,7 +21,9 @@ void Boss::Initialize(std::unique_ptr<Model> model, TextureManager::LoadedTextur
    // コライダーの初期化
    InitializeCollider();
 
-   transform_.translate = { -5.0f, -5.0f, 0.0f };
+   transform_.translate = { -15.0f, 0.0f, 0.0f };
+
+   transform_.TransferMatrix();
 }
 
 void Boss::Update() {
@@ -67,9 +69,8 @@ bool Boss::DrawImGui() {
 }
 
 void Boss::OnCollisionEnter(GameObject* other) {
-   // 無敵時間中は衝突処理をスキップ
-   if (IsInvincible()) {
-      return;
+   if (IsInvincible() || stateMachine_->GetCurrentState() == "Respawn" || stateMachine_->GetCurrentState() == "Despawn") {
+	  return;
    }
 
    // プレイヤーと衝突したら反発する
@@ -118,8 +119,8 @@ void Boss::OnCollisionEnter(GameObject* other) {
 
 void Boss::OnCollisionStay(GameObject* other) {
    // 無敵時間中は衝突処理をスキップ
-   if (IsInvincible()) {
-      return;
+   if (IsInvincible() || stateMachine_->GetCurrentState() == "Respawn" || stateMachine_->GetCurrentState() == "Despawn") {
+	  return;
    }
 
    if (auto p = dynamic_cast<Player*>(other)) {

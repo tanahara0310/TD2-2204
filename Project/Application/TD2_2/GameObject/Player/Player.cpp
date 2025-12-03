@@ -29,6 +29,10 @@ void Player::Initialize(std::unique_ptr<Model> model, TextureManager::LoadedText
 
    // コライダーの初期化
    InitializeCollider();
+
+   transform_.translate = { 15.0f, 0.0f, 0.0f };
+
+   transform_.TransferMatrix();
 }
 
 void Player::Update() {
@@ -71,9 +75,8 @@ void Player::Draw(const ICamera* camera) {
 
 void Player::OnCollisionEnter(GameObject* other) {
 
-   // 無敵時間中は衝突処理をスキップ
-   if (IsInvincible()) {
-      return;
+   if (IsInvincible() || stateMachine_->GetCurrentState() == "Respawn" || stateMachine_->GetCurrentState() == "Despawn") {
+	  return;
    }
 
    if (hitEnemyFunction_) {
@@ -124,9 +127,8 @@ void Player::OnCollisionEnter(GameObject* other) {
 }
 
 void Player::OnCollisionStay(GameObject* other) {
-   // 無敵時間中は衝突処理をスキップ
-   if (IsInvincible()) {
-      return;
+   if (IsInvincible() || stateMachine_->GetCurrentState() == "Respawn" || stateMachine_->GetCurrentState() == "Despawn") {
+	  return;
    }
 
    if (hitEnemyFunction_) {
