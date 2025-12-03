@@ -14,54 +14,61 @@
 
 using namespace MathCore;
 
-void GaugeUI::Initialize(Sprite* fill, Sprite* bg, Sprite* segment, CameraManager* cameraManager) {
+std::vector<std::unique_ptr<IDrawable>> GaugeUI::Initialize(CameraManager* cameraManager) {
 	assert(cameraManager != nullptr);
+
+	std::vector<std::unique_ptr<IDrawable>> sprites;
 
 	cameraManager_ = cameraManager;
 
-	// 各スプライト作成
-	spriteBG_ = bg;
-	handleBG_ = TextureManager::GetInstance().Load("Resources/Textures/white.png");
-	spriteFill_ = fill;
-	handleFill_ = TextureManager::GetInstance().Load("Resources/Textures/white.png");
-	spriteSegment_ = segment;
-	handleSegment_ = TextureManager::GetInstance().Load("Resources/Textures/white.png");
+	// BGを作成
+	{
+		auto bg = CreateBG();
+		spriteBG_ = bg.get();
+		sprites.push_back(std::move(bg));
+	}
 
-	// アンカーポイント
-	spriteBG_->SetAnchor({0.5f, 0.5f});      // 中央
-	spriteFill_->SetAnchor({0.0f, 0.5f});    // 左寄せ
-	spriteSegment_->SetAnchor({0.0f, 0.5f}); // 左寄せ
+	// Fillを作成
+	{
+		auto fill = CreateFill();
+		spriteFill_ = fill.get();
+		sprites.push_back(std::move(fill));
+	}
 
-	// 色の初期化
-	spriteBG_->SetColor({0.2f, 0.2f, 0.2f, 1.0f});
-	spriteFill_->SetColor({0.5f, 0.5f, 0.0f, 1.0f});
-	spriteSegment_->SetColor({0.8f, 1.0f, 0.0f, 1.0f});
+	// Segmentを作成
+	{
+		auto segment = CreateSegment();
+		spriteSegment_ = segment.get();
+		sprites.push_back(std::move(segment));
+	}
 
 	// 初期スケール設定
 	Vector2 texBG = spriteBG_->GetTextureSize();
 	maxSpriteSize_ = {fullWidth_ / texBG.x, fullHeight_ / texBG.y};
 
+	// ゲージ1個分のサイズ
+	spriteSizeX_ = maxSpriteSize_.x / maxGauge_;
+
 	// fullWidth_/fullHeight_を実際のピクセル幅にするためスケールを設定
 	if (texBG.x > 0 && texBG.y > 0) {
-		spriteBG_->SetScale({maxSpriteSize_.x, maxSpriteSize_.y, 1.0f});
+		spriteBG_->GetTransform().scale = {maxSpriteSize_.x, maxSpriteSize_.y, 1.0f};
 
 		// Fill & Segment初期は0
-		spriteFill_->SetScale({0.0f, maxSpriteSize_.y, 1.0f});
+		spriteFill_->GetTransform().scale = {0.0f, maxSpriteSize_.y, 1.0f};
 
 		// セグメントも初期は幅0にしておく
-		spriteSegment_->SetScale({0.0f, maxSpriteSize_.y, 1.0f});
+		spriteSegment_->GetTransform().scale = {0.0f, maxSpriteSize_.y, 1.0f};
 	}
 
 	// 初期ゲージ値
 	maxGauge_ = 5;
 	currentGauge_ = 0;
 
-	// ゲージ1個分のサイズ
-	spriteSizeX_ = maxSpriteSize_.x / maxGauge_;
+	return sprites;
 }
 
 void GaugeUI::SetValue(int current) {
-	if (current > maxGauge_)
+	if (current > maxGauge_ || current < 0)
 		return;
 
 	// ゲージの値更新
@@ -83,24 +90,30 @@ void GaugeUI::Update() {
 
 	Vector2 normalized = Coordinate::WorldToNormalizedScreen(worldPos, view, proj, static_cast<float>(WinApp::kClientWidth), static_cast<float>(WinApp::kClientHeight));
 
-	float screenX = (normalized.x + 1.0f) * 0.5f * static_cast<float>(WinApp::kClientWidth);
-	float screenY = (-normalized.y + 1.0f) * 0.5f * static_cast<float>(WinApp::kClientHeight);
+	// NDC (normalized) のまま中心基準に変換
+	float halfW = static_cast<float>(WinApp::kClientWidth) * 0.5f;
+	float halfH = static_cast<float>(WinApp::kClientHeight) * 0.5f;
 
-	screenX += screenOffset_.x;
-	screenY += screenOffset_.y;
+	// 中心原点座標（+Y 上向き）を計算
+	float centerX = normalized.x * halfW;
+	float centerY = normalized.y * halfH;
 
-	// 左端xを計算（BGの中央を基点として左端を求める）
-	float leftX = screenX - (fullWidth_ * 0.5f);
+	// オフセット（ピクセル単位）を中心基準で加える
+	centerX += screenOffset_.x;
+	centerY += screenOffset_.y;
 
-	// BGは中央に置く
-	spriteBG_->SetPosition({screenX, screenY, drawDepth_});
+	// 左端を求めるときも中心基準で計算する
+	float leftX_center = centerX - (fullWidth_ * 0.5f);
 
-	// 若干の補正としてYは中央合わせ
-	spriteFill_->SetPosition({leftX, screenY, drawDepth_ + 0.0f});
-    spriteSegment_->SetPosition({leftX, screenY, drawDepth_ + 0.0f});
+	// BG は中心基準位置に配置（アンカーに応じて見た目が変わる）
+	spriteBG_->GetTransform().translate = {centerX, centerY, 0.0f};
+
+	// Fill / Segment は左端基準にしたいので leftX を渡す（アンカーが左中央なら正しく表示される）
+	spriteFill_->GetTransform().translate = {leftX_center, centerY, 0.0f};
+	spriteSegment_->GetTransform().translate = {leftX_center, centerY, 0.0f};
 
 	// スケール更新
-	spriteFill_->SetScale({spriteSizeX_ * currentGauge_, maxSpriteSize_.y, 1.0f});
+	spriteFill_->GetTransform().scale = {spriteSizeX_ * currentGauge_, maxSpriteSize_.y, 0.0f};
 
 	// セグメントのスケールを徐々に増やす
 	float targetSegmentWidth = segmentWidth_;
@@ -113,14 +126,34 @@ void GaugeUI::Update() {
 		targetSegmentWidth = spriteSizeX_ * currentGauge_;
 	}
 	segmentWidth_ = targetSegmentWidth;
-	spriteSegment_->SetScale({segmentWidth_, maxSpriteSize_.y, 1.0f});
+	spriteSegment_->GetTransform().scale = {segmentWidth_, maxSpriteSize_.y, 1.0f};
 }
 
-void GaugeUI::Draw() {
-	if (spriteBG_)
-		spriteBG_->Draw(handleBG_.gpuHandle);
-	if (spriteFill_)
-		spriteFill_->Draw(handleFill_.gpuHandle);
-	if (spriteSegment_)
-		spriteSegment_->Draw(handleSegment_.gpuHandle);
+std::unique_ptr<SpriteObject> GaugeUI::CreateFill() {
+	auto sprite = std::make_unique<SpriteObject>();
+	sprite->Initialize("Resources/Textures/white.png");
+	sprite->GetTransform().translate = {0.0f, 0.0f, 0.0f};
+	sprite->SetColor({0.5f, 0.5f, 0.0f, 1.0f});
+	sprite->SetAnchor({0.0f, 0.5f});
+	return sprite;
+}
+
+std::unique_ptr<SpriteObject> GaugeUI::CreateBG() {
+	auto sprite = std::make_unique<SpriteObject>();
+	sprite->Initialize("Resources/Textures/white.png");
+	sprite->GetTransform().translate = {0.0f, 0.0f, 0.0f};
+	sprite->SetColor({0.2f, 0.2f, 0.2f, 1.0f});
+	sprite->SetAnchor({0.5f, 0.5f});
+
+	return sprite;
+}
+
+std::unique_ptr<SpriteObject> GaugeUI::CreateSegment() {
+	auto sprite = std::make_unique<SpriteObject>();
+	sprite->Initialize("Resources/Textures/white.png");
+	sprite->GetTransform().translate = {0.0f, 0.0f, 0.0f};
+	sprite->SetColor({0.8f, 1.0f, 0.0f, 1.0f});
+	sprite->SetAnchor({0.0f, 0.5f});
+
+	return sprite;
 }

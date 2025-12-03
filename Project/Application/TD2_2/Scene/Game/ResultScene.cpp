@@ -24,6 +24,12 @@ void ResultScene::Initialize(EngineSystem* engine) {
 		   gameObjects_.push_back(std::move(sprite));
 	   }
    }
+
+   // クリアタイマーを文字列に変換
+   {
+	   timerDigits_ = FormatTime(currentClearTime_);
+
+   }
 }
 
 void ResultScene::Update() {
@@ -91,3 +97,20 @@ void ResultScene::Draw() {
 }
 
 void ResultScene::Finalize() {}
+
+std::string ResultScene::FormatTime(float time) {
+	int totalSeconds = (int)time;
+
+	int hours = totalSeconds / 3600;
+	int minutes = (totalSeconds % 3600) / 60;
+	int seconds = totalSeconds % 60;
+
+	int h1 = hours / 10;
+	int h2 = hours % 10;
+	int m1 = minutes / 10;
+	int m2 = minutes % 10;
+	int s1 = seconds / 10;
+	int s2 = seconds % 10;
+
+	return std::to_string(h1) + std::to_string(h2) + std::to_string(m1) + std::to_string(m2) + std::to_string(s1) + std::to_string(s2);
+}
