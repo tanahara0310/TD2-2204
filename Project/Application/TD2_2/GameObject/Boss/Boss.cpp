@@ -342,7 +342,7 @@ void Boss::InitializeRespawn() {
    respawnTimer_.Start(respawnDuration_, false);
    
    // ポジションをステージ中央に設定
-   transform_.translate = { 0.0f, 0.0f, 0.0f };
+   transform_.translate = { -15.0f, 0.0f, 0.0f };
    
    velocity_ = { 0.0f, 0.0f };
    acceleration_ = { 0.0f, 0.0f };

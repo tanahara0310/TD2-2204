@@ -48,12 +48,12 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  player->SetStartDamageFunction([this]() {
 		 if (cameraController_) {
 			// プリセット版は継続時間も事前設定されている
-			cameraController_->StartShake(CameraController::ShakeIntensity::Large);
+			//cameraController_->StartShake(CameraController::ShakeIntensity::Large);
 		 }
 		 });
 	  player->SetHitEnemyFunction([this]() {
 		 if (cameraController_) {
-			cameraController_->StartShake(CameraController::ShakeIntensity::Medium);
+			//cameraController_->StartShake(CameraController::ShakeIntensity::Medium);
 		 }
 		 });
 	  player->RegisterModelResource("Damage", "Resources/Models/Player/Damage/PlayerDamage.obj");
