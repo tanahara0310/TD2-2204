@@ -97,6 +97,20 @@ void TitleScene::Update() {
 		return;
 	}
 
+	// electricParticle_が有効かチェック（gameObjects_内に存在するか）
+	bool isParticleValid = false;
+	if (electricParticle_) {
+		for (const auto& obj : gameObjects_) {
+			if (obj.get() == electricParticle_) {
+				isParticleValid = true;
+				break;
+			}
+		}
+		if (!isParticleValid) {
+			electricParticle_ = nullptr; // 削除されていたらnullptrに
+		}
+	}
+
 	// 遷移中でなければ入力を受け付ける
 	if (!isTransitioning_) {
 		// 上キーでスタートを選択
@@ -118,9 +132,11 @@ void TitleScene::Update() {
 				transitionTimer_ = 0.0f;
 
 				// 電気パーティクルを画面中央で再生
-				if (electricParticle_) {
+				if (electricParticle_ && isParticleValid) {
+					electricParticle_->SetActive(true); // アクティブ化
 					electricParticle_->SetEmitterPosition({ 0.0f, 0.0f, 0.0f });
-					electricParticle_->Play();
+					electricParticle_->Clear(); // 前回のパーティクルをクリア
+					electricParticle_->Play(); // 再生開始
 				}
 				break;
 			case TitleUI::SelectionState::Quit:
@@ -153,6 +169,9 @@ void TitleScene::CreateElectricParticleEffect() {
 	// パーティクルシステムを作成
 	auto particleSystem = std::make_unique<ParticleSystem>();
 	particleSystem->Initialize(dxCommon, resourceFactory);
+	
+	// 最初は非アクティブに設定（使用時にアクティブ化）
+	particleSystem->SetActive(false);
 
 	// テクスチャを設定（白い円のテクスチャを使用）
 	particleSystem->SetTexture("Resources/SampleResources/circle.png");
@@ -169,6 +188,7 @@ void TitleScene::CreateElectricParticleEffect() {
 		auto mainData = mainModule.GetMainData();
 		mainData.duration = 1.0f; // エフェクト継続時間
 		mainData.looping = false; // ループなし（ワンショット）
+		mainData.playOnAwake = false; // 起動時は再生しない（手動制御）
 		mainData.startLifetime = 0.8f; // パーティクルの寿命
 		mainData.startSpeed = 8.0f; // 初速を速く（電気の火花が飛び散る）
 		mainData.startSize = { 0.3f, 0.3f, 0.3f }; // 開始サイズ
@@ -182,7 +202,7 @@ void TitleScene::CreateElectricParticleEffect() {
 		auto& emissionModule = particleSystem->GetEmissionModule();
 		auto emissionData = emissionModule.GetEmissionData();
 		emissionData.rateOverTime = 0; // 継続的な放出なし
-		emissionData.burstCount = 200; // バーストで150個放出
+		emissionData.burstCount = 200; // バーストで200個放出
 		emissionData.burstTime = 0.0f; // 開始時に放出
 		emissionModule.SetEmissionData(emissionData);
 	}

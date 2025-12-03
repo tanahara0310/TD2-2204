@@ -27,6 +27,9 @@ public:
 
    /// @brief オブジェクト名を取得
    const char* GetObjectName() const override { return "Bullet"; }
+   
+   /// @brief 削除可能かどうか（非アクティブな弾は自動削除）
+   bool CanBeDeleted() const override { return !IsActive(); }
 
    /// @brief 速度を設定
    /// @param speed 速度

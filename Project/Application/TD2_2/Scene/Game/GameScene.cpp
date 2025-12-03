@@ -49,10 +49,6 @@ void GameScene::Initialize(EngineSystem* engine) {
 		 if (cameraController_) {
 			cameraController_->StartShake(CameraController::ShakeIntensity::Medium);
 		 }
-		 // ダメージエフェクトを開始
-		 if (lightningEffectManager_ && playerDamageEffectId_ >= 0) {
-			lightningEffectManager_->StartEffect(playerDamageEffectId_);
-		 }
 		 });
 	  player->RegisterModelResource("Damage", "Resources/Models/Player/Damage/PlayerDamage.obj");
 	  player->RegisterModelResource("Player1", "Resources/Models/Player/Player.obj");
@@ -91,29 +87,6 @@ void GameScene::Initialize(EngineSystem* engine) {
    // フレームの初期化
    InitializeFrames();
 
-   // 雷エフェクトマネージャーの初期化
-   {
-	  lightningEffectManager_ = std::make_unique<LightningEffectManager>();
-	  lightningEffectManager_->Initialize(modelManager, &textureManager);
-	  
-	  // プレイヤーのダメージエフェクト設定
-	  LightningEffectManager::SphericalEffectConfig config;
-	  config.radius = 2.2f;
-	  config.color = { 1.0f, 0.3f, 0.3f, 1.0f };  // 赤色
-	  config.lightningCount = 8;  // 球面配置用の雷の総数
-	  config.visibleCount = 5;    // 常に5本表示
-	  config.arcLength = 0.4f;    // 雷の長さ
-	  config.effectDuration = 0.8f; // エフェクト継続時間
-	  config.enableStagger = true;  // 時間差出現を有効化
-	  config.staggerDelay = 0.05f;  // 各雷の出現間隔（0.05秒 = 50ms）
-	  
-	  // エフェクトを作成
-	  playerDamageEffectId_ = lightningEffectManager_->CreateCircularEffect(
-		 player_, 
-		 config,
-		 gameObjects_
-	  );
-   }
 
    // 衝突設定の初期化
    {
@@ -159,6 +132,7 @@ void GameScene::Initialize(EngineSystem* engine) {
 }
 
 void GameScene::Update() {
+   // BaseScene::Update()の最初でCleanupGameObjects()が呼ばれる
    BaseScene::Update();
 
    // カメラコントローラーの更新
@@ -167,7 +141,7 @@ void GameScene::Update() {
    }
 
 
-   // 削除予定の弾をリストから削除（gameObjects_からは描画後に削除）
+   // 削除予定の弾をリストから削除（gameObjects_からは次のフレームの最初に削除）
    bullets_.remove_if([](Bullet* bullet) {
 	  return bullet == nullptr || !bullet->IsActive();
    });
@@ -224,9 +198,9 @@ std::unique_ptr<BehaviorTree> GameScene::CreateBossBehaviorTree() {
 			.Sequence()
 			.Action<FleeFromPlayerAction>(boss_, player_)
 			.Action<ChargeToPlayerAction>(boss_,player_)
-			/*.Action<ShootEightWayAction>(boss_, [this](const Vector3& pos, const Vector3& direction, float speed) {
+			.Action<ShootEightWayAction>(boss_, [this](const Vector3& pos, const Vector3& direction, float speed) {
 			   CreateBullet(pos, direction, BulletType::ElasticSphere, speed);
-			   })  */
+			   })  
 			.End()
 			.Action<FleeFromPlayerAction>(boss_, player_)
 			.End();
