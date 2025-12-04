@@ -118,7 +118,16 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  ui_ = ui.get();
 	  gameObjects_.push_back(std::move(ui));
 
+	  // スタートUIの生成と初期化
+	  auto startUI = std::make_unique<SpriteObject>();
+	  startUI->Initialize("Resources/Textures/GameSceneStartUI.png");
+	  startUI->GetTransform().scale = { 1.0f, 1.0f, 1.0f };
+	  startUI->GetTransform().translate = { 1280.0f, 0.0f, 0.0f };
+	  startUI_ = startUI.get();
+	  gameObjects_.push_back(std::move(startUI));
    }
+
+   uiAnimationTimer_.Start(2.5f);
 
    // フレームの初期化
    InitializeFrames();
@@ -157,7 +166,6 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  cameraController_->SetSmoothSpeed(20.0f);
 	  cameraController_->SetMarginDistance(8.0f);
 	  cameraController_->SetScreenPadding(0.35f);
-
 
 	  cameraController_->SetStageBounds(
 		 GameSceneConfig::kStageCenter.x - stageHalfWidth - frameWidth,
@@ -260,6 +268,8 @@ void GameScene::Update() {
    if (lightningManager_) {
 	  lightningManager_->UpdateAllEffects();
    }
+
+   StartUIAnimation();
 
    // 削除予定の弾をリストから削除（gameObjects_からは次のフレームの最初に削除）
    bullets_.remove_if([](Bullet* bullet) {
@@ -461,4 +471,15 @@ Bullet* GameScene::CreateBullet(const Vector3& position, const Vector3& directio
    newGameObjectsQueue_.push_back(std::move(bullet));
 
    return bulletPtr;
+}
+
+void GameScene::StartUIAnimation() {
+   if (!startUI_) return;
+   if (uiAnimationTimer_.IsFinished()) return;
+
+   uiAnimationTimer_.Update(GameUtils::GetDeltaTime());
+
+   float progress = uiAnimationTimer_.GetProgress();
+   float easedT = EasingUtil::ApplyComposite(progress, EasingUtil::Type::EaseOutQuint, EasingUtil::Type::EaseInQuint, 0.5f);
+   startUI_->GetTransform().translate.x = EasingUtil::Lerp(1280.0f, -1280.0f, easedT);
 }
