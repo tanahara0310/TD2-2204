@@ -32,6 +32,10 @@ private:
 	/// @brief シーン遷移の処理
 	void UpdateSceneTransition(float deltaTime);
 
+protected:
+	/// @brief リリースカメラの初期設定をカスタマイズ
+	void SetupReleaseCameraParameters(Camera* camera) override;
+
 	/// @brief クリアタイマーを時:分:秒に分解する
 	/// @param time クリアタイマー
 	std::array<int, 6> FormatTime(float time); 
