@@ -65,6 +65,9 @@ private:
    std::unique_ptr<HitPoint> bossHitPointUI_;
 
    SpriteObject* ui_;
+   SpriteObject* startUI_;
+
+   GameTimer uiAnimationTimer_;
 private:
    void RegisterAllColliders();
 
@@ -81,4 +84,6 @@ private:
    /// @param speed 速度（デフォルト: 30.0f）
    /// @return 生成された弾のポインタ
    Bullet* CreateBullet(const Vector3& position, const Vector3& direction, BulletType type, float speed = 30.0f);
+
+   void StartUIAnimation();
 };
