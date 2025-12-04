@@ -31,7 +31,8 @@ public:
 
 private:
     /// @brief FPS計測値を更新
-    void UpdateFPSCalculation();
+    /// @param actualDeltaTime 実測のデルタタイム（秒）
+    void UpdateFPSCalculation(float actualDeltaTime);
 
 private:
     // 固定値

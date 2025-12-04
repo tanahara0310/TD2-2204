@@ -335,7 +335,7 @@ void GameScene::Update() {
    }
 
    if (boss_->GetHP() <= 0 || player_->GetHP() <= 0) {
-	  sceneManager_->ChangeScene("ResultScene");
+	  sceneManager_->ChangeScene("TitleScene");
    }
 
 #ifdef _DEBUG

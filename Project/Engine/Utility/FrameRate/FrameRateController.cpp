@@ -34,22 +34,17 @@ void FrameRateController::BeginFrame()
         return;
     }
     
-    // 前フレームからの実測経過時間を計算（VSync待機時間を含む）
+    // デルタタイムは常に固定値を使用（60FPS固定）
+    deltaTime_ = kFixedDeltaTime;
+    
+    // 前フレームからの実測経過時間を計算（FPS計測用）
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
         currentTime - lastFrameTime_
     );
     float actualDeltaTime = duration.count() / 1000000.0f;
     
-    // デルタタイムを更新（異常値のガード）
-    if (actualDeltaTime > 0.0001f && actualDeltaTime < 1.0f) {
-        deltaTime_ = actualDeltaTime;
-    } else {
-        // 異常値の場合は固定値を使用
-        deltaTime_ = kFixedDeltaTime;
-    }
-    
-    // FPS計測を更新
-    UpdateFPSCalculation();
+    // FPS計測を更新（実測値を使用）
+    UpdateFPSCalculation(actualDeltaTime);
     
     // 次フレームのために現在時刻を保存
     lastFrameTime_ = currentTime;
@@ -68,12 +63,12 @@ void FrameRateController::ResetFPSMeasurement()
     lastFrameTime_ = std::chrono::high_resolution_clock::now();
 }
 
-void FrameRateController::UpdateFPSCalculation()
+void FrameRateController::UpdateFPSCalculation(float actualDeltaTime)
 {
     // 実測FPSを計算（異常値のガード）
     float instantFPS = kTargetFPS;
-    if (deltaTime_ > 0.0001f) { // 0除算を防ぐ
-        instantFPS = 1.0f / deltaTime_;
+    if (actualDeltaTime > 0.0001f) { // 0除算を防ぐ
+        instantFPS = 1.0f / actualDeltaTime;
         
         // VSync有効時は目標FPSを超えることはないはずなので、上限を設定
         // 計測誤差を考慮して少し余裕を持たせる（+5%）
