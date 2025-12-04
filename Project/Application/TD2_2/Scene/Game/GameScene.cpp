@@ -101,7 +101,7 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  }
 
 	  bossHitPointUI_ = std::make_unique<HitPoint>();
-	  auto bossSprites = bossHitPointUI_->Initialize({ 450.0f, 300.0f }, SettingObject::BOSS, boss_->GetMaxHP());
+	  auto bossSprites = bossHitPointUI_->Initialize({ 324.0f, 300.0f }, SettingObject::BOSS, boss_->GetMaxHP());
 	  // スプライトをgameObjects_に追加
 	  for (auto& sprite : bossSprites) {
 		 gameObjects_.push_back(std::move(sprite));

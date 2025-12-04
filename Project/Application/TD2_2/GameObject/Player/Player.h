@@ -92,8 +92,8 @@ private:
    // 突進中フラグ
    bool isCharging_ = false;
 
-   int hp_ = 3;
-   int maxHp_ = 3;
+   int hp_ = 5;
+   int maxHp_ = 5;
    private:
    /// @brief キーコンフィグの初期化
    void InitializeKeyConfig();
