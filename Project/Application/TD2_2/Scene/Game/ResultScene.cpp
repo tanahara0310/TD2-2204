@@ -9,10 +9,13 @@
 #include "Engine/Graphics/Render/RenderManager.h"
 #include "Engine/Graphics/Light/LightManager.h"
 #include "Engine/Graphics/Light/LightData.h"
+#include "Engine/Input/KeyboardInput.h"
 #include "MathCore.h"
 
 void ResultScene::Initialize(EngineSystem* engine) {
    BaseScene::Initialize(engine);
+
+   InputSource::Initialize(engine);
 
    // クリアタイマーを文字列に変換
    timerDigits_ = FormatTime(currentClearTime_);
@@ -31,31 +34,47 @@ void ResultScene::Initialize(EngineSystem* engine) {
 	   // タイマー文字列を受け取る
 	   resultUI_->SetTimerString(timerDigits_);
    }
+
+   // KeyConfigの設定
+   {
+	   // 上方向の入力（キーボード上キー or ゲームパッドの十字キー上）
+	   ActionBuilder(keyConfig_.AddAction("Right", ActionType::Bool))
+		   .BindKey(DIK_RIGHT)
+		   .BindGamepadButton(GamepadButton::DPadRight);
+
+	   // 下方向の入力（キーボード下キー or ゲームパッドの十字キー下）
+	   ActionBuilder(keyConfig_.AddAction("Left", ActionType::Bool))
+		   .BindKey(DIK_LEFT)
+		   .BindGamepadButton(GamepadButton::DPadLeft);
+
+	   // 決定ボタン（キーボードスペース or ゲームパッドAボタン）
+	   ActionBuilder(keyConfig_.AddAction("Confirm", ActionType::Bool))
+		   .BindKey(DIK_SPACE)
+		   .BindGamepadButton(GamepadButton::A);
+   }
 }
 
 void ResultScene::Update() {
    BaseScene::Update();
 
-   auto input = engine_->GetComponent<KeyboardInput>();
-   auto gamePad = engine_->GetComponent<GamepadInput>();
-   if (!input || !resultUI_) {
+   if (!resultUI_) {
 	   return;
    }
 
    // 遷移中でなければ入力を受け付ける
    if (!isTitleTransitioning_ || !isGameTransitioning_) {
 	   // 右キーでスタートを選択
-	   if (input->IsKeyTriggered(DIK_RIGHT) || gamePad->IsButtonTriggered(GamepadButton::DPadRight)) {
+	   if (keyConfig_.GetDown("Right")) {
 		   resultUI_->SetSelectionState(ResultUI::SelectionState::ToTitle);
 	   }
 
 	   // 左キーでQuitを選択
-	   if (input->IsKeyTriggered(DIK_LEFT) || gamePad->IsButtonTriggered(GamepadButton::DPadLeft)) {
+	   if (keyConfig_.GetDown("Left")) {
 		   resultUI_->SetSelectionState(ResultUI::SelectionState::ReStart);
 	   }
 
 	   // スペースキーで決定
-	   if (input->IsKeyTriggered(DIK_SPACE) || gamePad->IsButtonTriggered(GamepadButton::A)) {
+	   if (keyConfig_.GetDown("Confirm")) {
 		   switch (resultUI_->GetSelectionState()) {
 		   case ResultUI::SelectionState::ToTitle:
 			   // 遷移開始
