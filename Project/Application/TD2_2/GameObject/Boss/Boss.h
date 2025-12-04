@@ -70,7 +70,7 @@ private:
    Vector2 direction_ = {};
    
    // 衝突反発の速度依存スケール
-   float collisionResponseScale_ = 50.0f;
+   float collisionResponseScale_ = 10.0f;
    float stunPower_ = 2000.0f; // 基礎反発力
 
    // 突進フラグ

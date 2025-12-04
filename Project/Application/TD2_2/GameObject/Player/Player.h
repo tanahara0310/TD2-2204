@@ -74,7 +74,7 @@ private:
    GameTimer respawnTimer_;
 
    // 衝突反発の速度依存スケール
-   float collisionResponseScale_ = 50.0f; // 速度に応じて反発力がどれだけ増えるかの係数
+   float collisionResponseScale_ = 10.0f; // 速度に応じて反発力がどれだけ増えるかの係数
 
    // 衝突反発の最大値
    float maxCollisionResponse_ = 5000.0f;
