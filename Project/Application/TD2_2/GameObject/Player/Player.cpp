@@ -306,6 +306,10 @@ void Player::InitializeCharge() {
 
    direction_ = GetMoveDirection() * chargeSpeed_;
 
+   if (startChargeFunction_) {
+	  startChargeFunction_();
+   }
+
    isCharging_ = true;
 }
 

@@ -42,6 +42,8 @@ void ChargeToPlayerAction::OnEnter() {
 	  boss_->StartRotateAroundAxis(chargeDuration_, 3.0f);
 
 	  boss_->SetIsCharging(true);
+
+      boss_->ChargeFunction();
    }
    
 }

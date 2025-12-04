@@ -28,6 +28,10 @@ public:
       hitEnemyFunction_ = func;
    }
 
+   void SetStartChargeFunction(const std::function<void()>& func) {
+      startChargeFunction_ = func;
+   }
+
    // 速度取得
    Vector2 GetVelocity() const { return velocity_; }
 
@@ -40,6 +44,8 @@ public:
    // HP取得
    int GetHP() const { return hp_; }
    int GetMaxHP() const { return maxHp_; }
+
+
 private:
 
    Vector2 acceleration_ = { 0.0f, 0.0f }; // 加速度ベクトル
@@ -88,6 +94,8 @@ private:
    std::function<void()> damageFunction_;
 
    std::function<void()> hitEnemyFunction_;
+
+   std::function<void()> startChargeFunction_;
 
    // 突進中フラグ
    bool isCharging_ = false;
