@@ -12,6 +12,7 @@
 #include "Engine/Graphics/Resource/ResourceFactory.h"
 #include "Engine/Graphics/Model/ModelManager.h"
 #include "Engine/Graphics/TextureManager.h"
+#include "Engine/Audio/SoundManager.h"
 #include "Engine/Input/KeyboardInput.h"
 #include "Engine/Input/GamepadInput.h"
 #include "Engine/WinApp/WinApp.h"
@@ -74,6 +75,19 @@ void TitleScene::Initialize(EngineSystem* engine) {
 		// スプライトをgameObjects_に追加
 		for (auto& sprite : sprites) {
 			gameObjects_.push_back(std::move(sprite));
+		}
+	}
+
+	// BGM再生
+	{
+		auto audio = engine_->GetComponent<SoundManager>();
+		if (audio) {
+			titleBGM_ = audio->CreateSoundResource("Resources/Audio/BGM/Title.mp3");
+			
+			if (titleBGM_ && titleBGM_->IsValid()) {
+				titleBGM_->Play(true); // ループ再生
+				titleBGM_->SetVolume(0.4f); // 音量調整
+			}
 		}
 	}
 
