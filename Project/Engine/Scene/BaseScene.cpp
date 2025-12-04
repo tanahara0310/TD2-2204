@@ -168,13 +168,14 @@ void BaseScene::SetupCamera()
 	// カメラマネージャーを作成
 	cameraManager_ = std::make_unique<CameraManager>();
 
-	// ===== 3Dカメラの設定 =====
+	// ===== 3Dカメラの設定=====
 
 	// リリースカメラを作成して登録（斜め上から俯瞰する視点）
 	auto releaseCamera = std::make_unique<Camera>();
 	releaseCamera->Initialize(dxCommon->GetDevice());
-	releaseCamera->SetTranslate({ 0.0f, 12.0f, -15.0f });
-	releaseCamera->SetRotate({ 0.6f, 0.0f, 0.0f });
+	
+	// 派生クラスでカスタマイズ可能なパラメータ設定
+	SetupReleaseCameraParameters(releaseCamera.get());
 
 	cameraManager_->RegisterCamera("Release", std::move(releaseCamera));
 
@@ -203,6 +204,13 @@ void BaseScene::SetupCamera()
 
 	// 2Dカメラをアクティブに設定
 	cameraManager_->SetActiveCamera("Camera2D", CameraType::Camera2D);
+}
+
+void BaseScene::SetupReleaseCameraParameters(Camera* camera)
+{
+	// デフォルトのカメラパラメータ（GameScene用の斜め上から俯瞰する視点）
+	camera->SetTranslate({ 0.0f, 12.0f, -15.0f });
+	camera->SetRotate({ 0.6f, 0.0f, 0.0f });
 }
 
 void BaseScene::SetupLight()

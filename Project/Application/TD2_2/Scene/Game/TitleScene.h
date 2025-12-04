@@ -7,11 +7,13 @@
 #include "Object3d.h"
 #include "../../GameObject/Voxel/Voxel.h"
 #include "../../GameObject/Title/TitleUI.h"
+#include "../../GameObject/Background/Background.h"
 #include "../../Utility/KeyConfig.h"
 
 
 class EngineSystem;
 class CameraManager;
+class Camera;
 
 /// @brief タイトルシーンクラス
 class TitleScene : public BaseScene {
@@ -28,6 +30,10 @@ public:
 	/// @brief 解放
 	void Finalize() override;
 
+protected:
+	/// @brief リリースカメラの初期設定をカスタマイズ
+	void SetupReleaseCameraParameters(Camera* camera) override;
+
 private:
 	// /// @brief 電気パーティクルエフェクトを作成
 	// void CreateElectricParticleEffect();
@@ -38,9 +44,16 @@ private:
 private:
 	std::unique_ptr<TitleUI> titleUI_;
 	
-	// キーコンフィグ
-	KeyConfig keyConfig_;
+	// 背景
+	Background* background_ = nullptr;
 	
+	// キーコンフィグ
+	std::unique_ptr<KeyConfig> keyConfig_;
+	
+	// スティック入力のクールダウン
+	float stickInputCooldown_ = 0.0f;
+	static constexpr float kStickInputDelay = 0.2f; // スティック入力の遅延時間（秒）
+	static constexpr float kStickThreshold = 0.5f;   // スティック入力の閾値
 	
 	// シーン遷移フラグとタイマー
 	bool isTransitioning_ = false;
