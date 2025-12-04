@@ -98,8 +98,8 @@ private:
    // ビヘイビアツリー
    std::unique_ptr<BehaviorTree> behaviorTree_;
 
-   int hp_ = 3;
-   int maxHp_ = 3;
+   int hp_ = 5;
+   int maxHp_ = 5;
 
 private:
    /// @brief コライダーの初期化
