@@ -1,10 +1,13 @@
 #include "WinApp.h"
 
+#pragma comment(lib, "winmm.lib")
+
 // 静的メンバの初期化
 WinApp* WinApp::instance_ = nullptr;
 
 void WinApp::Initialize(int32_t width, int32_t height, const wchar_t* title)
 {
+	timeBeginPeriod(1); // タイマー精度を1msに設定
 	hwnd_ = nullptr;
 	instance_ = this; // インスタンスポインタを設定
 	currentClientWidth_ = width;
