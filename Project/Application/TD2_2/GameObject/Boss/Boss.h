@@ -49,6 +49,16 @@ public:
    int GetMaxHP() const { return maxHp_; }
    float GetHPRatio() const { return static_cast<float>(hp_) / static_cast<float>(maxHp_); }
 
+   void SetStartDamageFunction(const std::function<void()>& func) {
+	  startDamageFunction_ = func;
+   }
+
+   void SetStartChargeFunction(const std::function<void()>& func) {
+	  startChargeFunction_ = func;
+   }
+
+   void ChargeFunction();
+
    //======================================================================
    // ビヘイビアツリー関連
    //======================================================================
@@ -100,6 +110,10 @@ private:
 
    int hp_ = 5;
    int maxHp_ = 5;
+
+   std::function<void()> startDamageFunction_;
+
+   std::function<void()> startChargeFunction_;
 
 private:
    /// @brief コライダーの初期化

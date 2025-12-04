@@ -29,10 +29,10 @@ void Boss::Initialize(std::unique_ptr<Model> model, TextureManager::LoadedTextur
 void Boss::Update() {
    // ダメージ壁との接触判定（ダメージ状態以外、かつ無敵時間でない場合のみ）
    if (stateMachine_->GetCurrentState() != "Damage" &&
-       stateMachine_->GetCurrentState() != "Despawn" &&
-       stateMachine_->GetCurrentState() != "Respawn" &&
-       !IsInvincible()) {
-      CheckDamageWallCollision();
+	  stateMachine_->GetCurrentState() != "Despawn" &&
+	  stateMachine_->GetCurrentState() != "Respawn" &&
+	  !IsInvincible()) {
+	  CheckDamageWallCollision();
    }
 
    // ステートマシンの更新
@@ -154,6 +154,12 @@ void Boss::OnCollisionExit(GameObject* other) {
    (void)other;
 }
 
+void Boss::ChargeFunction() {
+   if (startChargeFunction_) {
+	  startChargeFunction_();
+   }
+}
+
 void Boss::SetBehaviorTree(std::unique_ptr<BehaviorTree> tree) {
    behaviorTree_ = std::move(tree);
 }
@@ -179,18 +185,18 @@ void Boss::InitializeStateMachine() {
 
    // ダメージ状態
    stateMachine_->AddState("Damage",
-      std::bind(&Boss::InitializeDamage, this),
-      std::bind(&Boss::Damage, this));
+	  std::bind(&Boss::InitializeDamage, this),
+	  std::bind(&Boss::Damage, this));
 
    // デスポーン状態
    stateMachine_->AddState("Despawn",
-      std::bind(&Boss::InitializeDespawn, this),
-      std::bind(&Boss::Despawn, this));
+	  std::bind(&Boss::InitializeDespawn, this),
+	  std::bind(&Boss::Despawn, this));
 
    // リスポーン状態
    stateMachine_->AddState("Respawn",
-      std::bind(&Boss::InitializeRespawn, this),
-      std::bind(&Boss::Respawn, this));
+	  std::bind(&Boss::InitializeRespawn, this),
+	  std::bind(&Boss::Respawn, this));
 
    // 状態遷移ルール
    stateMachine_->AddTransitionRule("Normal", { "Stun", "Damage" });
@@ -297,13 +303,17 @@ void Boss::Stun() {
 void Boss::InitializeDamage() {
    velocity_ = { 0.0f, 0.0f };
    acceleration_ = { 0.0f, 0.0f };
-   
+
    StopModelSwapAnimation();
    ChangeToRegisteredModel("Damage");
-   
+
    isCharging_ = false;
-   
+
    GameObject::StartShake(0.15f, 1.0f);
+
+   if (startDamageFunction_) {
+	  startDamageFunction_();
+   }
 }
 
 void Boss::Damage() {
@@ -318,32 +328,32 @@ void Boss::InitializeDespawn() {
    despawnTimer_.Start(despawnDuration_, false);
    velocity_ = { 0.0f, 0.0f };
    acceleration_ = { 0.0f, 0.0f };
-   
+
    StopModelSwapAnimation();
    ChangeToRegisteredModel("Damage");
-   
+
    isCharging_ = false;
 }
 
 void Boss::Despawn() {
    despawnTimer_.Update(GameUtils::GetDeltaTime());
-   
+
    // スケールを0にイージング
    float progress = despawnTimer_.GetEasedProgress(EasingUtil::Type::EaseInCubic);
    float scale = GameUtils::Lerp(1.0f, 0.0f, progress);
    transform_.scale = { scale, scale, scale };
-   
+
    if (despawnTimer_.IsFinished()) {
-      stateMachine_->RequestState("Respawn", 0);
+	  stateMachine_->RequestState("Respawn", 0);
    }
 }
 
 void Boss::InitializeRespawn() {
    respawnTimer_.Start(respawnDuration_, false);
-   
+
    // ポジションをステージ中央に設定
    transform_.translate = { 15.0f, 0.0f, 0.0f };
-   
+
    velocity_ = { 0.0f, 0.0f };
    acceleration_ = { 0.0f, 0.0f };
 
@@ -352,16 +362,16 @@ void Boss::InitializeRespawn() {
 
 void Boss::Respawn() {
    respawnTimer_.Update(GameUtils::GetDeltaTime());
-   
+
    // スケールを1に戻すイージング
    float progress = respawnTimer_.GetEasedProgress(EasingUtil::Type::EaseOutCubic);
    float scale = GameUtils::Lerp(0.0f, 1.0f, progress);
    transform_.scale = { scale, scale, scale };
-   
+
    if (respawnTimer_.IsFinished()) {
-      // リスポーン完了時に無敵時間を開始（2秒間、0.1秒間隔で点滅）
-      StartInvincibility(2.0f, 0.1f);
-      stateMachine_->RequestState("Normal", 0);
+	  // リスポーン完了時に無敵時間を開始（2秒間、0.1秒間隔で点滅）
+	  StartInvincibility(2.0f, 0.1f);
+	  stateMachine_->RequestState("Normal", 0);
    }
 }
 
@@ -369,11 +379,11 @@ void Boss::CheckDamageWallCollision() {
    // ダメージ壁の範囲を計算（フレームより1ブロック内側）
    float damageWallHalfWidth = (GameSceneConfig::kMoveableAreaSize.x * 0.5f) - GameSceneConfig::kFrameSize.x;
    float damageWallHalfHeight = (GameSceneConfig::kMoveableAreaSize.y * 0.5f) - GameSceneConfig::kFrameSize.y;
-   
+
    // ボスがダメージ壁に接触したか判定
    if (std::abs(transform_.translate.x) >= damageWallHalfWidth ||
-       std::abs(transform_.translate.y) >= damageWallHalfHeight) {
-      // ダメージステートに遷移
-      stateMachine_->RequestState("Damage", 0);
+	  std::abs(transform_.translate.y) >= damageWallHalfHeight) {
+	  // ダメージステートに遷移
+	  stateMachine_->RequestState("Damage", 0);
    }
 }

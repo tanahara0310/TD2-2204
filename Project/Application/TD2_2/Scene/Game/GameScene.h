@@ -68,6 +68,11 @@ private:
    SpriteObject* startUI_;
 
    GameTimer uiAnimationTimer_;
+
+   Sound bgmSound_;
+   Sound hitSound_;
+   Sound damageSound_;
+   Sound chargeSound_;
 private:
    void RegisterAllColliders();
 

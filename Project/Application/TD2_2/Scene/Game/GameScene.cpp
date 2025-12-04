@@ -50,12 +50,28 @@ void GameScene::Initialize(EngineSystem* engine) {
 			// プリセット版は継続時間も事前設定されている
 			cameraController_->StartShake(CameraController::ShakeIntensity::Large);
 		 }
+
+		 if (damageSound_ && damageSound_->IsValid()) {
+			damageSound_->Play(false);
+		 }
+
 		 });
 	  player->SetHitEnemyFunction([this]() {
 		 if (cameraController_) {
 			cameraController_->StartShake(CameraController::ShakeIntensity::Medium);
 		 }
+
+		 if (hitSound_ && hitSound_->IsValid()) {
+			hitSound_->Play(false);
+		 }
+
 		 });
+	  player->SetStartChargeFunction([this]() {
+		 if (chargeSound_ && chargeSound_->IsValid()) {
+			chargeSound_->Play(false);
+		 }
+		 });
+
 	  player->RegisterModelResource("Damage", "Resources/Models/Player/Damage/PlayerDamage.obj");
 	  player->RegisterModelResource("Player1", "Resources/Models/Player/Player.obj");
 	  player->RegisterModelResource("Player2", "Resources/Models/PlayerPropeller/PlayerPropeller.obj");
@@ -77,6 +93,16 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  boss->RegisterModelResource("Damage", "Resources/Models/Boss/Damage/BossDamage.obj");
 	  boss->RegisterModelResource("Boss1", "Resources/Models/Boss/Boss.obj");
 	  boss->RegisterModelResource("Boss2", "Resources/Models/BossPropeller/BossPropeller.obj");
+	  boss->SetStartDamageFunction([this]() {
+		 if (damageSound_ && damageSound_->IsValid()) {
+			damageSound_->Play(false);
+		 }
+		 });
+	  boss->SetStartChargeFunction([this]() {
+		 if (chargeSound_ && chargeSound_->IsValid()) {
+			chargeSound_->Play(false);
+		 }
+		 });
 	  gameObjects_.push_back(std::move(boss));
    }
 
@@ -128,6 +154,22 @@ void GameScene::Initialize(EngineSystem* engine) {
    }
 
    uiAnimationTimer_.Start(2.5f);
+
+   {
+	  auto soundManager = engine_->GetComponent<SoundManager>();
+	  if (soundManager) {
+		 bgmSound_ = soundManager->CreateSoundResource("Resources/Audio/BGM/GameSceneBGM.mp3");
+		 hitSound_ = soundManager->CreateSoundResource("Resources/Audio/SE/hit.mp3");
+		 damageSound_ = soundManager->CreateSoundResource("Resources/Audio/SE/damage.mp3");
+		 chargeSound_ = soundManager->CreateSoundResource("Resources/Audio/SE/charge.mp3");
+		 chargeSound_->SetVolume(0.5f);
+		 damageSound_->SetVolume(1.0f);
+	  }
+
+	  if (bgmSound_ && bgmSound_->IsValid()) {
+		 bgmSound_->Play(true);
+	  }
+   }
 
    // フレームの初期化
    InitializeFrames();
