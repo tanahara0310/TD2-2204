@@ -58,5 +58,5 @@ private:
 	// シーン遷移フラグとタイマー
 	bool isTransitioning_ = false;
 	float transitionTimer_ = 0.0f;
-	static constexpr float kTransitionDuration = 1.0f; // 1秒で遷移
+	static constexpr float kTransitionDuration = 0.3f; // 0.3秒で遷移（決定アニメーションと同時）
 };
