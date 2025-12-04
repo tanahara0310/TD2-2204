@@ -31,8 +31,7 @@ public:
 
 private:
     /// @brief FPS計測値を更新
-    /// @param actualDeltaTime 実測のデルタタイム（秒）
-    void UpdateFPSCalculation(float actualDeltaTime);
+    void UpdateFPSCalculation();
 
 private:
     // 固定値
@@ -40,11 +39,11 @@ private:
     static constexpr float kFixedDeltaTime = 1.0f / kTargetFPS;   // 固定デルタタイム（フォールバック用）
     static constexpr int kFPSSampleCount = 60;                    // FPS計測用サンプル数（1秒分）
     static constexpr int kWarmupFrames = 3;                       // 初期化後の安定化フレーム数
-    
+
     // 時間管理
     std::chrono::high_resolution_clock::time_point lastFrameTime_;  // 前フレームの開始時刻
     float deltaTime_ = kFixedDeltaTime;                            // フレーム間経過時間（秒）
-    
+
     // FPS計測
     float fpsSamples_[kFPSSampleCount] = {};    // FPS計測用サンプル配列
     int fpsSampleIndex_ = 0;                    // 現在のサンプルインデックス
