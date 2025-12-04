@@ -12,6 +12,7 @@ class DirectXCommon;
 class Object3d;
 class RenderManager;
 class LineRenderer;  // 前方宣言
+class Camera;        // 前方宣言
 
 /// @brief シーンの基底クラス（共通処理を実装）
 class BaseScene : public IScene {
@@ -30,6 +31,11 @@ public:
 
    /// @brief 解放（共通処理 + 派生クラスの解放）
    virtual void Finalize() override;
+
+protected:
+   /// @brief リリースカメラの初期設定をカスタマイズ（派生クラスでオーバーライド可能）
+   /// @param camera リリースカメラのポインタ
+   virtual void SetupReleaseCameraParameters(Camera* camera);
 
 private:
 
