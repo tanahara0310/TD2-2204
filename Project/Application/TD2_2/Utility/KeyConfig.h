@@ -59,6 +59,24 @@ public:
    Vector2 GetVector2() const override;
 };
 
+enum class AxisComponent {
+   X,
+   Y
+};
+
+class GamepadAxisBoolSource : public InputSource {
+public:
+   // component: X軸 or Y軸, positive: trueなら正方向、falseなら負方向
+   GamepadAxisBoolSource(AxisComponent component, bool positive)
+	  : component_(component), positive_(positive) {}
+
+   bool GetBool() const override;
+
+private:
+   AxisComponent component_;
+   bool positive_;
+};
+
 class Action {
 public:
    ActionType type;
@@ -107,6 +125,7 @@ public:
    bool GetDown(const std::string& name) const {
 	  return actions_.at(name).GetBoolDown();
    }
+
    bool GetUp(const std::string& name) const {
 	  return actions_.at(name).GetBoolUp();
    }
@@ -159,6 +178,13 @@ public:
 
    ActionBuilder& BindGamepadLeftStick() {
 	  action_.sources.push_back(std::make_unique<GamepadAxis2DSource>());
+	  return *this;
+   }
+
+   ActionBuilder& BindGamepadAxisBool(AxisComponent component, bool positive) {
+	  action_.sources.push_back(
+		 std::make_unique<GamepadAxisBoolSource>(component, positive)
+	  );
 	  return *this;
    }
 };
