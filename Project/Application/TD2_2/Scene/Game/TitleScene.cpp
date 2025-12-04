@@ -129,16 +129,16 @@ void TitleScene::Update() {
 
 		// 決定ボタン（キーボード or ゲームパッド）
 		if (keyConfig_->GetDown("Confirm")) {
-			// 決定アニメーション開始
-			titleUI_->OnConfirm();
-
 			switch (titleUI_->GetSelectionState()) {
 			case TitleUI::SelectionState::Start:
-				// 遷移開始
+				// 決定アニメーション開始（視覚的フィードバック）
+				titleUI_->OnConfirm();
+				
+				// シーン遷移を即座に開始
 				isTransitioning_ = true;
 				transitionTimer_ = 0.0f;
-
 				break;
+				
 			case TitleUI::SelectionState::Quit:
 				// アプリケーション終了
 				PostQuitMessage(0);
