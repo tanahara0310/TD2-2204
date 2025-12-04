@@ -153,7 +153,7 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  gameObjects_.push_back(std::move(startUI));
    }
 
-   uiAnimationTimer_.Start(2.5f);
+   uiAnimationTimer_.Start(3.0f);
 
    {
 	  auto soundManager = engine_->GetComponent<SoundManager>();
