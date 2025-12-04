@@ -63,6 +63,8 @@ private:
 
    std::unique_ptr<HitPoint> playerHitPointUI_;
    std::unique_ptr<HitPoint> bossHitPointUI_;
+
+   SpriteObject* ui_;
 private:
    void RegisterAllColliders();
 

@@ -48,12 +48,12 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  player->SetStartDamageFunction([this]() {
 		 if (cameraController_) {
 			// プリセット版は継続時間も事前設定されている
-			//cameraController_->StartShake(CameraController::ShakeIntensity::Large);
+			cameraController_->StartShake(CameraController::ShakeIntensity::Large);
 		 }
 		 });
 	  player->SetHitEnemyFunction([this]() {
 		 if (cameraController_) {
-			//cameraController_->StartShake(CameraController::ShakeIntensity::Medium);
+			cameraController_->StartShake(CameraController::ShakeIntensity::Medium);
 		 }
 		 });
 	  player->RegisterModelResource("Damage", "Resources/Models/Player/Damage/PlayerDamage.obj");
@@ -106,6 +106,18 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  for (auto& sprite : bossSprites) {
 		 gameObjects_.push_back(std::move(sprite));
 	  }
+   }
+
+   {
+	  // UIの生成と初期化
+	  auto ui = std::make_unique<SpriteObject>();
+	  ui->Initialize("Resources/Textures/ACharge.png");
+	  ui->GetTransform().scale = { 1.0f, 1.0f, 1.0f };
+	  ui->SetAnchor({ 1.0f, 1.0f });
+	  ui->GetTransform().translate = { 624.0f, -344.0f, 0.0f };
+	  ui_ = ui.get();
+	  gameObjects_.push_back(std::move(ui));
+
    }
 
    // フレームの初期化
