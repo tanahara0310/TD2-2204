@@ -50,3 +50,25 @@ Vector2 GamepadAxis2DSource::GetVector2() const {
    Stick s = sGamepad->GetLeftStick();
    return { s.x, s.y };
 }
+
+bool GamepadAxisBoolSource::GetBool() const {
+   // アナログスティックがBool値として認識されるためのしきい値
+   constexpr float AXIS_THRESHOLD = 0.5f;
+
+   Stick s = sGamepad->GetLeftStick();
+   float axis_value = 0.0f;
+
+   if (component_ == AxisComponent::X) {
+	  axis_value = s.x;
+   } else { // component_ == AxisComponent::Y
+	  axis_value = s.y;
+   }
+
+   if (positive_) {
+	  // 正方向（右、上）の入力チェック
+	  return axis_value >= AXIS_THRESHOLD;
+   } else {
+	  // 負方向（左、下）の入力チェック
+	  return axis_value <= -AXIS_THRESHOLD;
+   }
+}
