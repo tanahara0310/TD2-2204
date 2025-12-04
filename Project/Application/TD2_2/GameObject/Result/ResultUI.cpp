@@ -44,10 +44,10 @@ std::vector<std::unique_ptr<IDrawable>> ResultUI::Initialize([[maybe_unused]] En
 		auto timer = CreateTimerUI();
 
 		// 基本の位置
-		float x = i * 64.0f - 400.0f;
+		float x = i * 96.0f - 440.0f;
 
 		// iが2の倍数のときに余分なオフセットを加える
-		x += (i / 2) * 256.0f;
+		x += (i / 2) * 192.0f;
 
 		timer->GetTransform().translate = {x, 140.0f, 0.0f};
 		timerUI_.push_back(timer.get());
@@ -59,7 +59,7 @@ std::vector<std::unique_ptr<IDrawable>> ResultUI::Initialize([[maybe_unused]] En
 		auto timer = CreateTimerUI();
 
 		// 基本の位置
-		float x = i * 32.0f - 200.0f;
+		float x = i * 64.0f - 260.0f;
 
 		// iが2の倍数のときに余分なオフセットを加える
 		x += (i / 2) * 128.0f;
@@ -75,7 +75,7 @@ std::vector<std::unique_ptr<IDrawable>> ResultUI::Initialize([[maybe_unused]] En
 		auto timer = CreateTimerUI();
 
 		// 基本の位置
-		float x = i * 32.0f - 200.0f;
+		float x = i * 64.0f - 260.0f;
 
 		// iが2の倍数のときに余分なオフセットを加える
 		x += (i / 2) * 128.0f;
@@ -91,7 +91,7 @@ std::vector<std::unique_ptr<IDrawable>> ResultUI::Initialize([[maybe_unused]] En
 		auto timer = CreateTimerUI();
 
 		// 基本の位置
-		float x = i * 32.0f - 200.0f;
+		float x = i * 64.0f - 260.0f;
 
 		// iが2の倍数のときに余分なオフセットを加える
 		x += (i / 2) * 128.0f;
@@ -103,38 +103,46 @@ std::vector<std::unique_ptr<IDrawable>> ResultUI::Initialize([[maybe_unused]] En
 	}
 
 	// コロンUIを作成
-	for (int i = 0; i < 2; i++) {
-		auto colonUI = CreateColonUI();
-		colonUI->GetTransform().translate = {i * 390.0f - 180.0f, 130.0f, 0.0f};
-		colonUI_ = colonUI.get();
-		sprites.push_back(std::move(colonUI));
-	}
+	auto colonUI = CreateColonUI();
+	colonUI->GetTransform().translate = {-20.0f - 180.0f, 130.0f, 0.0f};
+	colonUI_ = colonUI.get();
+	sprites.push_back(std::move(colonUI));
 
 	// コロンUI(1位)を作成
-	for (int i = 0; i < 2; i++) {
-		auto colonUI = CreateColonUI();
-		colonUI->GetTransform().translate = {i * 195.0f - 90.0f, -10.0f, 0.0f};
-		colonUI->GetTransform().scale = {0.5f, 0.5f, 0.5f};
-		colonUIRank1_ = colonUI.get();
-		sprites.push_back(std::move(colonUI));
-	}
+	auto colonUI1 = CreateColonUI();
+	colonUI1->GetTransform().translate = {-10.0f - 90.0f, -10.0f, 0.0f};
+	colonUI1->GetTransform().scale = {0.5f, 0.5f, 0.5f};
+	colonUIRank1_ = colonUI1.get();
+	sprites.push_back(std::move(colonUI1));
 
 	// コロンUI(2位)を作成
-	for (int i = 0; i < 2; i++) {
-		auto colonUI = CreateColonUI();
-		colonUI->GetTransform().translate = {i * 195.0f - 90.0f, -100.0f, 0.0f};
-		colonUI->GetTransform().scale = {0.5f, 0.5f, 0.5f};
-		colonUIRank2_ = colonUI.get();
-		sprites.push_back(std::move(colonUI));
-	}
+	auto colonUI2 = CreateColonUI();
+	colonUI2->GetTransform().translate = {-10.0f - 90.0f, -100.0f, 0.0f};
+	colonUI2->GetTransform().scale = {0.5f, 0.5f, 0.5f};
+	colonUIRank2_ = colonUI2.get();
+	sprites.push_back(std::move(colonUI2));
 
 	// コロンUI(3位)を作成
-	for (int i = 0; i < 2; i++) {
-		auto colonUI = CreateColonUI();
-		colonUI->GetTransform().translate = {i * 195.0f - 90.0f, -190.0f, 0.0f};
-		colonUI->GetTransform().scale = {0.5f, 0.5f, 0.5f};
-		colonUIRank3_ = colonUI.get();
-		sprites.push_back(std::move(colonUI));
+	auto colonUI3 = CreateColonUI();
+	colonUI3->GetTransform().translate = {-10.0f - 90.0f, -190.0f, 0.0f};
+	colonUI3->GetTransform().scale = {0.5f, 0.5f, 0.5f};
+	colonUIRank3_ = colonUI3.get();
+	sprites.push_back(std::move(colonUI3));
+
+	// ピリオドUIを作成
+	auto period = CreatePeriodUI();
+	period->GetTransform().translate = {195.0f, 100.0f, 0.0f};
+	period->GetTransform().scale = {0.5f, 0.5f, 0.5f};
+	period_ = period.get();
+	sprites.push_back(std::move(period));
+
+	// ピリオドUIを作成
+	for (int i = 0; i < 3; i++) {
+		auto periodRank = CreatePeriodUI();
+		periodRank->GetTransform().translate = {160.0f, i * -90.0f - 30.0f, 0.0f};
+		periodRank->GetTransform().scale = {0.2f, 0.2f, 0.2f};
+		periodRanks_.push_back(periodRank.get());
+		sprites.push_back(std::move(periodRank));
 	}
 
 	// ステートマシーンの初期化
@@ -236,7 +244,7 @@ std::unique_ptr<SpriteObject> ResultUI::CreateResult() {
 std::unique_ptr<SpriteObject> ResultUI::CreateToTitleUI() {
 	auto sprite = std::make_unique<SpriteObject>();
 	sprite->Initialize("Resources/GameResources/Result/ToTitle.png");
-	sprite->GetTransform().translate = {490.0f, -310.0f, 0.0f};
+	sprite->GetTransform().translate = {440.0f, -310.0f, 0.0f};
 	sprite->SetAnchor({0.5f, 0.5f});
 
 	return sprite;
@@ -245,7 +253,7 @@ std::unique_ptr<SpriteObject> ResultUI::CreateToTitleUI() {
 std::unique_ptr<SpriteObject> ResultUI::CreateRestartUI() {
 	auto sprite = std::make_unique<SpriteObject>();
 	sprite->Initialize("Resources/GameResources/Result/Restart.png");
-	sprite->GetTransform().translate = {-500.0f, -300.0f, 0.0f};
+	sprite->GetTransform().translate = {-450.0f, -300.0f, 0.0f};
 	sprite->SetAnchor({0.5f, 0.5f});
 
 	return sprite;
@@ -254,7 +262,7 @@ std::unique_ptr<SpriteObject> ResultUI::CreateRestartUI() {
 std::unique_ptr<SpriteObject> ResultUI::CreateRankingUI(int num) {
 	auto sprite = std::make_unique<SpriteObject>();
 	sprite->Initialize("Resources/GameResources/Result/Numbers/" + std::to_string(num) + ".png");
-	sprite->GetTransform().translate = {-300.0f, 80.0f - (num * 90.0f), 0.0f};
+	sprite->GetTransform().translate = {-450.0f, 80.0f - (num * 90.0f), 0.0f};
 	sprite->SetAnchor({0.5f, 0.5f});
 
 	return sprite;
@@ -281,6 +289,14 @@ std::unique_ptr<SpriteObject> ResultUI::CreateTimerUI() {
 std::unique_ptr<SpriteObject> ResultUI::CreateColonUI() {
 	auto sprite = std::make_unique<SpriteObject>();
 	sprite->Initialize("Resources/GameResources/Result/Colon.png");
+	sprite->SetAnchor({0.5f, 0.5f});
+
+	return sprite;
+}
+
+std::unique_ptr<SpriteObject> ResultUI::CreatePeriodUI() { 
+	auto sprite = std::make_unique<SpriteObject>();
+	sprite->Initialize("Resources/GameResources/Result/Period.png");
 	sprite->SetAnchor({0.5f, 0.5f});
 
 	return sprite;

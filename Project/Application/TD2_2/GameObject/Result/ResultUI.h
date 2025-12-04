@@ -65,6 +65,9 @@ private:
 	// コロンui
 	std::unique_ptr<SpriteObject> CreateColonUI();
 
+	// ピリオドui
+	std::unique_ptr<SpriteObject> CreatePeriodUI();
+
 	/// @brief 選択状態に応じて矢印の位置を更新
 	void UpdateArrowPosition();
 
@@ -82,10 +85,13 @@ private:
 	std::vector<SpriteObject*> timerUIRank1_;
 	std::vector<SpriteObject*> timerUIRank2_;
 	std::vector<SpriteObject*> timerUIRank3_;
+	std::vector<SpriteObject*> periodRanks_;
 	SpriteObject* colonUI_ = nullptr;
 	SpriteObject* colonUIRank1_ = nullptr;
 	SpriteObject* colonUIRank2_ = nullptr;
 	SpriteObject* colonUIRank3_ = nullptr;
+	SpriteObject* period_ = nullptr;
+	
 
 	// 選択状態
 	SelectionState selectionState_ = SelectionState::ToTitle;
@@ -97,8 +103,8 @@ private:
 	std::array<int, 6> timerDigits_;
 
 	// 矢印の位置（スタートUIのサイズを考慮）
-	static constexpr float kArrowOffsetX_ToTitle = 320.0f;   // リスタートボタン用（X方向に大きいため左寄り）
-	static constexpr float kArrowOffsetX_ReStart = -340.0f;  // 「タイトルへ」ボタン用（標準サイズ）
+	static constexpr float kArrowOffsetX_ToTitle = 270.0f;   // リスタートボタン用（X方向に大きいため左寄り）
+	static constexpr float kArrowOffsetX_ReStart = -280.0f;  // 「タイトルへ」ボタン用（標準サイズ）
 	static constexpr float kToTitleButtonY = -310.0f;        // 「タイトルへ」ボタンのY座標
 	static constexpr float kReStartButtonY = -310.0f;        // リスタートボタンのY座標
 };

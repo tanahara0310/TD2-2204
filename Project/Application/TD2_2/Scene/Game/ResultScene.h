@@ -7,6 +7,7 @@
 #include "Engine/ObjectCommon/SpriteObject.h"
 #include "../../GameObject/Result/ResultUI.h"
 #include "../../Utility/KeyConfig.h"
+#include "../../GameObject/Background/Background.h"
 
 class EngineSystem;
 class CameraManager;
@@ -57,6 +58,9 @@ private:
 	// リザルトUI
 	std::unique_ptr<ResultUI> resultUI_;
 
+	// 背景
+	Background* background_ = nullptr;
+
 	// キーコンフィグ
 	KeyConfig keyConfig_;
 
@@ -68,4 +72,7 @@ private:
 
 	// タイマーの6要素(00:00:00)を格納する変数
 	std::array<int, 6> timerDigits_;
+
+	// BGM
+	Sound mp3Resource_;
 };
