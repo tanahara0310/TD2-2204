@@ -6,6 +6,7 @@
 #include "Engine/Graphics/TextureManager.h"
 #include "Engine/ObjectCommon/SpriteObject.h"
 #include "../../GameObject/Result/ResultUI.h"
+#include "../../Utility/KeyConfig.h"
 
 class EngineSystem;
 class CameraManager;
@@ -55,6 +56,9 @@ private:
 
 	// リザルトUI
 	std::unique_ptr<ResultUI> resultUI_;
+
+	// キーコンフィグ
+	KeyConfig keyConfig_;
 
 	// シーン遷移フラグとタイマー
 	bool isTitleTransitioning_ = false;
