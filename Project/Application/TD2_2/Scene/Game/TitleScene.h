@@ -59,4 +59,6 @@ private:
 	bool isTransitioning_ = false;
 	float transitionTimer_ = 0.0f;
 	static constexpr float kTransitionDuration = 0.3f; // 0.3秒で遷移（決定アニメーションと同時）
+
+	Sound titleBGM_;
 };
