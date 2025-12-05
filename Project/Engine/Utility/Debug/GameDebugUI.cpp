@@ -181,7 +181,7 @@ void GameDebugUI::ShowFPSInfoTab(FrameRateController* frameRate)
 	
 	// FPSの色分け
 	ImVec4 fpsColor;
-	if (currentFPS >= targetFPS * 0.95f) {
+	if (currentFPS >= targetFPS * 0.90f) {
 		fpsColor = ImVec4(0.0f, 1.0f, 0.0f, 1.0f); // 緑: 正常
 	} else if (currentFPS >= targetFPS * 0.80f) {
 		fpsColor = ImVec4(1.0f, 0.8f, 0.0f, 1.0f); // 黄: やや低下
@@ -206,7 +206,7 @@ void GameDebugUI::ShowFPSInfoTab(FrameRateController* frameRate)
 	// パフォーマンス状態インジケーター
 	const char* statusText;
 	ImVec4 statusColor;
-	if (currentFPS >= targetFPS * 0.95f) {
+	if (currentFPS >= targetFPS * 0.90f) {
 		statusText = "良好";
 		statusColor = ImVec4(0.0f, 1.0f, 0.0f, 1.0f);
 	} else if (currentFPS >= targetFPS * 0.80f) {

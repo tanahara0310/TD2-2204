@@ -186,7 +186,7 @@ void BaseScene::SetupCamera()
 
 #ifdef _DEBUG
 	// デバッグビルドではデバッグカメラをアクティブに設定
-	cameraManager_->SetActiveCamera("Debug", CameraType::Camera3D);
+	cameraManager_->SetActiveCamera("Release", CameraType::Camera3D);
 #else
 	// リリースビルドではリリースカメラをアクティブに設定
 	cameraManager_->SetActiveCamera("Release", CameraType::Camera3D);

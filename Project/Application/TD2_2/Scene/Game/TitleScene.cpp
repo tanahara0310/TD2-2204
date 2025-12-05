@@ -27,6 +27,9 @@ void TitleScene::Initialize(EngineSystem* engine) {
 	// InputSourceの初期化（必須）
 	InputSource::Initialize(engine);
 
+	// カメラコントローラーの初期化
+	cameraController_ = std::make_unique<TitleCameraController>();
+
 	// KeyConfigの設定
 	{
 		keyConfig_ = std::make_unique<KeyConfig>();
@@ -64,6 +67,15 @@ void TitleScene::Initialize(EngineSystem* engine) {
 		auto background = std::make_unique<Background>();
 		background_ = background.get();
 		background->Initialize(std::move(backgroundModel), backgroundTexture);
+		
+		// タイトルシーン専用の背景モデルパラメータ
+		background_->GetTransform().translate = { 47.8f, 12.7f, -27.7f };
+		background_->GetTransform().rotate = { 0.0f, 0.0f, 0.0f };
+
+		
+		// 行列を更新して変更を反映
+		background_->GetTransform().TransferMatrix();
+		
 		gameObjects_.push_back(std::move(background));
 	}
 
@@ -96,6 +108,21 @@ void TitleScene::Initialize(EngineSystem* engine) {
 void TitleScene::Update() {
 	BaseScene::Update();
 
+	// カメラコントローラーを毎フレーム適用（デフォルト値も含む）
+	if (cameraController_ && cameraManager_) {
+		auto* activeCamera = cameraManager_->GetActiveCamera();
+		if (activeCamera) {
+			auto* camera = dynamic_cast<Camera*>(activeCamera);
+			if (camera) {
+				cameraController_->ApplyToCamera(camera);
+			}
+		}
+	}
+
+	// カメラコントローラーのImGui表示
+	if (cameraController_) {
+		cameraController_->DrawImGui();
+	}
 
 	if (!titleUI_) {
 		return;
@@ -145,9 +172,6 @@ void TitleScene::Update() {
 		if (keyConfig_->GetDown("Confirm")) {
 			switch (titleUI_->GetSelectionState()) {
 			case TitleUI::SelectionState::Start:
-				// 決定アニメーション開始（視覚的フィードバック）
-				titleUI_->OnConfirm();
-				
 				// シーン遷移を即座に開始
 				isTransitioning_ = true;
 				transitionTimer_ = 0.0f;
@@ -192,8 +216,8 @@ void TitleScene::Finalize() {
 
 void TitleScene::SetupReleaseCameraParameters(Camera* camera)
 {
-	// タイトルシーン専用のカメラパラメータ
-	// より引きの視点で全体を見渡せるように設定
-	camera->SetTranslate({ 0.0f, 0.0f, -70.0f });
-	camera->SetRotate({ 0.0f, 0.0f, 0.0f });
+	// カメラコントローラーを使ってカメラパラメータを適用
+	if (cameraController_) {
+		cameraController_->ApplyToCamera(camera);
+	}
 }
