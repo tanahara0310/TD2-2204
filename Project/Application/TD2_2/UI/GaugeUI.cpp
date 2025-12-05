@@ -14,7 +14,7 @@
 
 using namespace MathCore;
 
-std::vector<std::unique_ptr<IDrawable>> GaugeUI::Initialize(CameraManager* cameraManager, int maxGauge) {
+std::vector<std::unique_ptr<IDrawable>> GaugeUI::Initialize(CameraManager* cameraManager, float maxGauge) {
 	assert(cameraManager != nullptr);
 
 	std::vector<std::unique_ptr<IDrawable>> sprites;
@@ -67,7 +67,7 @@ std::vector<std::unique_ptr<IDrawable>> GaugeUI::Initialize(CameraManager* camer
 	return sprites;
 }
 
-void GaugeUI::SetValue(int current) {
+void GaugeUI::SetValue(float current) {
 	if (current > maxGauge_ || current < 0)
 		return;
 

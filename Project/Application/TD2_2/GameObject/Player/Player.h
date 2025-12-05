@@ -17,19 +17,19 @@ public:
    const char* GetObjectName() const override { return "Player"; }
 
    void SetStartDamageFunction(const std::function<void()>& func) {
-      startDamageFunction_ = func;
+	  startDamageFunction_ = func;
    }
 
    void SetDamageFunction(const std::function<void()>& func) {
-      damageFunction_ = func;
+	  damageFunction_ = func;
    }
 
    void SetHitEnemyFunction(const std::function<void()>& func) {
-      hitEnemyFunction_ = func;
+	  hitEnemyFunction_ = func;
    }
 
    void SetStartChargeFunction(const std::function<void()>& func) {
-      startChargeFunction_ = func;
+	  startChargeFunction_ = func;
    }
 
    // 速度取得
@@ -45,7 +45,7 @@ public:
    int GetHP() const { return hp_; }
    int GetMaxHP() const { return maxHp_; }
 
-
+   float GetStoredEnergy() const { return storedEnergy_; }
 private:
 
    Vector2 acceleration_ = { 0.0f, 0.0f }; // 加速度ベクトル
@@ -68,7 +68,7 @@ private:
 
    // スタン
    float stunPower_ = 2000.0f; // スタン反発力 (基礎)
-   float stunDuration_ = 0.3f; // スタン持続時間（秒）
+   float stunDuration_ = 0.25f; // スタン持続時間（秒）
    float stunDamping_ = 0.02f;  // スタン減衰率
    float stunMaxSpeed_ = 35.0f; // スタン最大速度
    GameTimer stunTimer_;
@@ -102,7 +102,14 @@ private:
 
    int hp_ = 5;
    int maxHp_ = 5;
-   private:
+
+   float storedEnergy_ = 0.0f;
+   float energyScale_ = 0.2f;
+   float enemyStoredEnergy_ = 0.0f;
+   float maxStoredEnergy_ = 2.0f;
+   float energyDecayPerSecond_ = 0.5f;
+
+private:
    /// @brief キーコンフィグの初期化
    void InitializeKeyConfig();
 
@@ -146,4 +153,6 @@ private:
 
    /// @brief ダメージ壁との接触判定
    void CheckDamageWallCollision();
+
+   void UpdateEnergy();
 };
