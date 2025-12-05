@@ -43,6 +43,8 @@ void Boss::Update() {
 	  behaviorTree_->Tick();
    }
 
+   UpdateEnergy();
+
    UpdateModelSwapAnimation();
 
    // 無敵時間の更新
@@ -78,12 +80,15 @@ void Boss::OnCollisionEnter(GameObject* other) {
 	  Vector3 toOther = p->GetWorldPosition() - GetWorldPosition();
 	  Vector2 normal = Vector2{ toOther.x, toOther.y }.Normalize();
 
+	  playerStoredEnergy_ = p->GetStoredEnergy();
+
 	  Vector2 relativeVel = velocity_ - p->GetVelocity();
 	  float speed = relativeVel.Length();
 	  float response = stunPower_ + speed * collisionResponseScale_;
 
 	  // 突進中かつプレイヤーに向かって突進している場合は反発を弱める
 	  if (isCharging_) {
+		 playerStoredEnergy_ = 0.0f; // 突進中はプレイヤーのエネルギーを吸収しない
 		 Vector2 chargeDir = direction_.Normalize();
 		 if (chargeDir.Length() > 0.0f) {
 			float dot = chargeDir.x * normal.x + chargeDir.y * normal.y;
@@ -127,11 +132,14 @@ void Boss::OnCollisionStay(GameObject* other) {
 	  Vector3 toOther = p->GetWorldPosition() - GetWorldPosition();
 	  Vector2 normal = Vector2{ toOther.x, toOther.y }.Normalize();
 
+	  playerStoredEnergy_ = p->GetStoredEnergy();
+
 	  Vector2 relativeVel = velocity_ - p->GetVelocity();
 	  float speed = relativeVel.Length();
 	  float response = stunPower_ + speed * collisionResponseScale_;
 
 	  if (isCharging_) {
+		 playerStoredEnergy_ = 0.0f; // 突進中はプレイヤーのエネルギーを吸収しない
 		 Vector2 chargeDir = direction_.Normalize();
 		 if (chargeDir.Length() > 0.0f) {
 			float dot = chargeDir.x * normal.x + chargeDir.y * normal.y;
@@ -151,7 +159,11 @@ void Boss::OnCollisionStay(GameObject* other) {
 }
 
 void Boss::OnCollisionExit(GameObject* other) {
-   (void)other;
+   if (dynamic_cast<Player*>(other)) {
+	  storedEnergy_ = 0.0f;
+   }
+
+   isCharging_ = false;
 }
 
 void Boss::ChargeFunction() {
@@ -280,15 +292,12 @@ void Boss::InitializeStun() {
    maxSpeed_ = stunMaxSpeed_;
 
    // スタンタイマーを開始
-   stunTimer_.Start(stunDuration_, false);
+   stunTimer_.Start(stunDuration_ + playerStoredEnergy_ * energyScale_, false);
 
    StopModelSwapAnimation();
 
    // モデルを変更（ダメージ表現）
    ChangeToRegisteredModel("Damage");
-
-   // 突進フラグをリセット
-   isCharging_ = false;
 }
 
 void Boss::Stun() {
@@ -314,6 +323,8 @@ void Boss::InitializeDamage() {
    if (startDamageFunction_) {
 	  startDamageFunction_();
    }
+
+   storedEnergy_ = 0.0f;
 }
 
 void Boss::Damage() {
@@ -386,4 +397,12 @@ void Boss::CheckDamageWallCollision() {
 	  // ダメージステートに遷移
 	  stateMachine_->RequestState("Damage", 0);
    }
+}
+
+void Boss::UpdateEnergy() {
+   if (IsInvincible() || stateMachine_->GetCurrentState() == "Respawn" || stateMachine_->GetCurrentState() == "Despawn" || stateMachine_->GetCurrentState() == "Damage") {
+	  return;
+   }
+
+   storedEnergy_ += GameUtils::GetDeltaTime() * energyDecayPerSecond_;
 }

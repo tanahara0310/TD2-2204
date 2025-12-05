@@ -11,7 +11,7 @@ public:
    void Update() override;
    void Draw(const ICamera* camera) override;
    bool DrawImGui() override;
-   
+
    void OnCollisionEnter(GameObject* other) override;
    void OnCollisionStay(GameObject* other) override;
    void OnCollisionExit(GameObject* other) override;
@@ -59,13 +59,15 @@ public:
 
    void ChargeFunction();
 
+   float GetStoredEnergy() const { return storedEnergy_; }
+
    //======================================================================
    // ビヘイビアツリー関連
    //======================================================================
-   
+
    /// @brief ビヘイビアツリーを設定
    void SetBehaviorTree(std::unique_ptr<BehaviorTree> tree);
-   
+
    /// @brief ビヘイビアツリーを取得
    BehaviorTree* GetBehaviorTree() const { return behaviorTree_.get(); }
 
@@ -78,7 +80,7 @@ private:
    float moveableAreaRadius_ = 50.0f; // 移動可能エリアの半径
 
    Vector2 direction_ = {};
-   
+
    // 衝突反発の速度依存スケール
    float collisionResponseScale_ = 10.0f;
    float stunPower_ = 2000.0f; // 基礎反発力
@@ -87,8 +89,8 @@ private:
    bool isCharging_ = false;
 
    // スタン
-   float stunDuration_ = 0.3f;      // スタン持続時間（秒）
-   float stunDamping_ = 0.02f;      // スタン減衰率
+   float stunDuration_ = 0.25f;      // スタン持続時間（秒）
+   float stunDamping_ = 0.04f;      // スタン減衰率
    float stunMaxSpeed_ = 35.0f;     // スタン最大速度
    GameTimer stunTimer_;            // スタンタイマー
 
@@ -104,7 +106,7 @@ private:
 
    // 衝突反発の最大値
    float maxCollisionResponse_ = 2000.0f;
-   
+
    // ビヘイビアツリー
    std::unique_ptr<BehaviorTree> behaviorTree_;
 
@@ -114,6 +116,12 @@ private:
    std::function<void()> startDamageFunction_;
 
    std::function<void()> startChargeFunction_;
+
+   float storedEnergy_ = 0.0f;
+   float energyScale_ = 0.2f;
+   float playerStoredEnergy_ = 0.0f;
+   float maxStoredEnergy_ = 2.0f;
+   float energyDecayPerSecond_ = 0.5f;
 
 private:
    /// @brief コライダーの初期化
@@ -158,4 +166,6 @@ private:
 
    /// @brief ダメージ壁との接触判定
    void CheckDamageWallCollision();
+
+   void UpdateEnergy();
 };

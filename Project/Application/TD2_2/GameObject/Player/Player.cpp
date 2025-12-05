@@ -44,13 +44,15 @@ void Player::Update() {
 
    // ダメージ壁との接触判定（ダメージ状態以外、かつ無敵時間でない場合のみ）
    if (stateMachine_->GetCurrentState() != "Damage" &&
-       stateMachine_->GetCurrentState() != "Despawn" &&
-       stateMachine_->GetCurrentState() != "Respawn" &&
-       !IsInvincible()) {
-      CheckDamageWallCollision();
+	  stateMachine_->GetCurrentState() != "Despawn" &&
+	  stateMachine_->GetCurrentState() != "Respawn" &&
+	  !IsInvincible()) {
+	  CheckDamageWallCollision();
    }
 
    stateMachine_->Update();
+
+   UpdateEnergy();
 
    GameObject::UpdateModelSwapAnimation();
 
@@ -96,6 +98,7 @@ void Player::OnCollisionEnter(GameObject* other) {
 	  otherVel = p->GetVelocity();
    } else if (auto b = dynamic_cast<Boss*>(other)) {
 	  otherVel = b->GetVelocity();
+	  enemyStoredEnergy_ = b->GetStoredEnergy();
    }
 
    Vector2 relativeVel = velocity_ - otherVel;
@@ -105,6 +108,7 @@ void Player::OnCollisionEnter(GameObject* other) {
 
    // 突進中かつ相手に向かって突進している場合は反発を弱める
    if (isCharging_) {
+	  enemyStoredEnergy_ = 0.0f; // 突進中は相手のエネルギーを吸収しない
 	  Vector2 chargeDir = direction_.Normalize();
 	  if (chargeDir.Length() > 0.0f) {
 		 float dot = chargeDir.x * normal.x + chargeDir.y * normal.y; // cos(theta)
@@ -146,6 +150,7 @@ void Player::OnCollisionStay(GameObject* other) {
 	  otherVel = p->GetVelocity();
    } else if (auto b = dynamic_cast<Boss*>(other)) {
 	  otherVel = b->GetVelocity();
+	  enemyStoredEnergy_ = b->GetStoredEnergy();
    }
 
    Vector2 relativeVel = velocity_ - otherVel;
@@ -154,6 +159,7 @@ void Player::OnCollisionStay(GameObject* other) {
    float response = stunPower_ + speed * collisionResponseScale_;
 
    if (isCharging_) {
+	  enemyStoredEnergy_ = 0.0f;
 	  Vector2 chargeDir = direction_.Normalize();
 	  if (chargeDir.Length() > 0.0f) {
 		 float dot = chargeDir.x * normal.x + chargeDir.y * normal.y;
@@ -172,7 +178,11 @@ void Player::OnCollisionStay(GameObject* other) {
 }
 
 void Player::OnCollisionExit(GameObject* other) {
-   (void)other;
+   if (dynamic_cast<Boss*>(other)) {
+	  storedEnergy_ = 0.0f;
+   }
+
+   isCharging_ = false;
 }
 
 void Player::InitializeKeyConfig() {
@@ -324,13 +334,11 @@ void Player::InitializeStun() {
    dampingPerSecond_ = stunDamping_;
    maxSpeed_ = stunMaxSpeed_;
 
-   stunTimer_.Start(stunDuration_, false);
+   stunTimer_.Start(stunDuration_ + enemyStoredEnergy_ * energyScale_, false);
 
    StopModelSwapAnimation();
 
    ChangeToRegisteredModel("Damage");
-
-   isCharging_ = false;
 }
 
 void Player::InitializeDamage() {
@@ -347,38 +355,40 @@ void Player::InitializeDamage() {
    ChangeToRegisteredModel("Damage");
 
    isCharging_ = false;
+
+   storedEnergy_ = 0.0f;
 }
 
 void Player::InitializeDespawn() {
    despawnTimer_.Start(despawnDuration_, false);
    velocity_ = { 0.0f, 0.0f };
    acceleration_ = { 0.0f, 0.0f };
-   
+
    StopModelSwapAnimation();
    ChangeToRegisteredModel("Damage");
-   
+
    isCharging_ = false;
 }
 
 void Player::Despawn() {
    despawnTimer_.Update(GameUtils::GetDeltaTime());
-   
+
    // スケールを0にイージング
    float progress = despawnTimer_.GetEasedProgress(EasingUtil::Type::EaseInCubic);
    float scale = GameUtils::Lerp(1.0f, 0.0f, progress);
    transform_.scale = { scale, scale, scale };
-   
+
    if (despawnTimer_.IsFinished()) {
-      stateMachine_->RequestState("Respawn", 0);
+	  stateMachine_->RequestState("Respawn", 0);
    }
 }
 
 void Player::InitializeRespawn() {
    respawnTimer_.Start(respawnDuration_, false);
-   
+
    // ポジションをステージ中央に設定
    transform_.translate = { -15.0f, 0.0f, 0.0f };
-   
+
    velocity_ = { 0.0f, 0.0f };
    acceleration_ = { 0.0f, 0.0f };
 
@@ -387,16 +397,16 @@ void Player::InitializeRespawn() {
 
 void Player::Respawn() {
    respawnTimer_.Update(GameUtils::GetDeltaTime());
-   
+
    // スケールを1に戻すイージング
    float progress = respawnTimer_.GetEasedProgress(EasingUtil::Type::EaseOutCubic);
    float scale = GameUtils::Lerp(0.0f, 1.0f, progress);
    transform_.scale = { scale, scale, scale };
-   
+
    if (respawnTimer_.IsFinished()) {
-      // リスポーン完了時に無敵時間を開始（2秒間、0.1秒間隔で点滅）
-      StartInvincibility(2.0f, 0.1f);
-      stateMachine_->RequestState("Move", 0);
+	  // リスポーン完了時に無敵時間を開始（2秒間、0.1秒間隔で点滅）
+	  StartInvincibility(2.0f, 0.1f);
+	  stateMachine_->RequestState("Move", 0);
    }
 }
 
@@ -404,11 +414,19 @@ void Player::CheckDamageWallCollision() {
    // ダメージ壁の範囲を計算（フレームより1ブロック内側）
    float damageWallHalfWidth = (GameSceneConfig::kMoveableAreaSize.x * 0.5f) - GameSceneConfig::kFrameSize.x;
    float damageWallHalfHeight = (GameSceneConfig::kMoveableAreaSize.y * 0.5f) - GameSceneConfig::kFrameSize.y;
-   
+
    // プレイヤーがダメージ壁に接触したか判定
    if (std::abs(transform_.translate.x) >= damageWallHalfWidth ||
-       std::abs(transform_.translate.y) >= damageWallHalfHeight) {
-      // ダメージステートに遷移
-      stateMachine_->RequestState("Damage", 1);
+	  std::abs(transform_.translate.y) >= damageWallHalfHeight) {
+	  // ダメージステートに遷移
+	  stateMachine_->RequestState("Damage", 1);
    }
+}
+
+void Player::UpdateEnergy() {
+   if (IsInvincible() || stateMachine_->GetCurrentState() == "Respawn" || stateMachine_->GetCurrentState() == "Despawn" || stateMachine_->GetCurrentState() == "Damage") {
+	  return;
+   }
+
+   storedEnergy_ += GameUtils::GetDeltaTime() * energyDecayPerSecond_;
 }

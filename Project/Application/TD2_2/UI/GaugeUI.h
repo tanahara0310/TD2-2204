@@ -19,13 +19,13 @@ public:
 	/// 初期化関数
 	/// </summary>
 	/// <param name="cameraManager">カメラマネージャー</param>
-	std::vector<std::unique_ptr<IDrawable>> Initialize(CameraManager* cameraManager, int maxGauge);
+	std::vector<std::unique_ptr<IDrawable>> Initialize(CameraManager* cameraManager, float maxGauge);
 
 	// 追従対象を設定
 	void SetTarget(GameObject* target) { target_ = target; }
 
 	// 外部から分割数を設定
-	void SetValue(int current);
+	void SetValue(float current);
 
 	// 毎フレーム呼ぶ
 	void Update();
@@ -50,8 +50,8 @@ private:
 	GameObject* target_ = nullptr;
 
 	// ゲージ値管理
-	int maxGauge_ = 5;
-	int currentGauge_ = 0;
+	float maxGauge_ = 5;
+	float currentGauge_ = 0;
 
 	// 見た目設定（ピクセル単位）
 	float fullWidth_ = 120.0f; // HPゲージの最大幅（px）
