@@ -161,6 +161,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Application\TD2_2\Camera\CameraController.cpp" />
+    <ClCompile Include="Application\TD2_2\Camera\TitleCameraController.cpp" />
     <ClCompile Include="Application\TD2_2\Collider\AABBCollider.cpp" />
     <ClCompile Include="Application\TD2_2\Collider\Collider.cpp" />
     <ClCompile Include="Application\TD2_2\Collider\CollisionConfig.cpp" />
@@ -186,11 +187,12 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="Application\TD2_2\AI\Node\DecoratorNode.cpp" />
     <ClCompile Include="Application\TD2_2\AI\Node\Evaluator.cpp" />
     <ClCompile Include="Application\TD2_2\AI\Node\LeafNode.cpp" />
-    <ClCompile Include="Application\TD2_2\GameObject\Title\TitleUI.cpp" />
+    <ClCompile Include="Application\TD2_2\GameObject\TitleUI\StartModel.cpp" />
+    <ClCompile Include="Application\TD2_2\GameObject\TitleUI\TitleUI.cpp" />
+    <ClCompile Include="Application\TD2_2\GameObject\TitleUI\YameruModel.cpp" />
     <ClCompile Include="Application\TD2_2\GameObject\Voxel\Voxel.cpp" />
     <ClCompile Include="Application\TD2_2\UI\GaugeUI.cpp" />
     <ClCompile Include="Application\TD2_2\Utility\StateMachine.cpp" />
-    <ClCompile Include="Application\TD2_2\GameObject\Title\Sphere.cpp" />
     <ClCompile Include="Application\TD2_2\Scene\Game\GameScene.cpp" />
     <ClCompile Include="Application\TD2_2\Scene\Game\ResultScene.cpp" />
     <ClCompile Include="Application\TD2_2\Scene\Game\TitleScene.cpp" />
@@ -356,6 +358,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="Application\GameObject\GameObject.h" />
     <ClInclude Include="Application\TD2_2\AI\Node\BossAIExamples.h" />
     <ClInclude Include="Application\TD2_2\Camera\CameraController.h" />
+    <ClInclude Include="Application\TD2_2\Camera\TitleCameraController.h" />
     <ClInclude Include="Application\TD2_2\Collider\AABBCollider.h" />
     <ClInclude Include="Application\TD2_2\Collider\Collider.h" />
     <ClInclude Include="Application\TD2_2\Collider\CollisionConfig.h" />
@@ -383,12 +386,13 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="Application\TD2_2\AI\Node\DecoratorNode.h" />
     <ClInclude Include="Application\TD2_2\AI\Node\Evaluator.h" />
     <ClInclude Include="Application\TD2_2\AI\Node\LeafNode.h" />
-    <ClInclude Include="Application\TD2_2\GameObject\Title\TitleUI.h" />
+    <ClInclude Include="Application\TD2_2\GameObject\TitleUI\StartModel.h" />
+    <ClInclude Include="Application\TD2_2\GameObject\TitleUI\TitleUI.h" />
+    <ClInclude Include="Application\TD2_2\GameObject\TitleUI\YameruModel.h" />
     <ClInclude Include="Application\TD2_2\GameObject\Voxel\Voxel.h" />
     <ClInclude Include="Application\TD2_2\Scene\Config\GameSceneConfig.h" />
     <ClInclude Include="Application\TD2_2\UI\GaugeUI.h" />
     <ClInclude Include="Application\TD2_2\Utility\StateMachine.h" />
-    <ClInclude Include="Application\TD2_2\GameObject\Title\Sphere.h" />
     <ClInclude Include="Application\TD2_2\Scene\Game\GameScene.h" />
     <ClInclude Include="Application\TD2_2\Scene\Game\ResultScene.h" />
     <ClInclude Include="Application\TD2_2\Scene\Game\TitleScene.h" />

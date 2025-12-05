@@ -6,9 +6,10 @@
 //ゲームオブジェクトのインクルード
 #include "Object3d.h"
 #include "../../GameObject/Voxel/Voxel.h"
-#include "../../GameObject/Title/TitleUI.h"
+#include "../../GameObject/TitleUI/TitleUI.h"
 #include "../../GameObject/Background/Background.h"
 #include "../../Utility/KeyConfig.h"
+#include "../../Camera/TitleCameraController.h"
 
 
 class EngineSystem;
@@ -49,6 +50,9 @@ private:
 	
 	// キーコンフィグ
 	std::unique_ptr<KeyConfig> keyConfig_;
+	
+	// タイトルカメラコントローラー
+	std::unique_ptr<TitleCameraController> cameraController_;
 	
 	// スティック入力のクールダウン
 	float stickInputCooldown_ = 0.0f;
