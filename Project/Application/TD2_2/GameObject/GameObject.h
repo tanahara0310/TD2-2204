@@ -145,8 +145,8 @@ private:
 
    GameTimer shakeTimer_;
 
-   Vector3 basePosition_ = { 0.0f, 0.0f, 0.0f };
    float shakeIntensity_ = 0.0f;
+   Vector3 currentShakeOffset_ = { 0.0f, 0.0f, 0.0f }; // 現在適用中のシェイクオフセット
 
    // 無敵時間システム
    GameTimer invincibleTimer_;

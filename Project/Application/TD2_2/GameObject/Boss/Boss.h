@@ -89,10 +89,16 @@ private:
    bool isCharging_ = false;
 
    // スタン
-   float stunDuration_ = 0.25f;      // スタン持続時間（秒）
+   float stunDuration_ = 0.3f;      // スタン持続時間（秒）
    float stunDamping_ = 0.04f;      // スタン減衰率
    float stunMaxSpeed_ = 35.0f;     // スタン最大速度
    GameTimer stunTimer_;            // スタンタイマー
+
+   // パンク
+   float punkDuration_ = 2.0f;      // パンク持続時間（秒）
+   float punkDamping_ = 0.04f;      // パンク減衰率
+   float punkMaxSpeed_ = 25.0f;     // パンク最大速度
+   GameTimer punkTimer_;            // パンクタイマー
 
    // デスポーン・リスポーン
    float despawnDuration_ = 0.5f; // デスポーン持続時間（秒）
@@ -118,9 +124,9 @@ private:
    std::function<void()> startChargeFunction_;
 
    float storedEnergy_ = 0.0f;
-   float energyScale_ = 0.2f;
+   float energyScale_ = 0.3f;
    float playerStoredEnergy_ = 0.0f;
-   float maxStoredEnergy_ = 2.0f;
+   float maxStoredEnergy_ = 5.0f;
    float energyDecayPerSecond_ = 0.5f;
 
 private:
@@ -163,6 +169,10 @@ private:
 
    /// @brief リスポーン初期化
    void InitializeRespawn();
+
+   void InitializePunk();
+
+   void Punk();
 
    /// @brief ダメージ壁との接触判定
    void CheckDamageWallCollision();
