@@ -36,6 +36,7 @@ public:
 		int segmentCount = 20;                       // セグメント数
 		Lightning::PathType pathType = Lightning::PathType::Linear;  // パスタイプ
 		bool enableAnimation = true;                 // アニメーション有効化
+		Vector3 voxelScale = { 3.0f, 3.0f, 3.0f };   // ボクセルのスケール
 	};
 
 	LightningEffectManager() = default;
@@ -85,6 +86,11 @@ public:
 
 	/// @brief 直線エフェクト設定を取得
 	LinearEffectConfig& GetLinearEffectConfig(int effectId);
+
+	/// @brief エフェクトのスケールを設定
+	/// @param effectId エフェクトID
+	/// @param scale 新しいスケール
+	void SetEffectScale(int effectId, const Vector3& scale);
 
 	/// @brief デバッグUI表示
 	void DrawDebugUI(int effectId, const char* windowName = "Lightning Effect");

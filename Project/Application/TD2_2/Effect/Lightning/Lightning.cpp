@@ -379,7 +379,7 @@ void Lightning::GenerateVoxels()
 	// 最後のパスポイント（終点）にもボクセルを配置して完全な線にする
 	auto finalVoxel = GetVoxelFromPool();
 	finalVoxel->GetTransform().translate = pathPoints_.back();
-	finalVoxel->GetTransform().scale = { kVoxelScale, kVoxelScale, kVoxelScale }; // スケールを大きく
+	finalVoxel->GetTransform().scale = config_.voxelScale; // 設定からスケールを取得
 	AddChild(std::move(finalVoxel));
 }
 
@@ -481,7 +481,7 @@ void Lightning::PlaceVoxelsBetween(const Vector3& start, const Vector3& end)
 		// プールからボクセルを取得（再利用）
 		auto voxel = GetVoxelFromPool();
 		voxel->GetTransform().translate = position;
-		voxel->GetTransform().scale = { kVoxelScale, kVoxelScale, kVoxelScale }; // スケールを大きく
+		voxel->GetTransform().scale = config_.voxelScale; // 設定からスケールを取得
 
 		// 子オブジェクトとして追加
 		AddChild(std::move(voxel));
@@ -499,7 +499,7 @@ void Lightning::ClearDeferredDeletions()
 	// 前フレームで遅延削除されたオブジェクトをプールに返却
 	for (auto& obj : deferredDeletions_) {
 		if (auto* voxel = dynamic_cast<Voxel*>(obj.get())) {
-			// Voxelの場合はプールに返却（所有権を移動）
+			// Voxelの場合はプールに返却（Ownershipを移動）
 			// 親の参照をクリア
 			voxel->GetTransform().SetParent(nullptr);
 			voxelPool_.push_back(std::unique_ptr<Voxel>(voxel));

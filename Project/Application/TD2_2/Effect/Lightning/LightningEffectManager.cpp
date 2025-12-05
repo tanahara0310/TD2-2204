@@ -122,6 +122,7 @@ int LightningEffectManager::CreateLinearEffect(GameObject* target, const LinearE
 	lightningConfig.enableAnimation = config.enableAnimation;
 	lightningConfig.color = config.color;
 	lightningConfig.pathType = config.pathType;
+	lightningConfig.voxelScale = config.voxelScale;  // スケールを設定
 
 	auto lightning = std::make_unique<Lightning>();
 	lightning->Initialize(voxelModelResource_, voxelTexture_, lightningConfig,
@@ -161,6 +162,7 @@ int LightningEffectManager::CreateLinearEffectAtPosition(const Vector3& position
 	lightningConfig.enableAnimation = config.enableAnimation;
 	lightningConfig.color = config.color;
 	lightningConfig.pathType = config.pathType;
+	lightningConfig.voxelScale = config.voxelScale;  // スケールを設定
 
 	auto lightning = std::make_unique<Lightning>();
 	lightning->Initialize(voxelModelResource_, voxelTexture_, lightningConfig,
@@ -288,6 +290,28 @@ LightningEffectManager::LinearEffectConfig& LightningEffectManager::GetLinearEff
 		return dummy;
 	}
 	return effects_[effectId].linearConfig;
+}
+
+void LightningEffectManager::SetEffectScale(int effectId, const Vector3& scale)
+{
+	if (effectId < 0 || effectId >= static_cast<int>(effects_.size())) {
+		return;
+	}
+	
+	EffectData& effect = effects_[effectId];
+	
+	// 設定を更新
+	if (effect.type == EffectType::Linear) {
+		effect.linearConfig.voxelScale = scale;
+	}
+	
+	// 全てのライトニングにスケールを適用
+	for (auto* lightning : effect.lightnings) {
+		if (lightning) {
+			lightning->GetConfig().voxelScale = scale;
+			lightning->ApplyConfigChanges();  // 変更を反映
+		}
+	}
 }
 
 void LightningEffectManager::DrawDebugUI(int effectId, const char* windowName)

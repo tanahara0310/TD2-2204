@@ -27,6 +27,7 @@ public:
 		bool enableAnimation = true;    // アニメーション有効
 		Vector4 color = { 1.0f, 1.0f, 1.0f, 1.0f }; // 雷の色（RGBA）
 		PathType pathType = PathType::Linear;  // パスの補間方法
+		Vector3 voxelScale = { 1.0f, 1.0f, 1.0f }; // ボクセルのスケール
 	};
 
 	Lightning() = default;
