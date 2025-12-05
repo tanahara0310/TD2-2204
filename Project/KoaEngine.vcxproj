@@ -188,6 +188,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="Application\TD2_2\AI\Node\Evaluator.cpp" />
     <ClCompile Include="Application\TD2_2\AI\Node\LeafNode.cpp" />
     <ClCompile Include="Application\TD2_2\GameObject\TitleUI\StartModel.cpp" />
+    <ClCompile Include="Application\TD2_2\GameObject\TitleUI\TitleModel.cpp" />
     <ClCompile Include="Application\TD2_2\GameObject\TitleUI\TitleUI.cpp" />
     <ClCompile Include="Application\TD2_2\GameObject\TitleUI\YameruModel.cpp" />
     <ClCompile Include="Application\TD2_2\GameObject\Voxel\Voxel.cpp" />
@@ -387,6 +388,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="Application\TD2_2\AI\Node\Evaluator.h" />
     <ClInclude Include="Application\TD2_2\AI\Node\LeafNode.h" />
     <ClInclude Include="Application\TD2_2\GameObject\TitleUI\StartModel.h" />
+    <ClInclude Include="Application\TD2_2\GameObject\TitleUI\TitleModel.h" />
     <ClInclude Include="Application\TD2_2\GameObject\TitleUI\TitleUI.h" />
     <ClInclude Include="Application\TD2_2\GameObject\TitleUI\YameruModel.h" />
     <ClInclude Include="Application\TD2_2\GameObject\Voxel\Voxel.h" />

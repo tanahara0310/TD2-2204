@@ -90,9 +90,6 @@ void TitleScene::Initialize(EngineSystem* engine) {
 		}
 	}
 
-	// ライトニングエフェクトの作成
-	CreateLightningEffects();
-
 	// BGM再生
 	{
 		auto audio = engine_->GetComponent<SoundManager>();
@@ -101,7 +98,7 @@ void TitleScene::Initialize(EngineSystem* engine) {
 			
 			if (titleBGM_ && titleBGM_->IsValid()) {
 				titleBGM_->Play(true); // ループ再生
-				titleBGM_->SetVolume(0.4f); // 音量調整
+				titleBGM_->SetVolume(0.0f); // 音量調整
 			}
 		}
 	}
@@ -110,11 +107,6 @@ void TitleScene::Initialize(EngineSystem* engine) {
 
 void TitleScene::Update() {
 	BaseScene::Update();
-
-	// ライトニングエフェクトの更新
-	if (lightningManager_) {
-		lightningManager_->UpdateAllEffects();
-	}
 
 	// カメラコントローラーを毎フレーム適用（デフォルト値も含む）
 	if (cameraController_ && cameraManager_) {
@@ -228,82 +220,4 @@ void TitleScene::SetupReleaseCameraParameters(Camera* camera)
 	if (cameraController_) {
 		cameraController_->ApplyToCamera(camera);
 	}
-}
-
-void TitleScene::CreateLightningEffects()
-{
-	auto modelManager = engine_->GetComponent<ModelManager>();
-	auto& textureManager = TextureManager::GetInstance();
-	
-	// ライトニングエフェクトマネージャーの初期化
-	lightningManager_ = std::make_unique<LightningEffectManager>();
-	lightningManager_->Initialize(modelManager, &textureManager);
-	
-	// UIモデルの取得
-	StartModel* startModel = titleUI_->GetStartModel();
-	/*YameruModel* yameruModel = titleUI_->GetYameruModel();*/
-	
-	// エフェクト設定（直線ライトニング）
-	LightningEffectManager::LinearEffectConfig config;
-	config.color = { 0.3f, 0.6f, 1.0f, 1.0f };  // 青系の雷
-	config.voxelScale = { 1.0f, 1.0f, 1.0f };
-	config.noiseScale = 0.3f;
-	config.noiseSpeed = 12.0f;
-	config.segmentCount = 5;
-	config.pathType = Lightning::PathType::Linear;
-	config.enableAnimation = true;
-	
-	// UIモデルを囲むサイズ（大きめに設定して間隔を広げる）
-	constexpr float frameWidth = 4.0f;   // 横幅
-	constexpr float frameHeight = 1.5f;  // 縦幅
-	
-	// ===== StartModel用のライトニング（四方を囲む） =====
-	if (startModel) {
-		Vector3 startPos = startModel->GetWorldPosition();
-		
-		// 上辺（左から右へ）
-		config.startOffset = { -frameWidth / 2.0f, frameHeight / 2.0f, 0.0f };
-		config.endOffset = { frameWidth / 2.0f, frameHeight / 2.0f, 0.0f };
-		startLightningEffects_[0] = lightningManager_->CreateLinearEffectAtPosition(startPos, config, gameObjects_);
-		
-		// 下辺（左から右へ）
-		config.startOffset = { -frameWidth / 2.0f, -frameHeight / 2.0f, 0.0f };
-		config.endOffset = { frameWidth / 2.0f, -frameHeight / 2.0f, 0.0f };
-		startLightningEffects_[1] = lightningManager_->CreateLinearEffectAtPosition(startPos, config, gameObjects_);
-		
-		// 左辺（下から上へ）
-		config.startOffset = { -frameWidth / 2.0f, -frameHeight / 2.0f, 0.0f };
-		config.endOffset = { -frameWidth / 2.0f, frameHeight / 2.0f, 0.0f };
-		startLightningEffects_[2] = lightningManager_->CreateLinearEffectAtPosition(startPos, config, gameObjects_);
-		
-		// 右辺（下から上へ）
-		config.startOffset = { frameWidth / 2.0f, -frameHeight / 2.0f, 0.0f };
-		config.endOffset = { frameWidth / 2.0f, frameHeight / 2.0f, 0.0f };
-		startLightningEffects_[3] = lightningManager_->CreateLinearEffectAtPosition(startPos, config, gameObjects_);
-	}
-	//
-	//// ===== YameruModel用のライトニング（四方を囲む） =====
-	//if (yameruModel) {
-	//	Vector3 yameruPos = yameruModel->GetWorldPosition();
-	//	
-	//	// 上辺（左から右へ）
-	//	config.startOffset = { -frameWidth / 2.0f, frameHeight / 2.0f, 0.0f };
-	//	config.endOffset = { frameWidth / 2.0f, frameHeight / 2.0f, 0.0f };
-	//	yameruLightningEffects_[0] = lightningManager_->CreateLinearEffectAtPosition(yameruPos, config, gameObjects_);
-	//	
-	//	// 下辺（左から右へ）
-	//	config.startOffset = { -frameWidth / 2.0f, -frameHeight / 2.0f, 0.0f };
-	//	config.endOffset = { frameWidth / 2.0f, -frameHeight / 2.0f, 0.0f };
-	//	yameruLightningEffects_[1] = lightningManager_->CreateLinearEffectAtPosition(yameruPos, config, gameObjects_);
-	//	
-	//	// 左辺（下から上へ）
-	//	config.startOffset = { -frameWidth / 2.0f, -frameHeight / 2.0f, 0.0f };
-	//	config.endOffset = { -frameWidth / 2.0f, frameHeight / 2.0f, 0.0f };
-	//	yameruLightningEffects_[2] = lightningManager_->CreateLinearEffectAtPosition(yameruPos, config, gameObjects_);
-	//	
-	//	// 右辺（下から上へ）
-	//	config.startOffset = { frameWidth / 2.0f, -frameHeight / 2.0f, 0.0f };
-	//	config.endOffset = { frameWidth / 2.0f, frameHeight / 2.0f, 0.0f };
-	//	yameruLightningEffects_[3] = lightningManager_->CreateLinearEffectAtPosition(yameruPos, config, gameObjects_);
-	//}
 }

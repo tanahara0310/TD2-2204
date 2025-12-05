@@ -2,6 +2,7 @@
 #include "Engine/ObjectCommon/SpriteObject.h"
 #include "YameruModel.h"
 #include "StartModel.h"
+#include "TitleModel.h"
 #include "../../Utility/StateMachine.h"
 #include <memory>
 #include <vector>
@@ -44,45 +45,40 @@ public:
 	
 	/// @brief YameruModelを取得
 	YameruModel* GetYameruModel() const { return yameruModel_; }
+	
+	/// @brief TitleModelを取得
+	TitleModel* GetTitleModel() const { return titleModel_; }
 
 private:
 	//タイトルロゴを作成
 	std::unique_ptr<SpriteObject> CreateTitleLogo();
-
-	//開始ボタンui
-	std::unique_ptr<SpriteObject> CreateStartButtonUI();
-
-	//quitボタンui
-	std::unique_ptr<SpriteObject> CreateQuitButtonUI();
 	
 	//yameruモデルを作成
 	std::unique_ptr<YameruModel> CreateYameruModel(EngineSystem* engine);
 	
 	//startモデルを作成
 	std::unique_ptr<StartModel> CreateStartModel(EngineSystem* engine);
+	
+	//titleモデルを作成
+	std::unique_ptr<TitleModel> CreateTitleModel(EngineSystem* engine);
 
 	/// @brief ステートマシーンの初期化
 	void InitializeStateMachine();
+
+	/// @brief 選択演出の更新
+	void UpdateSelectionEffect();
 
 private:
 
 	// UI要素のポインタ（所有権はgameObjects_が持つ）
 	SpriteObject* titleLogo_ = nullptr;
-	SpriteObject* startButtonUI_ = nullptr;
-	SpriteObject* quitButtonUI_ = nullptr;
 	YameruModel* yameruModel_ = nullptr;
-	StartModel* startModel_ = nullptr; // 新たに追加されたメンバー変数
+	StartModel* startModel_ = nullptr;
+	TitleModel* titleModel_ = nullptr;
 
 	// 選択状態
 	SelectionState selectionState_ = SelectionState::Start;
 
 	// ステートマシーン
 	StateMachine stateMachine_;
-	
-	// ボタンの位置
-	static constexpr float kStartButtonY = -80.0f;
-	static constexpr float kQuitButtonY = -230.0f;
-	
-	// やめるボタンui
-	SpriteObject* yameruButtonUI_ = nullptr;
 };
