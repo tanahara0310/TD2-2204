@@ -10,6 +10,7 @@
 #include "../../GameObject/Frame/Frame.h"
 #include "../../GameObject/GameObject.h"
 #include "../../GameObject/Bullet/Bullet.h"
+#include "../../GameObject/Cloud/Cloud.h"
 #include "../../Collider/CollisionManager.h"
 #include "../../Collider/CollisionConfig.h"
 #include "../../Camera/CameraController.h"
@@ -48,6 +49,7 @@ private:
    Background* background_;
    std::list<Bullet*> bullets_;
    std::list<Frame*> frames_;
+   Cloud* cloud_;
 
    std::unique_ptr<CollisionManager> collisionManager_;
    std::unique_ptr<CollisionConfig> collisionConfig_;
@@ -73,7 +75,11 @@ private:
    Sound hitSound_;
    Sound damageSound_;
    Sound chargeSound_;
-private:
+
+   std::unique_ptr<GaugeUI> playerGauge_;
+   std::unique_ptr<GaugeUI> bossGauge_;
+
+   private:
    void RegisterAllColliders();
 
    void CheckCollisions();

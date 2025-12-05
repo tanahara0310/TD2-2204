@@ -8,20 +8,18 @@ void Cloud::Initialize(std::unique_ptr<Model> model, TextureManager::LoadedTextu
 
 void Cloud::Update() { 
 	// 進行方向に移動
-	if (direction_ == CloudDirection::LEFT) {
+	/*if (direction_ == CloudDirection::LEFT) {
 		transform_.translate.x -= velocityX_;
 	} else if (direction_ == CloudDirection::RIGHT) {
 		transform_.translate.x += velocityX_;
-	}
+	}*/
+
+	// 進行方向変更
+	/*if ((direction_ == CloudDirection::LEFT) && transform_.translate.x <= -400.0f) {
+		transform_.translate.x = 400.0f;
+	} else if ((direction_ == CloudDirection::RIGHT) && transform_.translate.x >= 400.0f) {
+		transform_.translate.x = -400.0f;
+	}*/
 
 	transform_.TransferMatrix(); 
-}
-
-void Cloud::Draw(const ICamera* camera) {
-	if (!model_ || !camera) {
-		return;
-	}
-
-	// モデルの描画
-	model_->Draw(transform_, camera, texture_.gpuHandle);
 }

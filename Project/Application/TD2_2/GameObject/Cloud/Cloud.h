@@ -12,8 +12,6 @@ public:
 
 	void Update() override;
 
-	void Draw(const ICamera* camera) override;
-
 	const char* GetObjectName() const override { return "Cloud"; }
 
 	CloudDirection GetDirection() { return direction_; }
@@ -25,5 +23,5 @@ private:
 	CloudDirection direction_ = CloudDirection::LEFT;
 
 	// 移動速度
-	float velocityX_ = 1.0f;
+	float velocityX_ = 0.0f;
 };

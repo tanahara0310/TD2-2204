@@ -19,7 +19,7 @@ public:
 	/// 初期化関数
 	/// </summary>
 	/// <param name="cameraManager">カメラマネージャー</param>
-	std::vector<std::unique_ptr<IDrawable>> Initialize(CameraManager* cameraManager);
+	std::vector<std::unique_ptr<IDrawable>> Initialize(CameraManager* cameraManager, int maxGauge);
 
 	// 追従対象を設定
 	void SetTarget(GameObject* target) { target_ = target; }
