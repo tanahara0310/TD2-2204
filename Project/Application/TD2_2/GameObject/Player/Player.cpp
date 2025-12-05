@@ -178,6 +178,10 @@ void Player::OnCollisionStay(GameObject* other) {
 }
 
 void Player::OnCollisionExit(GameObject* other) {
+   if (IsInvincible() || stateMachine_->GetCurrentState() == "Respawn" || stateMachine_->GetCurrentState() == "Despawn") {
+	  return;
+   }
+
    if (dynamic_cast<Boss*>(other)) {
 	  storedEnergy_ = 0.0f;
    }
@@ -212,13 +216,15 @@ void Player::InitializeStateMachine() {
    stateMachine_->AddState("Damage", std::bind(&Player::InitializeDamage, this), std::bind(&Player::Damage, this));
    stateMachine_->AddState("Despawn", std::bind(&Player::InitializeDespawn, this), std::bind(&Player::Despawn, this));
    stateMachine_->AddState("Respawn", std::bind(&Player::InitializeRespawn, this), std::bind(&Player::Respawn, this));
+   stateMachine_->AddState("Punk", std::bind(&Player::InitializePunk, this), std::bind(&Player::Punk, this));
 
-   stateMachine_->AddTransitionRule("Charge", { "Move" ,"Stun" ,"Damage" });
-   stateMachine_->AddTransitionRule("Move", { "Charge" ,"Stun" ,"Damage" });
-   stateMachine_->AddTransitionRule("Stun", { "Move" ,"Damage" });
+   stateMachine_->AddTransitionRule("Charge", { "Move" ,"Stun" ,"Damage", "Punk" });
+   stateMachine_->AddTransitionRule("Move", { "Charge" ,"Stun" ,"Damage", "Punk" });
+   stateMachine_->AddTransitionRule("Stun", { "Move" ,"Damage" ,"Punk"});
    stateMachine_->AddTransitionRule("Damage", { "Despawn" });
    stateMachine_->AddTransitionRule("Despawn", { "Respawn" });
    stateMachine_->AddTransitionRule("Respawn", { "Move" });
+   stateMachine_->AddTransitionRule("Punk", { "Move" ,"Damage" });
 }
 
 void Player::InitializeCollider() {
@@ -287,6 +293,10 @@ void Player::Charge() {
 void Player::Stun() {
 
    stunTimer_.Update(GameUtils::GetDeltaTime());
+
+   // シェイクの更新
+   UpdateShake();
+
    if (stunTimer_.IsFinished()) {
 	  stateMachine_->RequestState("Move", 0);
    }
@@ -334,7 +344,11 @@ void Player::InitializeStun() {
    dampingPerSecond_ = stunDamping_;
    maxSpeed_ = stunMaxSpeed_;
 
-   stunTimer_.Start(stunDuration_ + enemyStoredEnergy_ * energyScale_, false);
+   float stunTime = stunDuration_ + enemyStoredEnergy_ * energyScale_;
+   stunTimer_.Start(stunTime, false);
+
+   // スタン時間に応じたシェイクを開始
+   GameObject::StartShake(0.1f, stunTime);
 
    StopModelSwapAnimation();
 
@@ -348,7 +362,7 @@ void Player::InitializeDamage() {
 
    StopModelSwapAnimation();
 
-   GameObject::StartShake(0.15f, 1.0f);
+   GameObject::StartShake(0.225f, 1.0f);
 
    velocity_ = { 0.0f, 0.0f };
 
@@ -419,14 +433,52 @@ void Player::CheckDamageWallCollision() {
    if (std::abs(transform_.translate.x) >= damageWallHalfWidth ||
 	  std::abs(transform_.translate.y) >= damageWallHalfHeight) {
 	  // ダメージステートに遷移
-	  stateMachine_->RequestState("Damage", 1);
+	  stateMachine_->RequestState("Damage", 2);
    }
 }
 
 void Player::UpdateEnergy() {
-   if (IsInvincible() || stateMachine_->GetCurrentState() == "Respawn" || stateMachine_->GetCurrentState() == "Despawn" || stateMachine_->GetCurrentState() == "Damage") {
+   if (IsInvincible() || stateMachine_->GetCurrentState() == "Respawn" || stateMachine_->GetCurrentState() == "Despawn" || stateMachine_->GetCurrentState() == "Damage" || stateMachine_->GetCurrentState() == "Punk") {
 	  return;
    }
 
    storedEnergy_ += GameUtils::GetDeltaTime() * energyDecayPerSecond_;
+
+   if (storedEnergy_ >= maxStoredEnergy_) {
+	  // エネルギーが最大に達したらパンク状態に遷移
+	  stateMachine_->RequestState("Punk", 1);
+   }
+
+   storedEnergy_ = std::clamp(storedEnergy_, 0.0f, maxStoredEnergy_);
+}
+
+void Player::InitializePunk() {
+   dampingPerSecond_ = punkDamping_;
+   maxSpeed_ = punkMaxSpeed_;
+   velocity_ = { 0.0f, 0.0f };
+   storedEnergy_ = 0.0f;
+
+   // スタンタイマーを開始
+   punkTimer_.Start(punkDuration_, false);
+
+   StopModelSwapAnimation();
+
+   ChangeToRegisteredModel("Damage");
+
+   GameObject::StartShake(0.225f, punkDuration_);
+
+   if (startDamageFunction_) {
+	  startDamageFunction_();
+   }
+}
+
+void Player::Punk() {
+   punkTimer_.Update(GameUtils::GetDeltaTime());
+
+   UpdateShake();
+
+   if (punkTimer_.IsFinished()) {
+	  // スタン終了、通常状態に戻る
+	  stateMachine_->RequestState("Move", 0);
+   }
 }

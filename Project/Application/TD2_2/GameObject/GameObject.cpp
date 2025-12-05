@@ -151,29 +151,41 @@ void GameObject::UpdateRotation() {
 void GameObject::StartShake(float intensity, float duration) {
    shakeIntensity_ = intensity;
    shakeTimer_.Start(duration, false);
-
-   // 基本位置を保存
-   basePosition_ = transform_.translate;
+   currentShakeOffset_ = { 0.0f, 0.0f, 0.0f }; // オフセットをリセット
 }
 
 bool GameObject::UpdateShake() {
    if (!shakeTimer_.IsActive()) {
-	  return false;
+      // シェイクが終了したら、残っているオフセットを除去
+      if (currentShakeOffset_.x != 0.0f || currentShakeOffset_.y != 0.0f || currentShakeOffset_.z != 0.0f) {
+         transform_.translate -= currentShakeOffset_;
+         currentShakeOffset_ = { 0.0f, 0.0f, 0.0f };
+      }
+      return false;
    }
+   
    float deltaTime = GameUtils::GetDeltaTime();
    shakeTimer_.Update(deltaTime);
-   Vector3 shakeOffset = {
-	  GameUtils::RandomFloat(-shakeIntensity_ * 0.5f, shakeIntensity_ * 0.5f),
-	  GameUtils::RandomFloat(-shakeIntensity_ * 0.5f, shakeIntensity_ * 0.5f),
-	  0.0f
+
+   // 前フレームのオフセットを除去
+   transform_.translate -= currentShakeOffset_;
+
+   // 新しいシェイクオフセットを計算
+   currentShakeOffset_ = {
+      GameUtils::RandomFloat(-shakeIntensity_ * 0.5f, shakeIntensity_ * 0.5f),
+      GameUtils::RandomFloat(-shakeIntensity_ * 0.5f, shakeIntensity_ * 0.5f),
+      0.0f
    };
-   // オフセットを位置に適用
-   transform_.translate = basePosition_ + shakeOffset;
+   
+   // 新しいオフセットを適用
+   transform_.translate += currentShakeOffset_;
 
    if (shakeTimer_.IsFinished()) {
-	  shakeIntensity_ = 0.0f;
-	  transform_.translate = basePosition_;
-	  return false;
+      // 終了時にオフセットを除去
+      transform_.translate -= currentShakeOffset_;
+      currentShakeOffset_ = { 0.0f, 0.0f, 0.0f };
+      shakeIntensity_ = 0.0f;
+      return false;
    }
 
    return true;

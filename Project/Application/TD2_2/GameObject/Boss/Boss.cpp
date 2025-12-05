@@ -159,6 +159,10 @@ void Boss::OnCollisionStay(GameObject* other) {
 }
 
 void Boss::OnCollisionExit(GameObject* other) {
+   if (IsInvincible() || stateMachine_->GetCurrentState() == "Respawn" || stateMachine_->GetCurrentState() == "Despawn") {
+	  return;
+   }
+
    if (dynamic_cast<Player*>(other)) {
 	  storedEnergy_ = 0.0f;
    }
@@ -210,12 +214,18 @@ void Boss::InitializeStateMachine() {
 	  std::bind(&Boss::InitializeRespawn, this),
 	  std::bind(&Boss::Respawn, this));
 
+   // パンク状態
+   stateMachine_->AddState("Punk",
+	  std::bind(&Boss::InitializePunk, this),
+	  std::bind(&Boss::Punk, this));
+
    // 状態遷移ルール
-   stateMachine_->AddTransitionRule("Normal", { "Stun", "Damage" });
-   stateMachine_->AddTransitionRule("Stun", { "Normal", "Damage" });
+   stateMachine_->AddTransitionRule("Normal", { "Stun", "Damage" ,"Punk"});
+   stateMachine_->AddTransitionRule("Stun", { "Normal", "Damage" ,"Punk"});
    stateMachine_->AddTransitionRule("Damage", { "Despawn" });
    stateMachine_->AddTransitionRule("Despawn", { "Respawn" });
    stateMachine_->AddTransitionRule("Respawn", { "Normal" });
+   stateMachine_->AddTransitionRule("Punk", { "Normal" , "Damage" });
 }
 
 void Boss::UpdateMovement() {
@@ -292,7 +302,11 @@ void Boss::InitializeStun() {
    maxSpeed_ = stunMaxSpeed_;
 
    // スタンタイマーを開始
-   stunTimer_.Start(stunDuration_ + playerStoredEnergy_ * energyScale_, false);
+   float stunTime = stunDuration_ + playerStoredEnergy_ * energyScale_;
+   stunTimer_.Start(stunTime, false);
+
+   // シェイクの開始
+   GameObject::StartShake(0.1f, stunTime);
 
    StopModelSwapAnimation();
 
@@ -302,6 +316,9 @@ void Boss::InitializeStun() {
 
 void Boss::Stun() {
    stunTimer_.Update(GameUtils::GetDeltaTime());
+
+   // シェイクの更新
+   UpdateShake();
 
    if (stunTimer_.IsFinished()) {
 	  // スタン終了、通常状態に戻る
@@ -318,7 +335,7 @@ void Boss::InitializeDamage() {
 
    isCharging_ = false;
 
-   GameObject::StartShake(0.15f, 1.0f);
+   GameObject::StartShake(0.225f, 1.0f);
 
    if (startDamageFunction_) {
 	  startDamageFunction_();
@@ -395,14 +412,52 @@ void Boss::CheckDamageWallCollision() {
    if (std::abs(transform_.translate.x) >= damageWallHalfWidth ||
 	  std::abs(transform_.translate.y) >= damageWallHalfHeight) {
 	  // ダメージステートに遷移
-	  stateMachine_->RequestState("Damage", 0);
+	  stateMachine_->RequestState("Damage", 2);
    }
 }
 
 void Boss::UpdateEnergy() {
-   if (IsInvincible() || stateMachine_->GetCurrentState() == "Respawn" || stateMachine_->GetCurrentState() == "Despawn" || stateMachine_->GetCurrentState() == "Damage") {
+   if (IsInvincible() || stateMachine_->GetCurrentState() == "Respawn" || stateMachine_->GetCurrentState() == "Despawn" || stateMachine_->GetCurrentState() == "Damage"|| stateMachine_->GetCurrentState() == "Punk") {
 	  return;
    }
 
    storedEnergy_ += GameUtils::GetDeltaTime() * energyDecayPerSecond_;
+
+   if (storedEnergy_ >= maxStoredEnergy_) {
+	  // エネルギーが最大に達したらパンク状態に遷移
+	  stateMachine_->RequestState("Punk", 1);
+   }
+
+   storedEnergy_ = std::clamp(storedEnergy_, 0.0f, maxStoredEnergy_);
+}
+
+void Boss::InitializePunk() {
+   dampingPerSecond_ = punkDamping_;
+   maxSpeed_ = punkMaxSpeed_;
+   velocity_ = { 0.0f, 0.0f };
+   storedEnergy_ = 0.0f;
+
+   // スタンタイマーを開始
+   punkTimer_.Start(punkDuration_, false);
+
+   StopModelSwapAnimation();
+
+   ChangeToRegisteredModel("Damage");
+
+   GameObject::StartShake(0.225f, punkDuration_);
+
+   if (startDamageFunction_) {
+	  startDamageFunction_();
+   }
+}
+
+void Boss::Punk() {
+   punkTimer_.Update(GameUtils::GetDeltaTime());
+
+   UpdateShake();
+
+   if (punkTimer_.IsFinished()) {
+	  // スタン終了、通常状態に戻る
+	  stateMachine_->RequestState("Normal", 0);
+   }
 }
