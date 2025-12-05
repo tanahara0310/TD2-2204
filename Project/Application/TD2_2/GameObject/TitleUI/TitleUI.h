@@ -39,6 +39,12 @@ public:
 	/// @brief ステートマシーンを取得
 	StateMachine& GetStateMachine() { return stateMachine_; }
 
+	/// @brief StartModelを取得
+	StartModel* GetStartModel() const { return startModel_; }
+	
+	/// @brief YameruModelを取得
+	YameruModel* GetYameruModel() const { return yameruModel_; }
+
 private:
 	//タイトルロゴを作成
 	std::unique_ptr<SpriteObject> CreateTitleLogo();
