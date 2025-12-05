@@ -10,7 +10,6 @@
 #include "../../GameObject/Background/Background.h"
 #include "../../Utility/KeyConfig.h"
 #include "../../Camera/TitleCameraController.h"
-#include "../../Effect/Lightning/LightningEffectManager.h"
 
 
 class EngineSystem;
@@ -37,9 +36,6 @@ protected:
 	void SetupReleaseCameraParameters(Camera* camera) override;
 
 private:
-	/// @brief ライトニングエフェクトを作成
-	void CreateLightningEffects();
-
 	/// @brief シーン遷移の処理
 	void UpdateSceneTransition(float deltaTime);
 
@@ -54,13 +50,6 @@ private:
 	
 	// タイトルカメラコントローラー
 	std::unique_ptr<TitleCameraController> cameraController_;
-	
-	// ライトニングエフェクトマネージャー
-	std::unique_ptr<LightningEffectManager> lightningManager_;
-	
-	// ライトニングエフェクトID
-	int startLightningEffects_[4] = { -1, -1, -1, -1 };  // StartModel用（上下左右）
-	int yameruLightningEffects_[4] = { -1, -1, -1, -1 };  // YameruModel用（上下左右）
 	
 	// スティック入力のクールダウン
 	float stickInputCooldown_ = 0.0f;

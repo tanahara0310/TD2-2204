@@ -83,4 +83,6 @@ private:
 
     float timer_ = 0.0f;        // 現在のタイマー
     float duration_ = 1.0f;     // トランジション時間（秒）
+    
+    bool readyToChangeScene_ = false; // シーン切り替え準備完了フラグ（1フレーム遅延用）
 };

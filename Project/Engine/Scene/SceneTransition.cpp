@@ -23,6 +23,7 @@ void SceneTransition::Initialize(EngineSystem* engine) {
     phase_ = TransitionPhase::Idle;
     timer_ = 0.0f;
     duration_ = 1.0f;
+    readyToChangeScene_ = false;
 }
 
 void SceneTransition::Update(float deltaTime) {
@@ -43,7 +44,14 @@ void SceneTransition::Update(float deltaTime) {
         if (timer_ >= duration_) {
             timer_ = duration_;
             phase_ = TransitionPhase::Changing;
+            // このフレームではまだシーン切り替えしない（フェードを完全に適用してから）
+            readyToChangeScene_ = false;
         }
+        break;
+
+    case TransitionPhase::Changing:
+        // フェードが完全に適用された次フレームでシーン切り替え可能
+        readyToChangeScene_ = true;
         break;
 
     case TransitionPhase::FadeIn:
@@ -54,10 +62,6 @@ void SceneTransition::Update(float deltaTime) {
             fadeEffect_->SetFadeAlpha(0.0f);
             fadeEffect_->SetEnabled(false); // フェード完了後は無効化
         }
-        break;
-
-    case TransitionPhase::Changing:
-        // シーン切り替え待機中（完全に黒のまま維持）
         break;
 
     default:
@@ -90,13 +94,15 @@ void SceneTransition::StartTransition(TransitionType type, float duration) {
 }
 
 bool SceneTransition::IsReadyToChangeScene() const {
-    return phase_ == TransitionPhase::Changing;
+    return phase_ == TransitionPhase::Changing && readyToChangeScene_;
 }
 
 void SceneTransition::OnSceneChanged() {
     if (!fadeEffect_) {
         return;
     }
+
+    readyToChangeScene_ = false; // フラグをリセット
 
     if (type_ == TransitionType::None) {
         // トランジション無し → 即座に待機状態へ
@@ -128,6 +134,7 @@ void SceneTransition::SkipTransition() {
 
     phase_ = TransitionPhase::Idle;
     timer_ = 0.0f;
+    readyToChangeScene_ = false;
     fadeEffect_->SetFadeAlpha(0.0f);
     fadeEffect_->SetEnabled(false);
 }

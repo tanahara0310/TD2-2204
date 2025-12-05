@@ -4,6 +4,8 @@
 #include "Graphics/Model/ModelManager.h"
 #include "Graphics/TextureManager.h"
 #include "Graphics/Common/DirectXCommon.h"
+#include "../../Utility/GameUtils.h"
+#include <cmath>
 
 std::vector<std::unique_ptr<IDrawable>> TitleUI::Initialize(EngineSystem* engine) {
 	(void)engine;
@@ -14,16 +16,6 @@ std::vector<std::unique_ptr<IDrawable>> TitleUI::Initialize(EngineSystem* engine
 	auto titleLogo = CreateTitleLogo();
 	titleLogo_ = titleLogo.get();
 	sprites.push_back(std::move(titleLogo));
-
-	// 開始ボタンUIを作成
-	auto startButtonUI = CreateStartButtonUI();
-	startButtonUI_ = startButtonUI.get();
-	sprites.push_back(std::move(startButtonUI));
-
-	// quitボタンUIを作成
-	auto quitButtonUI = CreateQuitButtonUI();
-	quitButtonUI_ = quitButtonUI.get();
-	sprites.push_back(std::move(quitButtonUI));
 	
 	// yameruモデルを作成
 	auto yameruModel = CreateYameruModel(engine);
@@ -34,9 +26,22 @@ std::vector<std::unique_ptr<IDrawable>> TitleUI::Initialize(EngineSystem* engine
 	auto startModel = CreateStartModel(engine);
 	startModel_ = startModel.get();
 	sprites.push_back(std::move(startModel));
+	
+	// titleモデルを作成
+	auto titleModel = CreateTitleModel(engine);
+	titleModel_ = titleModel.get();
+	sprites.push_back(std::move(titleModel));
 
 	// ステートマシーンの初期化
 	InitializeStateMachine();
+	
+	// 初期状態の選択状態を設定（Startが選択された状態）
+	if (startModel_) {
+		startModel_->SetSelected(true);
+	}
+	if (yameruModel_) {
+		yameruModel_->SetSelected(false);
+	}
 
 	return sprites;
 }
@@ -44,6 +49,9 @@ std::vector<std::unique_ptr<IDrawable>> TitleUI::Initialize(EngineSystem* engine
 void TitleUI::Update() {
 	// ステートマシーンの更新
 	stateMachine_.Update();
+	
+	// 選択演出の更新
+	UpdateSelectionEffect();
 }
 
 void TitleUI::SetSelectionState(SelectionState state) {
@@ -92,31 +100,27 @@ void TitleUI::InitializeStateMachine() {
 	stateMachine_.RequestState("Start", 100);
 }
 
+void TitleUI::UpdateSelectionEffect() {
+	// 選択状態に応じてモデルの選択フラグを設定
+	bool isStartSelected = (selectionState_ == SelectionState::Start);
+	bool isQuitSelected = (selectionState_ == SelectionState::Quit);
+	
+	// StartModelの選択状態を設定
+	if (startModel_) {
+		startModel_->SetSelected(isStartSelected);
+	}
+	
+	// YameruModelの選択状態を設定
+	if (yameruModel_) {
+		yameruModel_->SetSelected(isQuitSelected);
+	}
+}
+
 std::unique_ptr<SpriteObject> TitleUI::CreateTitleLogo() {
 	auto sprite = std::make_unique<SpriteObject>();
 	sprite->Initialize("Resources/GameResources/Title/Title.png");
 	sprite->GetTransform().translate = { 10.0f, 180.0f, 0.0f };
 	sprite->SetAnchor({ 0.5f, 0.5f });
-	return sprite;
-}
-
-std::unique_ptr<SpriteObject> TitleUI::CreateStartButtonUI()
-{
-	auto sprite = std::make_unique<SpriteObject>();
-	sprite->Initialize("Resources/GameResources/Title/titleStart.png");
-	sprite->GetTransform().translate = { 6.0f, kStartButtonY, 0.0f };
-	sprite->SetAnchor({ 0.5f, 0.5f });
-
-	return sprite;
-}
-
-std::unique_ptr<SpriteObject> TitleUI::CreateQuitButtonUI()
-{
-	auto sprite = std::make_unique<SpriteObject>();
-	sprite->Initialize("Resources/GameResources/Title/quit.png");
-	sprite->GetTransform().translate = { 0.0f, kQuitButtonY, 0.0f };
-	sprite->SetAnchor({ 0.5f, 0.5f });
-
 	return sprite;
 }
 
@@ -148,4 +152,18 @@ std::unique_ptr<StartModel> TitleUI::CreateStartModel(EngineSystem* engine)
 	
 	
 	return startModel;
+}
+
+std::unique_ptr<TitleModel> TitleUI::CreateTitleModel(EngineSystem* engine)
+{
+	auto modelManager = engine->GetComponent<ModelManager>();
+	auto& textureManager = TextureManager::GetInstance();
+	
+	auto titleModelResource = modelManager->CreateStaticModel("Resources/GameResources/Title/Title/title.obj");
+	auto titleTexture = textureManager.Load("Resources/SampleResources/white1x1.png");
+	
+	auto titleModel = std::make_unique<TitleModel>();
+	titleModel->Initialize(std::move(titleModelResource), titleTexture);
+	
+	return titleModel;
 }
