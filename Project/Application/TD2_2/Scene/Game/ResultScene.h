@@ -8,6 +8,7 @@
 #include "../../GameObject/Result/ResultUI.h"
 #include "../../Utility/KeyConfig.h"
 #include "../../GameObject/Background/Background.h"
+#include "../../ClearTimeManager/ClearTimeManager.h"
 
 class EngineSystem;
 class CameraManager;
@@ -42,7 +43,7 @@ protected:
 
 private:
 	// クリア時間　上位3つ
-	float clearTimes_[3]{};
+	std::array<float, 3> clearTimes_{};
 
 	// 今回のクリアタイム
 	float currentClearTime_ = 123.456f;
@@ -65,6 +66,12 @@ private:
 	// タイマーの6要素(00:00:00)を格納する変数
 	std::array<int, 6> timerDigits_;
 
+	// クリアタイマーの文字列上位三つ
+	std::array<std::array<int, 6>, 3> timerDigitsRank_;
+
 	// BGM
 	Sound mp3Resource_;
+
+	// クリアタイムの管理
+	std::unique_ptr<ClearTimeManager> clearTimeManager_;
 };

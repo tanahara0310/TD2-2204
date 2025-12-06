@@ -300,6 +300,7 @@
     <ClCompile Include="Application\TD2_2\GameObject\Result\ReStartModel.cpp" />
     <ClCompile Include="Application\TD2_2\GameObject\Result\PeriodModel.cpp" />
     <ClCompile Include="Application\TD2_2\GameObject\Result\ColonModel.cpp" />
+    <ClCompile Include="Application\TD2_2\ClearTimeManager\ClearTimeManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Engine\WinApp\WinApp.h">
@@ -762,6 +763,7 @@
     <ClInclude Include="Application\TD2_2\GameObject\Result\ReStartModel.h" />
     <ClInclude Include="Application\TD2_2\GameObject\Result\PeriodModel.h" />
     <ClInclude Include="Application\TD2_2\GameObject\Result\ColonModel.h" />
+    <ClInclude Include="Application\TD2_2\ClearTimeManager\ClearTimeManager.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Engine\Particle\README.md">

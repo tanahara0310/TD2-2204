@@ -34,6 +34,18 @@ public:
 	/// @brief タイマーの文字列を受け取る
 	void SetTimerString(std::array<int, 6> timerString);
 
+	/// @brief クリアタイム上位3つの文字列を受け取る
+	void SetRankTimeStrings(const std::array<std::array<int, 6>, 3>& rankTimeStrings) {
+		rankTimeDigits_ = rankTimeStrings;
+		// ランキングタイマー
+		for (int rank = 0; rank < rankTimeDigits_.size(); ++rank) {
+			for (int i = 0; i < rankTimeDigits_[rank].size(); ++i) {
+				// モデルの切り替え
+				rankTimeModels_[rank * 6 + i]->ChangeModelResource("Resources/Models/" + std::to_string(rankTimeDigits_[rank][i]) + "/" + std::to_string(rankTimeDigits_[rank][i]) + ".obj");
+			}
+		}
+	}
+
 	/// @brief 現在の選択状態を取得
 	/// @return 選択状態
 	SelectionState GetSelectionState() const { return selectionState_; }
@@ -91,4 +103,7 @@ private:
 
 	// タイマー文字列
 	std::array<int, 6> timerDigits_;
+
+	// ランキングタイマー文字列
+	std::array<std::array<int, 6>, 3> rankTimeDigits_;
 };

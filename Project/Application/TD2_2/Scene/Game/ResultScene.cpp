@@ -17,6 +17,20 @@ void ResultScene::Initialize(EngineSystem* engine) {
 
 	InputSource::Initialize(engine);
 
+	// クリアタイムマネージャーの生成
+	clearTimeManager_ = std::make_unique<ClearTimeManager>("Resources/ClearTimes/ClearTimes.txt");
+
+	// クリアタイムの読み込み
+	clearTimeManager_->LoadTimes();
+
+	// クリアタイムの登録
+	clearTimeManager_->RegisterTime(currentClearTime_);
+
+	// 上位3つのクリアタイムを取得
+	for (int i = 0; i < 3; ++i) {
+		clearTimes_[i] = clearTimeManager_->GetTimes()[i];
+	}
+
 	// クリアタイマーを文字列に変換
 	timerDigits_ = FormatTime(currentClearTime_);
 
@@ -33,6 +47,12 @@ void ResultScene::Initialize(EngineSystem* engine) {
 
 		// タイマー文字列を受け取る
 		resultUI_->SetTimerString(timerDigits_);
+
+		// クリアタイム上位三つを文字列に変換
+		resultUI_->SetRankTimeStrings({
+			FormatTime(clearTimes_[0]),
+			FormatTime(clearTimes_[1]),
+			FormatTime(clearTimes_[2])});
 	}
 
 	// KeyConfigの設定
