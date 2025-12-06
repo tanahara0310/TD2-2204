@@ -73,6 +73,32 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  player->RegisterModelResource("Damage", "Resources/Models/Player/Damage/PlayerDamage.obj");
 	  player->RegisterModelResource("Player1", "Resources/Models/Player/Player.obj");
 	  player->RegisterModelResource("Player2", "Resources/Models/PlayerPropeller/PlayerPropeller.obj");
+	  
+	  // LightningManagerを設定
+	  player->SetLightningManager(lightningManager_.get());
+	  
+	  // プレイヤー用のダメージエフェクトを作成（球面配置）
+	  LightningEffectManager::EffectConfig damageEffectConfig;
+	  damageEffectConfig.useSphereDistribution = true;
+	  damageEffectConfig.sphereRadius = 2.0f;
+	  damageEffectConfig.sphereStartRadiusRatio = 0.6f; // 内側60%の位置から開始
+	  damageEffectConfig.randomOffsetRange = 0.5f; // ランダムオフセット範囲
+	  damageEffectConfig.lightningCount = 4;
+	  damageEffectConfig.color = { 1.0f, 0.3f, 0.3f, 1.0f }; // 赤色
+	  damageEffectConfig.noiseScale = 1.2f;
+	  damageEffectConfig.noiseSpeed = 15.0f;
+	  damageEffectConfig.segmentCount = 8; // セグメント数を減らして短くする
+	  damageEffectConfig.voxelScale = { 2.0f, 2.0f, 2.0f }; // ボクセルスケールを小さく
+	  damageEffectConfig.fadeInDuration = 0.25f;  // フェードイン時間
+	  damageEffectConfig.fadeOutDuration = 0.35f; // フェードアウト時間
+	  
+	  int damageEffectId = lightningManager_->CreateEffect(
+		 player->GetWorldPosition(),
+		 damageEffectConfig,
+		 gameObjects_
+	  );
+	  player->SetDamageEffectId(damageEffectId);
+	  
 	  player_ = player.get();
 	  gameObjects_.push_back(std::move(player));
    }
