@@ -1,5 +1,6 @@
 #include "Player.h"
 #include "Application/TD2_2/GameObject/Boss/Boss.h"
+#include "../../Effect/Lightning/LightningEffectManager.h"
 #include <algorithm>
 
 // Avoid Windows min/max macro collisions
@@ -62,6 +63,9 @@ void Player::Update() {
    UpdateRotation();
 
    UpdateMovement();
+
+   // ダメージエフェクトの更新
+   UpdateDamageEffect();
 
    transform_.TransferMatrix();
 }
@@ -309,6 +313,11 @@ void Player::Damage() {
 
    if (GameObject::UpdateShake()) return;
 
+   // ダメージエフェクトを非表示
+   if (lightningManager_ && damageEffectId_ >= 0) {
+	  lightningManager_->SetEffectVisible(damageEffectId_, false);
+   }
+
    // HPを減らしてデスポーンステートに遷移
    hp_--;
    stateMachine_->RequestState("Despawn", 0);
@@ -371,6 +380,11 @@ void Player::InitializeDamage() {
    isCharging_ = false;
 
    storedEnergy_ = 0.0f;
+
+   // ダメージエフェクトを表示
+   if (lightningManager_ && damageEffectId_ >= 0) {
+	  lightningManager_->SetEffectVisible(damageEffectId_, true);
+   }
 }
 
 void Player::InitializeDespawn() {
@@ -470,6 +484,11 @@ void Player::InitializePunk() {
    if (startDamageFunction_) {
 	  startDamageFunction_();
    }
+
+   // ダメージエフェクトを表示
+   if (lightningManager_ && damageEffectId_ >= 0) {
+	  lightningManager_->SetEffectVisible(damageEffectId_, true);
+   }
 }
 
 void Player::Punk() {
@@ -478,7 +497,21 @@ void Player::Punk() {
    UpdateShake();
 
    if (punkTimer_.IsFinished()) {
+	  // ダメージエフェクトを非表示
+	  if (lightningManager_ && damageEffectId_ >= 0) {
+		 lightningManager_->SetEffectVisible(damageEffectId_, false);
+	  }
+
 	  // スタン終了、通常状態に戻る
 	  stateMachine_->RequestState("Move", 0);
    }
+}
+
+void Player::UpdateDamageEffect() {
+   if (!lightningManager_ || damageEffectId_ < 0) {
+	  return;
+   }
+
+   // ダメージエフェクトの位置を自機の位置に更新
+   lightningManager_->SetEffectPosition(damageEffectId_, transform_.translate);
 }

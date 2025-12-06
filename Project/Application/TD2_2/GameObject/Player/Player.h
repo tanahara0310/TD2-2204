@@ -2,6 +2,8 @@
 #include "../GameObject.h"
 #include "../../UI/GaugeUI.h"
 
+class LightningEffectManager;
+
 class Player : public GameObject {
 public:
    Player() = default;
@@ -30,6 +32,16 @@ public:
 
    void SetStartChargeFunction(const std::function<void()>& func) {
 	  startChargeFunction_ = func;
+   }
+
+   // ライトニングエフェクトマネージャーを設定
+   void SetLightningManager(LightningEffectManager* manager) {
+	  lightningManager_ = manager;
+   }
+
+   // ダメージエフェクトIDを設定
+   void SetDamageEffectId(int effectId) {
+	  damageEffectId_ = effectId;
    }
 
    // 速度取得
@@ -115,6 +127,10 @@ private:
    float maxStoredEnergy_ = 5.0f;
    float energyDecayPerSecond_ = 0.5f;
 
+   // ライトニングエフェクト関連
+   LightningEffectManager* lightningManager_ = nullptr;
+   int damageEffectId_ = -1;
+
 private:
    /// @brief キーコンフィグの初期化
    void InitializeKeyConfig();
@@ -165,4 +181,7 @@ private:
    void CheckDamageWallCollision();
 
    void UpdateEnergy();
+
+   /// @brief ダメージエフェクトの更新
+   void UpdateDamageEffect();
 };
