@@ -47,18 +47,6 @@ private:
 	// 今回のクリアタイム
 	float currentClearTime_ = 123.456f;
 
-	// リザルト画像
-	SpriteObject* resultSprite_ = nullptr;
-
-	// リスタート画像
-	std::unique_ptr<Sprite> restartSprite_;
-
-	// 「タイトルへ」画像
-	std::unique_ptr<Sprite> toTitleSprite_;
-
-	// タイマー画像
-	std::unique_ptr<Sprite> curretTimeSprite_;
-
 	// リザルトUI
 	std::unique_ptr<ResultUI> resultUI_;
 

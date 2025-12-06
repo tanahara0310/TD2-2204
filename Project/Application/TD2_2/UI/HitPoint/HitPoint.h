@@ -5,6 +5,7 @@
 
 class EngineSystem;
 class IDrawable;
+class Player;
 
 enum class SettingObject {
 	PLAYER = 0,
@@ -40,11 +41,22 @@ private:
 	// 現在のHPアイコンの数
 	int currentHPCount_ = 0;
 
+	// 前フレームのHP値
+	int prevHPCount_ = 0;
+
+	// HP減少時のアニメーション開始フラグ
+	bool isDamageAnimation_ = false;
+
+	int damageIconNum_ = 0;
+
+	// 振り子アニメーション用の時間カウンタ
+	float pendulumTime_ = 0.0f;
+
 	// テクスチャファイルパス
 	std::string playerIconFilePath_ = "Resources/Textures/HPIcon/HiyokoIcon.png";
-	std::string playerDamageIconFilePath_ = "Resources/Textures/HPIcon/HiyokoIconDamage.png";
+	std::string playerDamageIconFilePath_ = "Resources/Textures/HPIcon/HiyokoDamageIcon.png";
 	std::string bossIconFilePath_ = "Resources/Textures/HPIcon/BossIcon.png";
-	std::string bossDamageIconFilePath_ = "Resources/Textures/HPIcon/BossIconDamage.png";
+	std::string bossDamageIconFilePath_ = "Resources/Textures/HPIcon/BossDamageIcon.png";
 
 	// UI要素のポインタ（所有権はgameObjects_が持つ）
 	std::vector<SpriteObject*> hpIcon_;

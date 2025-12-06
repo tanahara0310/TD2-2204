@@ -1,8 +1,14 @@
 #pragma once
-#include <memory>
-#include <vector>
+#include "../../GameObject/Result/ColonModel.h"
+#include "../../GameObject/Result/NumbersModel.h"
+#include "../../GameObject/Result/PeriodModel.h"
+#include "../../GameObject/Result/ReStartModel.h"
+#include "../../GameObject/Result/ResultModel.h"
+#include "../../GameObject/Result/ToTitleModel.h"
 #include "../../Utility/StateMachine.h"
 #include "Engine/ObjectCommon/SpriteObject.h"
+#include <memory>
+#include <vector>
 
 class EngineSystem;
 class IDrawable;
@@ -39,59 +45,43 @@ public:
 	/// @brief ステートマシーンを取得
 	StateMachine& GetStateMachine() { return stateMachine_; }
 
-	/// @brief リザルトテクスチャのセッター
-	/// @param filePath リザルトテクスチャのファイルパス
-	void SetResult(std::string filePath) { result_->SetTexture(filePath); }
-
 private:
-	// リザルトを作成
-	std::unique_ptr<SpriteObject> CreateResult();
-
-	// 「タイトルへ」ui
-	std::unique_ptr<SpriteObject> CreateToTitleUI();
-
-	// 「リスタート」ui
-	std::unique_ptr<SpriteObject> CreateRestartUI();
-
-	// 順位用ui
-	std::unique_ptr<SpriteObject> CreateRankingUI(int num);
-
-	// 矢印UI
-	std::unique_ptr<SpriteObject> CreateArrowUI();
-
-	// タイマーui
-	std::unique_ptr<SpriteObject> CreateTimerUI();
-
-	// コロンui
-	std::unique_ptr<SpriteObject> CreateColonUI();
-
-	// ピリオドui
-	std::unique_ptr<SpriteObject> CreatePeriodUI();
-
-	/// @brief 選択状態に応じて矢印の位置を更新
-	void UpdateArrowPosition();
+	/// @brief 選択状態に応じてモデルのスケールを更新
+	void UpdateModelScale();
 
 	/// @brief ステートマシーンの初期化
 	void InitializeStateMachine();
 
+	// リザルトモデルを作成
+	std::unique_ptr<ResultModel> CreateResultModel(EngineSystem* engine);
+
+	// 数字モデルを作成
+	std::unique_ptr<NumbersModel> CreateNumberModel(EngineSystem* engine, int num);
+
+	// 「タイトルへ」モデルを作成
+	std::unique_ptr<ToTitleModel> CreateToTitleModel(EngineSystem* engine);
+
+	// 「リスタート」モデルを作成
+	std::unique_ptr<ReStartModel> CreateReStartModel(EngineSystem* engine);
+
+	// ピリオドモデルを作成
+	std::unique_ptr<PeriodModel> CreatePeriodModel(EngineSystem* engine);
+
+	// コロンモデル作成
+	std::unique_ptr<ColonModel> CreateColonModel(EngineSystem* engine);
+
 private:
-	// UI要素のポインタ（所有権はgameObjects_が持つ）
-	SpriteObject* result_ = nullptr;
-	SpriteObject* toTitleUI_ = nullptr;
-	SpriteObject* restartUI_ = nullptr;
-	SpriteObject* rankingUI_ = nullptr;
-	SpriteObject* arrowUI_ = nullptr;
-	std::vector<SpriteObject*> timerUI_;
-	std::vector<SpriteObject*> timerUIRank1_;
-	std::vector<SpriteObject*> timerUIRank2_;
-	std::vector<SpriteObject*> timerUIRank3_;
-	std::vector<SpriteObject*> periodRanks_;
-	SpriteObject* colonUI_ = nullptr;
-	SpriteObject* colonUIRank1_ = nullptr;
-	SpriteObject* colonUIRank2_ = nullptr;
-	SpriteObject* colonUIRank3_ = nullptr;
-	SpriteObject* period_ = nullptr;
-	
+	// モデルのポインタ（所有権はgameObjects_が持つ）
+	ResultModel* resultModel_;
+	ToTitleModel* toTitleModel_;
+	ReStartModel* reStartModel_;
+	PeriodModel* periodModel_;
+	ColonModel* colonModel_;
+	std::vector<NumbersModel*> rankModels_;        // 順位モデル
+	std::vector<NumbersModel*> currentTimeModels_; // 今回のクリアタイムモデル
+	std::vector<NumbersModel*> rankTimeModels_;    // 1位から3位までのクリアタイムモデル
+	std::vector<PeriodModel*> periodModels_;       // 1位から3位までのピリオドモデル
+	std::vector<ColonModel*> colonModels_;         // 1位から3位までのピリオドモデル
 
 	// 選択状態
 	SelectionState selectionState_ = SelectionState::ToTitle;
@@ -101,10 +91,4 @@ private:
 
 	// タイマー文字列
 	std::array<int, 6> timerDigits_;
-
-	// 矢印の位置（スタートUIのサイズを考慮）
-	static constexpr float kArrowOffsetX_ToTitle = 270.0f;   // リスタートボタン用（X方向に大きいため左寄り）
-	static constexpr float kArrowOffsetX_ReStart = -280.0f;  // 「タイトルへ」ボタン用（標準サイズ）
-	static constexpr float kToTitleButtonY = -310.0f;        // 「タイトルへ」ボタンのY座標
-	static constexpr float kReStartButtonY = -310.0f;        // リスタートボタンのY座標
 };
