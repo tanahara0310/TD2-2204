@@ -3,6 +3,7 @@
 #include "YameruModel.h"
 #include "StartModel.h"
 #include "TitleModel.h"
+#include "PlayerPresetModel.h"
 #include "../../Utility/StateMachine.h"
 #include <memory>
 #include <vector>
@@ -36,6 +37,16 @@ public:
 	/// @brief 選択状態を設定（ステートマシーンを使用）
 	/// @param state 新しい選択状態
 	void SetSelectionState(SelectionState state);
+	
+	/// @brief 現在選択中のプリセットインデックスを取得
+	/// @return プリセットインデックス（0:HiyokoAfro, 1:Glass, 2:Student）
+	int GetSelectedPresetIndex() const { return selectedPresetIndex_; }
+	
+	/// @brief プリセット選択を上に移動
+	void SelectPreviousPreset();
+	
+	/// @brief プリセット選択を下に移動
+	void SelectNextPreset();
 
 	/// @brief ステートマシーンを取得
 	StateMachine& GetStateMachine() { return stateMachine_; }
@@ -59,12 +70,18 @@ private:
 	
 	//titleモデルを作成
 	std::unique_ptr<TitleModel> CreateTitleModel(EngineSystem* engine);
+	
+	/// @brief プレイヤープリセットモデルを作成
+	std::unique_ptr<PlayerPresetModel> CreatePlayerPresetModel(EngineSystem* engine, PresetType presetType, float yPosition);
 
 	/// @brief ステートマシーンの初期化
 	void InitializeStateMachine();
 
 	/// @brief 選択演出の更新
 	void UpdateSelectionEffect();
+	
+	/// @brief プリセット選択演出の更新
+	void UpdatePresetSelectionEffect();
 
 private:
 
@@ -72,6 +89,12 @@ private:
 	YameruModel* yameruModel_ = nullptr;
 	StartModel* startModel_ = nullptr;
 	TitleModel* titleModel_ = nullptr;
+	
+	// プリセットモデル（3つ）
+	std::vector<PlayerPresetModel*> presetModels_;
+	
+	// 選択中のプリセットインデックス（0:HiyokoAfro, 1:Glass, 2:Student）
+	int selectedPresetIndex_ = 0;
 
 	// 選択状態
 	SelectionState selectionState_ = SelectionState::Start;

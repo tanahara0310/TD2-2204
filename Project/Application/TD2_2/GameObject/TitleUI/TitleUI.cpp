@@ -27,6 +27,26 @@ std::vector<std::unique_ptr<IDrawable>> TitleUI::Initialize(EngineSystem* engine
 	auto titleModel = CreateTitleModel(engine);
 	titleModel_ = titleModel.get();
 	sprites.push_back(std::move(titleModel));
+	
+	// プレイヤープリセットモデルを作成（3つ縦に並べる）
+	// Y座標の間隔を狭める
+	const float kPresetSpacing = 2.0f; // 4.0から2.5に変更
+	const float kPresetStartY = -3.0f; // 中央のY座標を下げる
+	
+	// 1. HiyokoAfro（上）
+	auto hiyokoAfroModel = CreatePlayerPresetModel(engine, PresetType::HiyokoAfro, kPresetStartY + kPresetSpacing);
+	presetModels_.push_back(hiyokoAfroModel.get());
+	sprites.push_back(std::move(hiyokoAfroModel));
+	
+	// 2. Glass（中央）
+	auto glassModel = CreatePlayerPresetModel(engine, PresetType::Glass, kPresetStartY);
+	presetModels_.push_back(glassModel.get());
+	sprites.push_back(std::move(glassModel));
+	
+	// 3. Student（下）
+	auto studentModel = CreatePlayerPresetModel(engine, PresetType::Student, kPresetStartY - kPresetSpacing);
+	presetModels_.push_back(studentModel.get());
+	sprites.push_back(std::move(studentModel));
 
 	// ステートマシーンの初期化
 	InitializeStateMachine();
@@ -38,6 +58,10 @@ std::vector<std::unique_ptr<IDrawable>> TitleUI::Initialize(EngineSystem* engine
 	if (yameruModel_) {
 		yameruModel_->SetSelected(false);
 	}
+	
+	// 初期プリセット選択（HiyokoAfro）
+	selectedPresetIndex_ = 0;
+	UpdatePresetSelectionEffect();
 
 	return sprites;
 }
@@ -48,6 +72,9 @@ void TitleUI::Update() {
 	
 	// 選択演出の更新
 	UpdateSelectionEffect();
+	
+	// プリセット選択演出の更新
+	UpdatePresetSelectionEffect();
 }
 
 void TitleUI::SetSelectionState(SelectionState state) {
@@ -67,6 +94,22 @@ void TitleUI::SetSelectionState(SelectionState state) {
 		stateMachine_.RequestState("Quit", 100);
 		break;
 	}
+}
+
+void TitleUI::SelectPreviousPreset() {
+	selectedPresetIndex_--;
+	if (selectedPresetIndex_ < 0) {
+		selectedPresetIndex_ = static_cast<int>(presetModels_.size()) - 1;
+	}
+	UpdatePresetSelectionEffect();
+}
+
+void TitleUI::SelectNextPreset() {
+	selectedPresetIndex_++;
+	if (selectedPresetIndex_ >= static_cast<int>(presetModels_.size())) {
+		selectedPresetIndex_ = 0;
+	}
+	UpdatePresetSelectionEffect();
 }
 
 void TitleUI::InitializeStateMachine() {
@@ -112,6 +155,14 @@ void TitleUI::UpdateSelectionEffect() {
 	}
 }
 
+void TitleUI::UpdatePresetSelectionEffect() {
+	// 全てのプリセットモデルの選択状態を更新
+	for (int i = 0; i < static_cast<int>(presetModels_.size()); ++i) {
+		if (presetModels_[i]) {
+			presetModels_[i]->SetSelected(i == selectedPresetIndex_);
+		}
+	}
+}
 
 std::unique_ptr<YameruModel> TitleUI::CreateYameruModel(EngineSystem* engine)
 {
@@ -155,4 +206,37 @@ std::unique_ptr<TitleModel> TitleUI::CreateTitleModel(EngineSystem* engine)
 	titleModel->Initialize(std::move(titleModelResource), titleTexture);
 	
 	return titleModel;
+}
+
+std::unique_ptr<PlayerPresetModel> TitleUI::CreatePlayerPresetModel(EngineSystem* engine, PresetType presetType, float yPosition)
+{
+	auto modelManager = engine->GetComponent<ModelManager>();
+	auto& textureManager = TextureManager::GetInstance();
+	
+	std::string modelPath;
+	std::string texturePath;
+	
+	// プリセットタイプに応じてパスを設定
+	switch (presetType) {
+	case PresetType::HiyokoAfro:
+		modelPath = "Resources/Models/HiyokoAfroPropeller/HiyokoAfroPropeller.obj";
+		texturePath = "Resources/Textures/HiyokoAfroPropeller.png";
+		break;
+	case PresetType::Glass:
+		modelPath = "Resources/Models/HiyokoGlassPropeller/HiyokoGlassPropeller.obj";
+		texturePath = "Resources/Textures/HiyokoGlassPropeller.png";
+		break;
+	case PresetType::Student:
+		modelPath = "Resources/Models/HiyokoStudentPropeller/HiyokoStudentPropeller.obj";
+		texturePath = "Resources/Textures/HiyokoStudentPropeller.png";
+		break;
+	}
+	
+	auto presetModelResource = modelManager->CreateStaticModel(modelPath);
+	auto presetTexture = textureManager.Load(texturePath);
+	
+	auto presetModel = std::make_unique<PlayerPresetModel>();
+	presetModel->Initialize(std::move(presetModelResource), presetTexture, presetType, yPosition);
+	
+	return presetModel;
 }

@@ -50,6 +50,18 @@ void TitleScene::Initialize(EngineSystem* engine) {
 			.BindKey(DIK_DOWN)
 			.BindKey(DIK_S)
 			.BindGamepadButton(GamepadButton::DPadDown);
+		
+		// 左方向の入力（プリセット選択用）
+		ActionBuilder(keyConfig_->AddAction("Left", ActionType::Bool))
+			.BindKey(DIK_LEFT)
+			.BindKey(DIK_A)
+			.BindGamepadButton(GamepadButton::DPadLeft);
+		
+		// 右方向の入力（プリセット選択用）
+		ActionBuilder(keyConfig_->AddAction("Right", ActionType::Bool))
+			.BindKey(DIK_RIGHT)
+			.BindKey(DIK_D)
+			.BindGamepadButton(GamepadButton::DPadRight);
 
 		// 決定ボタン（キーボードスペース or ゲームパッドAボタン）
 		ActionBuilder(keyConfig_->AddAction("Confirm", ActionType::Bool))
@@ -151,6 +163,17 @@ void TitleScene::Update() {
 			selectionChanged = true;
 			stickInputCooldown_ = kStickInputDelay; // クールダウンをリセット
 		}
+		
+		// プリセット選択（左右キー）
+		if (keyConfig_->GetDown("Left")) {
+			titleUI_->SelectPreviousPreset();
+			stickInputCooldown_ = kStickInputDelay;
+		}
+		
+		if (keyConfig_->GetDown("Right")) {
+			titleUI_->SelectNextPreset();
+			stickInputCooldown_ = kStickInputDelay;
+		}
 
 		// スティック入力での選択（クールダウン中でなければ）
 		if (!selectionChanged && stickInputCooldown_ <= 0.0f) {
@@ -164,6 +187,16 @@ void TitleScene::Update() {
 			// 下方向（Y軸負）
 			else if (moveInput.y < -kStickThreshold) {
 				titleUI_->SetSelectionState(TitleUI::SelectionState::Quit);
+				stickInputCooldown_ = kStickInputDelay;
+			}
+			// 左方向（X軸負）
+			else if (moveInput.x < -kStickThreshold) {
+				titleUI_->SelectPreviousPreset();
+				stickInputCooldown_ = kStickInputDelay;
+			}
+			// 右方向（X軸正）
+			else if (moveInput.x > kStickThreshold) {
+				titleUI_->SelectNextPreset();
 				stickInputCooldown_ = kStickInputDelay;
 			}
 		}
