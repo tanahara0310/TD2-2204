@@ -12,10 +12,6 @@ std::vector<std::unique_ptr<IDrawable>> TitleUI::Initialize(EngineSystem* engine
 
 	std::vector<std::unique_ptr<IDrawable>> sprites;
 
-	// タイトルロゴを作成
-	auto titleLogo = CreateTitleLogo();
-	titleLogo_ = titleLogo.get();
-	sprites.push_back(std::move(titleLogo));
 	
 	// yameruモデルを作成
 	auto yameruModel = CreateYameruModel(engine);
@@ -116,13 +112,6 @@ void TitleUI::UpdateSelectionEffect() {
 	}
 }
 
-std::unique_ptr<SpriteObject> TitleUI::CreateTitleLogo() {
-	auto sprite = std::make_unique<SpriteObject>();
-	sprite->Initialize("Resources/GameResources/Title/Title.png");
-	sprite->GetTransform().translate = { 10.0f, 180.0f, 0.0f };
-	sprite->SetAnchor({ 0.5f, 0.5f });
-	return sprite;
-}
 
 std::unique_ptr<YameruModel> TitleUI::CreateYameruModel(EngineSystem* engine)
 {

@@ -31,7 +31,7 @@ public:
 	};
 
 	Lightning() = default;
-	~Lightning() override = default;
+	~Lightning() override;
 
 	/// @brief 初期化
 	/// @param voxelModel ボクセルモデル（シーン側で生成）

@@ -229,28 +229,26 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  frameWidth = GameSceneConfig::kFrameSize.x;
 	  frameHeight = GameSceneConfig::kFrameSize.y;
 
-	  LightningEffectManager::LinearEffectConfig config;
+	  LightningEffectManager::EffectConfig config;
 	  config.startOffset = { GameSceneConfig::kStageCenter.x - stageHalfWidth - frameWidth, 0.0f, 0.0f };
 	  config.endOffset = { GameSceneConfig::kStageCenter.x + stageHalfWidth + frameWidth, 0.0f, 0.0f };
 	  config.segmentCount = 12;
 	  config.noiseScale = 3.0f;
 	  config.noiseSpeed = 30.0f;
-	  config.enableAnimation = true;
 	  config.color = { 0.3f, 0.6f, 1.0f, 1.0f }; // 青白色
-	  config.pathType = Lightning::PathType::Linear;
 
 	  // ステージ中央に固定配置
-	  lightningManager_->CreateLinearEffectAtPosition({ 0.0f, -stageHalfHeight + frameHeight, 0.0f }, config, gameObjects_);
+	  lightningManager_->CreateEffect({ 0.0f, -stageHalfHeight + frameHeight, 0.0f }, config, gameObjects_);
 
-	  lightningManager_->CreateLinearEffectAtPosition({ 0.0f, stageHalfHeight - frameHeight, 0.0f }, config, gameObjects_);
+	  lightningManager_->CreateEffect({ 0.0f, stageHalfHeight - frameHeight, 0.0f }, config, gameObjects_);
 
 	  config.segmentCount = 8;
 	  config.noiseSpeed = 20.0f;
 	  config.color = { 0.8f, 1.0f, 1.0f, 1.0f }; // 青白色
 
-	  lightningManager_->CreateLinearEffectAtPosition({ 0.0f, -stageHalfHeight + frameHeight, 0.0f }, config, gameObjects_);
+	  lightningManager_->CreateEffect({ 0.0f, -stageHalfHeight + frameHeight, 0.0f }, config, gameObjects_);
 
-	  lightningManager_->CreateLinearEffectAtPosition({ 0.0f, stageHalfHeight - frameHeight, 0.0f }, config, gameObjects_);
+	  lightningManager_->CreateEffect({ 0.0f, stageHalfHeight - frameHeight, 0.0f }, config, gameObjects_);
 
 	  config.startOffset = { 0.0f, -stageHalfHeight - frameHeight, 0.0f };
 	  config.endOffset = { 0.0f, stageHalfHeight + frameHeight, 0.0f };
@@ -258,17 +256,17 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  config.color = { 0.3f, 0.6f, 1.0f, 1.0f }; // 青白色
 	  config.noiseSpeed = 30.0f;
 
-	  lightningManager_->CreateLinearEffectAtPosition({ -stageHalfWidth + frameWidth, 0.0f, 0.0f }, config, gameObjects_);
+	  lightningManager_->CreateEffect({ -stageHalfWidth + frameWidth, 0.0f, 0.0f }, config, gameObjects_);
 
-	  lightningManager_->CreateLinearEffectAtPosition({ stageHalfWidth - frameWidth, 0.0f, 0.0f }, config, gameObjects_);
+	  lightningManager_->CreateEffect({ stageHalfWidth - frameWidth, 0.0f, 0.0f }, config, gameObjects_);
 
 	  config.segmentCount = 5;
 	  config.noiseSpeed = 20.0f;
 	  config.color = { 0.8f, 1.0f, 1.0f, 1.0f }; // 青白色
 
-	  lightningManager_->CreateLinearEffectAtPosition({ -stageHalfWidth + frameWidth, 0.0f, 0.0f }, config, gameObjects_);
+	  lightningManager_->CreateEffect({ -stageHalfWidth + frameWidth, 0.0f, 0.0f }, config, gameObjects_);
 
-	  lightningManager_->CreateLinearEffectAtPosition({ stageHalfWidth - frameWidth, 0.0f, 0.0f }, config, gameObjects_);
+	  lightningManager_->CreateEffect({ stageHalfWidth - frameWidth, 0.0f, 0.0f }, config, gameObjects_);
    }
 
    // プレイヤーの帯電ゲージ

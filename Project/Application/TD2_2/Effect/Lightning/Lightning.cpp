@@ -23,6 +23,8 @@ namespace {
 	constexpr int kAnimationUpdateInterval = 4; // 3 → 4 に変更（4フレームに1回）
 }
 
+Lightning::~Lightning() = default;
+
 void Lightning::Initialize(ModelResource* voxelModel, TextureManager::LoadedTexture voxelTexture,
 	const Config& config, const std::string& name)
 {
