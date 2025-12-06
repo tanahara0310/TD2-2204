@@ -28,13 +28,6 @@ std::vector<std::unique_ptr<IDrawable>> GaugeUI::Initialize(CameraManager* camer
 		sprites.push_back(std::move(bg));
 	}
 
-	// Fillを作成
-	{
-		auto fill = CreateFill();
-		spriteFill_ = fill.get();
-		sprites.push_back(std::move(fill));
-	}
-
 	// Segmentを作成
 	{
 		auto segment = CreateSegment();
@@ -42,12 +35,19 @@ std::vector<std::unique_ptr<IDrawable>> GaugeUI::Initialize(CameraManager* camer
 		sprites.push_back(std::move(segment));
 	}
 
+	// Fillを作成
+	{
+		auto fill = CreateFill();
+		spriteFill_ = fill.get();
+		sprites.push_back(std::move(fill));
+	}
+
 	// 初期スケール設定
 	Vector2 texBG = spriteBG_->GetTextureSize();
 	maxSpriteSize_ = {fullWidth_ / texBG.x, fullHeight_ / texBG.y};
 
 	// ゲージ1個分のサイズ
-	spriteSizeX_ = maxSpriteSize_.x / maxGauge_;
+	spriteSizeX_ = maxSpriteSize_.x / (maxGauge_ * blinkThreshold_);
 
 	// fullWidth_/fullHeight_を実際のピクセル幅にするためスケールを設定
 	if (texBG.x > 0 && texBG.y > 0) {
@@ -83,6 +83,9 @@ void GaugeUI::Update() {
 	if (!cam)
 		return;
 
+	// 毎フレーム deltaTime を加算
+	elapsedTime_ += GameUtils::GetDeltaTime();
+
 	// ワールド->スクリーン位置
 	Vector3 worldPos = target_->GetWorldPosition();
 	const Matrix4x4& view = cam->GetViewMatrix();
@@ -112,28 +115,58 @@ void GaugeUI::Update() {
 	spriteFill_->GetTransform().translate = {leftX_center, centerY, 0.0f};
 	spriteSegment_->GetTransform().translate = {leftX_center, centerY, 0.0f};
 
-	// スケール更新
-	spriteFill_->GetTransform().scale = {spriteSizeX_ * currentGauge_, maxSpriteSize_.y, 0.0f};
-
-	// セグメントのスケールを徐々に増やす
-	float targetSegmentWidth = segmentWidth_;
-	if (segmentWidth_ < spriteSizeX_ * currentGauge_) {
-		targetSegmentWidth += segmentDecreaseSpeed_ * GameUtils::GetDeltaTime();
-		if (targetSegmentWidth > spriteSizeX_ * currentGauge_) {
-			targetSegmentWidth = spriteSizeX_ * currentGauge_;
-		}
-	} else {
-		targetSegmentWidth = spriteSizeX_ * currentGauge_;
+	// スケール更新（見た目用のゲージ値を計算）
+	float displayGauge = currentGauge_;
+	if (currentGauge_ >= maxGauge_ * blinkThreshold_) {
+		displayGauge = maxGauge_ * blinkThreshold_; // 見た目上は最大
 	}
-	segmentWidth_ = targetSegmentWidth;
+	spriteFill_->GetTransform().scale = {spriteSizeX_ * displayGauge, maxSpriteSize_.y, 0.0f};
+
+	// 色の点滅処理
+	if (currentGauge_ >= maxGauge_ * blinkThreshold_ && currentGauge_ < maxGauge_) {
+		// ゲージ割合
+		float gaugeRatio = currentGauge_ / maxGauge_;
+
+		// 最大値に近づくほど速くなるように倍率を掛ける
+		float blinkSpeed = blinkBaseSpeed_ * (1.0f + (gaugeRatio - blinkThreshold_) / (1.0f - blinkThreshold_));
+
+		float blink = (std::sin(elapsedTime_ * blinkSpeed) * 0.5f + 0.5f); // 0〜1で点滅
+		spriteFill_->SetColor({1.0f, blink, blink, 1.0f});                 // 点滅
+	} else {
+		spriteFill_->SetColor({0.8f, 1.0f, 0.0f, 1.0f}); // 通常色
+		elapsedTime_ = 0.0f;
+	}
+
+	// Fill の横幅に egmentWidthを追従
+	float fillWidth = spriteFill_->GetTransform().scale.x;
+
+	// 追従速度
+	const float followSpeed = 8.0f;
+
+	// Lerpで追従
+	segmentWidth_ += (fillWidth - segmentWidth_) * followSpeed * GameUtils::GetDeltaTime();
+
+	// スケール反映
 	spriteSegment_->GetTransform().scale = {segmentWidth_, maxSpriteSize_.y, 1.0f};
+}
+
+void GaugeUI::SetFillColor(const Vector4& color) {
+	if (spriteFill_) {
+		spriteFill_->SetColor(color);
+	}
+}
+
+void GaugeUI::SetSegmentColor(const Vector4& color) {
+	if (spriteSegment_) {
+		spriteSegment_->SetColor(color);
+	}
 }
 
 std::unique_ptr<SpriteObject> GaugeUI::CreateFill() {
 	auto sprite = std::make_unique<SpriteObject>();
 	sprite->Initialize("Resources/Textures/white.png");
 	sprite->GetTransform().translate = {0.0f, 0.0f, 0.0f};
-	sprite->SetColor({0.5f, 0.5f, 0.0f, 1.0f});
+	sprite->SetColor({0.8f, 1.0f, 0.0f, 1.0f});
 	sprite->SetAnchor({0.0f, 0.5f});
 	return sprite;
 }
@@ -152,7 +185,7 @@ std::unique_ptr<SpriteObject> GaugeUI::CreateSegment() {
 	auto sprite = std::make_unique<SpriteObject>();
 	sprite->Initialize("Resources/Textures/white.png");
 	sprite->GetTransform().translate = {0.0f, 0.0f, 0.0f};
-	sprite->SetColor({0.8f, 1.0f, 0.0f, 1.0f});
+	sprite->SetColor({0.7f, 0.4f, 0.0f, 1.0f});
 	sprite->SetAnchor({0.0f, 0.5f});
 
 	return sprite;

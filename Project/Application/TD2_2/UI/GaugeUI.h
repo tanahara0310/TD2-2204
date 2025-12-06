@@ -30,6 +30,18 @@ public:
 	// 毎フレーム呼ぶ
 	void Update();
 
+	// ゲージが点滅する割合指定
+	void SetBlinkThreshold(float blinkThreshold) { blinkThreshold_ = blinkThreshold; }
+
+	// 前面のゲージの色を指定
+	void SetFillColor(const Vector4& color);
+
+	// 後面のゲージの色を指定
+	void SetSegmentColor(const Vector4& color);
+
+	// 点滅の基本速度を指定
+	void SetBlinkBaseSpeed(float blinkBaseSpeed) { blinkBaseSpeed_ = blinkBaseSpeed; }
+
 private:
 	// Fillを作成
 	std::unique_ptr<SpriteObject> CreateFill();
@@ -61,7 +73,7 @@ private:
 	float segmentWidth_ = 0.0f;
 
 	// Segmentが増える速度
-	float segmentDecreaseSpeed_ = 10.0f;
+	float segmentDecreaseSpeed_ = 2.0f;
 
 	// 位置オフセット
 	Vector2 screenOffset_ = {0.0f, -100.0f};
@@ -71,4 +83,13 @@ private:
 
 	// ゲージ1個分のサイズX
 	float spriteSizeX_ = 0.0f;
+
+	// 累積時間
+	float elapsedTime_ = 0.0f;
+
+	// ゲージが点滅する割合
+	float blinkThreshold_ = 0.7f;
+
+	// 基本点滅速度
+	float blinkBaseSpeed_ = 14.0f;
 };
