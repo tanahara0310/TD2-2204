@@ -110,12 +110,23 @@ std::vector<std::unique_ptr<IDrawable>> ResultUI::Initialize([[maybe_unused]] En
 	// 初期スケールを設定
 	UpdateModelScale();
 
+	// 初期状態の選択状態を設定（Startが選択された状態）
+	if (toTitleModel_) {
+		toTitleModel_->SetSelected(true);
+	}
+	if (reStartModel_) {
+		reStartModel_->SetSelected(false);
+	}
+
 	return sprites;
 }
 
 void ResultUI::Update() {
 	// ステートマシーンの更新
 	stateMachine_.Update();
+
+	// 選択演出の更新
+	UpdateSelectionEffect();
 }
 
 void ResultUI::SetTimerString(std::array<int, 6> timerString) {
@@ -192,7 +203,7 @@ std::unique_ptr<ResultModel> ResultUI::CreateResultModel(EngineSystem* engine) {
 	auto modelManager = engine->GetComponent<ModelManager>();
 	auto& textureManager = TextureManager::GetInstance();
 
-	auto resultModelResource = modelManager->CreateStaticModel("Resources/Models/GameClear/GameClear.obj");
+	auto resultModelResource = modelManager->CreateStaticModel("Resources/Models/GameOver/GameOver.obj");
 	auto resultTexture = textureManager.Load("Resources/SampleResources/white1x1.png");
 
 	auto resultModel = std::make_unique<ResultModel>();
@@ -264,5 +275,21 @@ void ResultUI::UpdateModelScale() {
 		toTitleModel_->GetTransform().scale = {1.0f, 1.0f, 1.0f};
 		reStartModel_->GetTransform().scale = {1.2f, 1.2f, 1.2f};
 		break;
+	}
+}
+
+void ResultUI::UpdateSelectionEffect() {
+	// 選択状態に応じてモデルの選択フラグを設定
+	bool isToTitleSelected = (selectionState_ == SelectionState::ToTitle);
+	bool isReStartSelected = (selectionState_ == SelectionState::ReStart);
+
+	// StartModelの選択状態を設定
+	if (toTitleModel_) {
+		toTitleModel_->SetSelected(isToTitleSelected);
+	}
+
+	// YameruModelの選択状態を設定
+	if (reStartModel_) {
+		reStartModel_->SetSelected(isReStartSelected);
 	}
 }

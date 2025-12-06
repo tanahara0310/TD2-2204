@@ -72,8 +72,8 @@ void ResultScene::Initialize(EngineSystem* engine) {
 		auto modelManager = engine_->GetComponent<ModelManager>();
 		auto& textureManager = TextureManager::GetInstance();
 
-		auto backgroundModel = modelManager->CreateStaticModel("Resources/Models/Background/Background.obj");
-		auto backgroundTexture = textureManager.Load("Resources/Textures/Background.png");
+		auto backgroundModel = modelManager->CreateStaticModel("Resources/Models/Background/Background2.obj");
+		auto backgroundTexture = textureManager.Load("Resources/Textures/Background2.png");
 		auto background = std::make_unique<Background>();
 		background_ = background.get();
 		background->Initialize(std::move(backgroundModel), backgroundTexture);

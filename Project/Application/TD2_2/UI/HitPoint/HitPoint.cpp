@@ -71,8 +71,8 @@ void HitPoint::SetHP(int currentHPCount) {
 
 	if (isDamageAnimation_) {
 		// --- 振り子回転 ---
-		pendulumTime_ += 0.1f;                         // 時間の進み具合（速度調整用）
-		float angle = std::sin(pendulumTime_) * 30.0f; // -30°〜30°に変換
+		pendulumTime_ += 0.5f;                         // 時間の進み具合（速度調整用）
+		float angle = std::sin(pendulumTime_) * (30.0f * std::numbers::pi_v<float> / 180.0f); // -30°〜30°に変換
 		hpIcon_[damageIconNum_]->GetTransform().rotate.z = angle;
 
 		// 徐々に縮小

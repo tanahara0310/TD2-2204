@@ -82,6 +82,9 @@ private:
 	// コロンモデル作成
 	std::unique_ptr<ColonModel> CreateColonModel(EngineSystem* engine);
 
+	/// @brief 選択演出の更新
+	void UpdateSelectionEffect();
+
 private:
 	// モデルのポインタ（所有権はgameObjects_が持つ）
 	ResultModel* resultModel_;
