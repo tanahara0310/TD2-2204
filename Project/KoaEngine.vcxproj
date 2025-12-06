@@ -684,6 +684,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <None Include="docs\RenderingFlow.md" />
     <None Include="Engine\Particle\README.md" />
     <None Include="Engine\Utility\Debug\ImGui\README.md" />
+    <None Include="LightningEffectManager_Redesign_Summary.md" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

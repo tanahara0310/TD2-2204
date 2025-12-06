@@ -50,8 +50,6 @@ public:
 	TitleModel* GetTitleModel() const { return titleModel_; }
 
 private:
-	//タイトルロゴを作成
-	std::unique_ptr<SpriteObject> CreateTitleLogo();
 	
 	//yameruモデルを作成
 	std::unique_ptr<YameruModel> CreateYameruModel(EngineSystem* engine);
@@ -71,7 +69,6 @@ private:
 private:
 
 	// UI要素のポインタ（所有権はgameObjects_が持つ）
-	SpriteObject* titleLogo_ = nullptr;
 	YameruModel* yameruModel_ = nullptr;
 	StartModel* startModel_ = nullptr;
 	TitleModel* titleModel_ = nullptr;
