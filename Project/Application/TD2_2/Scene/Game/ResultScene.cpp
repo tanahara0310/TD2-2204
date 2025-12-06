@@ -166,6 +166,6 @@ std::array<int, 6> ResultScene::FormatTime(float time) {
 void ResultScene::SetupReleaseCameraParameters(Camera* camera) {
 	// リザルトシーン専用のカメラパラメータ
 	// より引きの視点で全体を見渡せるように設定
-	camera->SetTranslate({0.0f, 0.0f, -100.0f});
+	camera->SetTranslate({0.0f, 0.0f, -70.0f});
 	camera->SetRotate({0.0f, 0.0f, 0.0f});
 }

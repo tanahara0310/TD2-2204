@@ -1,25 +1,45 @@
 #include "Cloud.h"
-void Cloud::Initialize(std::unique_ptr<Model> model, TextureManager::LoadedTexture texture, CloudDirection direction) {
+#include "../Engine/Utility/Random/RandomGenerator.h"
+
+void Cloud::Initialize(std::unique_ptr<Model> model, TextureManager::LoadedTexture texture) {
 	// 基底クラスの初期化を呼び出す
 	GameObject::Initialize(std::move(model), texture);
 
-	direction_ = direction;
+	float posX = RangeFloat(-50.0f, -25.0f);
+	float randomPosY = RangeFloat(-10.0f, 5.0f);
+
+	transform_.translate = {posX, randomPosY, 50.0f};
+
+	// 進行速度
+	velocityX_ = RangeFloat(0.05f, 0.1f);
+
+	transform_.TransferMatrix();
 }
 
 void Cloud::Update() { 
 	// 進行方向に移動
-	/*if (direction_ == CloudDirection::LEFT) {
-		transform_.translate.x -= velocityX_;
-	} else if (direction_ == CloudDirection::RIGHT) {
-		transform_.translate.x += velocityX_;
-	}*/
+    transform_.translate.x += velocityX_;
 
-	// 進行方向変更
-	/*if ((direction_ == CloudDirection::LEFT) && transform_.translate.x <= -400.0f) {
-		transform_.translate.x = 400.0f;
-	} else if ((direction_ == CloudDirection::RIGHT) && transform_.translate.x >= 400.0f) {
-		transform_.translate.x = -400.0f;
-	}*/
+	// 座標リセット
+	if (transform_.translate.x >= kEndLineX) {
+		transform_.translate.x = RangeFloat(-50.0f, -25.0f);
+		velocityX_ = RangeFloat(0.1f, 0.3f); // 速度を再設定
+	}
 
 	transform_.TransferMatrix(); 
+}
+
+void Cloud::Draw(const ICamera* camera) {
+	if (!model_ || !camera) {
+		return;
+	}
+
+	// モデルの描画
+	model_->Draw(transform_, camera, texture_.gpuHandle);
+}
+
+float Cloud::RangeFloat(float min, float max) {
+	static std::mt19937 gen(std::random_device{}());
+	std::uniform_real_distribution<float> dist(min, max);
+	return dist(gen);
 }

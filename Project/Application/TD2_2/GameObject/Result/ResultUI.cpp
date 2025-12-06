@@ -3,153 +3,112 @@
 std::vector<std::unique_ptr<IDrawable>> ResultUI::Initialize([[maybe_unused]] EngineSystem* engine) {
 	std::vector<std::unique_ptr<IDrawable>> sprites;
 
-	// リザルトを作成
+	// リザルトモデル作成
 	{
-		auto result = CreateResult();
-		result_ = result.get();
-		sprites.push_back(std::move(result));
+		auto resultModel = CreateResultModel(engine);
+		resultModel_ = resultModel.get();
+		sprites.push_back(std::move(resultModel));
 	}
 
-	// 「タイトルへ」UIを作成
+	// 「タイトルへ」モデル作成
 	{
-		auto toTitleUI = CreateToTitleUI();
-		toTitleUI_ = toTitleUI.get();
-		sprites.push_back(std::move(toTitleUI));
+		auto toTitleModel = CreateToTitleModel(engine);
+		toTitleModel_ = toTitleModel.get();
+		sprites.push_back(std::move(toTitleModel));
 	}
 
-	// 「リスタート」UIを作成
+	// 「リスタート」モデル作成
 	{
-		auto restartUI = CreateRestartUI();
-		restartUI_ = restartUI.get();
-		sprites.push_back(std::move(restartUI));
+		auto reStartModel = CreateReStartModel(engine);
+		reStartModel_ = reStartModel.get();
+		sprites.push_back(std::move(reStartModel));
 	}
 
-	// 順位用のUIを作成
+	// ピリオドモデルを作成
+	{
+		auto periodModel = CreatePeriodModel(engine);
+		periodModel->GetTransform().translate = {6.5f, 5.0f, 0.0f};
+		periodModel->GetTransform().scale = {8.0f, 8.0f, 8.0f};
+		periodModel_ = periodModel.get();
+		sprites.push_back(std::move(periodModel));
+	}
+
+	// コロンモデルを作成
+	{
+		auto colonModel = CreateColonModel(engine);
+		colonModel->GetTransform().translate = {-2.0f, 1.6f, -47.0f};
+		colonModel->GetTransform().scale = {2.0f, 2.0f, 2.0f};
+		colonModel_ = colonModel.get();
+		sprites.push_back(std::move(colonModel));
+	}
+
+	// 順位用のモデルを作成
 	for (int i = 1; i <= 3; i++) {
-		auto ranking = CreateRankingUI(i);
-		ranking->GetTransform().scale = {0.5f, 0.5f, 0.5f};
-		rankingUI_ = ranking.get();
+		auto ranking = CreateNumberModel(engine, i);
+		ranking->GetTransform().scale = {1.0f, 1.0f, 1.0f};
+		ranking->GetTransform().translate = {-5.0f, i * -1.0f + 1.2f, -47.0f};
+		rankModels_.push_back(ranking.get());
 		sprites.push_back(std::move(ranking));
 	}
 
-	// 矢印UIを作成
-	{
-		auto arrowUI = CreateArrowUI();
-		arrowUI_ = arrowUI.get();
-		sprites.push_back(std::move(arrowUI));
-	}
-
-	// タイマー用のUIを作成
+	// タイマー用のモデルを作成
 	for (int i = 0; i < 6; i++) {
-		auto timer = CreateTimerUI();
+		auto timer = CreateNumberModel(engine, i);
 
 		// 基本の位置
-		float x = i * 96.0f - 440.0f;
+		float x = i * 1.5f - 4.7f;
 
 		// iが2の倍数のときに余分なオフセットを加える
-		x += (i / 2) * 192.0f;
+		x += (i / 2) * 1.0f;
 
-		timer->GetTransform().translate = {x, 140.0f, 0.0f};
-		timerUI_.push_back(timer.get());
+		timer->GetTransform().translate = {x, 1.5f, -47.0f};
+		timer->GetTransform().scale = {2.5f, 2.5f, 2.5f};
+		currentTimeModels_.push_back(timer.get());
 		sprites.push_back(std::move(timer));
 	}
 
-	// タイマー用(1位)のUIを作成
-	for (int i = 0; i < 6; i++) {
-		auto timer = CreateTimerUI();
+	// タイマー用のモデル(ランキング)を作成
+	for (int i = 1; i <= 3; i++) {
+		for (int j = 0; j < 6; j++) {
+			auto timer = CreateNumberModel(engine, j);
 
-		// 基本の位置
-		float x = i * 64.0f - 260.0f;
+			// 基本の位置
+			float x = j * 0.5f - 2.2f;
+			float y = i * -1.0f + 1.2f;
 
-		// iが2の倍数のときに余分なオフセットを加える
-		x += (i / 2) * 128.0f;
+			// iが2の倍数のときに余分なオフセットを加える
+			x += (j / 2) * 1.0f;
 
-		timer->GetTransform().translate = {x, -10.0f, 0.0f};
-		timer->GetTransform().scale = {0.5f, 0.5f, 0.5f};
-		timerUIRank1_.push_back(timer.get());
-		sprites.push_back(std::move(timer));
+			timer->GetTransform().translate = {x, y, -47.0f};
+			timer->GetTransform().scale = {1.0f, 1.0f, 1.0f};
+			rankTimeModels_.push_back(timer.get());
+			sprites.push_back(std::move(timer));
+		}
 	}
 
-	// タイマー用(2位)のUIを作成
-	for (int i = 0; i < 6; i++) {
-		auto timer = CreateTimerUI();
-
-		// 基本の位置
-		float x = i * 64.0f - 260.0f;
-
-		// iが2の倍数のときに余分なオフセットを加える
-		x += (i / 2) * 128.0f;
-
-		timer->GetTransform().translate = {x, -100.0f, 0.0f};
-		timer->GetTransform().scale = {0.5f, 0.5f, 0.5f};
-		timerUIRank1_.push_back(timer.get());
-		sprites.push_back(std::move(timer));
-	}
-
-	// タイマー用(3位)のUIを作成
-	for (int i = 0; i < 6; i++) {
-		auto timer = CreateTimerUI();
-
-		// 基本の位置
-		float x = i * 64.0f - 260.0f;
-
-		// iが2の倍数のときに余分なオフセットを加える
-		x += (i / 2) * 128.0f;
-
-		timer->GetTransform().translate = {x, -190.0f, 0.0f};
-		timer->GetTransform().scale = {0.5f, 0.5f, 0.5f};
-		timerUIRank1_.push_back(timer.get());
-		sprites.push_back(std::move(timer));
-	}
-
-	// コロンUIを作成
-	auto colonUI = CreateColonUI();
-	colonUI->GetTransform().translate = {-20.0f - 180.0f, 130.0f, 0.0f};
-	colonUI_ = colonUI.get();
-	sprites.push_back(std::move(colonUI));
-
-	// コロンUI(1位)を作成
-	auto colonUI1 = CreateColonUI();
-	colonUI1->GetTransform().translate = {-10.0f - 90.0f, -10.0f, 0.0f};
-	colonUI1->GetTransform().scale = {0.5f, 0.5f, 0.5f};
-	colonUIRank1_ = colonUI1.get();
-	sprites.push_back(std::move(colonUI1));
-
-	// コロンUI(2位)を作成
-	auto colonUI2 = CreateColonUI();
-	colonUI2->GetTransform().translate = {-10.0f - 90.0f, -100.0f, 0.0f};
-	colonUI2->GetTransform().scale = {0.5f, 0.5f, 0.5f};
-	colonUIRank2_ = colonUI2.get();
-	sprites.push_back(std::move(colonUI2));
-
-	// コロンUI(3位)を作成
-	auto colonUI3 = CreateColonUI();
-	colonUI3->GetTransform().translate = {-10.0f - 90.0f, -190.0f, 0.0f};
-	colonUI3->GetTransform().scale = {0.5f, 0.5f, 0.5f};
-	colonUIRank3_ = colonUI3.get();
-	sprites.push_back(std::move(colonUI3));
-
-	// ピリオドUIを作成
-	auto period = CreatePeriodUI();
-	period->GetTransform().translate = {195.0f, 100.0f, 0.0f};
-	period->GetTransform().scale = {0.5f, 0.5f, 0.5f};
-	period_ = period.get();
-	sprites.push_back(std::move(period));
-
-	// ピリオドUIを作成
+	// ピリオドモデル(ランキング)を作成
 	for (int i = 0; i < 3; i++) {
-		auto periodRank = CreatePeriodUI();
-		periodRank->GetTransform().translate = {160.0f, i * -90.0f - 30.0f, 0.0f};
-		periodRank->GetTransform().scale = {0.2f, 0.2f, 0.2f};
-		periodRanks_.push_back(periodRank.get());
-		sprites.push_back(std::move(periodRank));
+		auto periodModel = CreatePeriodModel(engine);
+		periodModel->GetTransform().translate = {1.1f, i * 1.0f - 1.7f, -47.0f};
+		periodModel->GetTransform().scale = {2.0f, 2.0f, 2.0f};
+		periodModels_.push_back(periodModel.get());
+		sprites.push_back(std::move(periodModel));
+	}
+
+	// コロンモデル(ランキング)を作成
+	for (int i = 0; i < 3; i++) {
+		auto colonModel = CreateColonModel(engine);
+		colonModel->GetTransform().translate = {-1.0f, i * 1.0f - 1.7f, -47.0f};
+		colonModel->GetTransform().scale = {0.7f, 0.7f, 0.7f};
+		colonModels_.push_back(colonModel.get());
+		sprites.push_back(std::move(colonModel));
 	}
 
 	// ステートマシーンの初期化
 	InitializeStateMachine();
 
-	// 初期位置を設定
-	UpdateArrowPosition();
+	// 初期スケールを設定
+	UpdateModelScale();
 
 	return sprites;
 }
@@ -164,7 +123,8 @@ void ResultUI::SetTimerString(std::array<int, 6> timerString) {
 
 	// タイマー
 	for (int i = 0; i < timerDigits_.size(); ++i) {
-		timerUI_[i]->SetTexture("Resources/GameResources/Result/Numbers/" + std::to_string(timerDigits_[i]) + ".png");
+		// モデルの切り替え
+		currentTimeModels_[i]->ChangeModelResource("Resources/Models/" + std::to_string(timerDigits_[i]) + "/" + std::to_string(timerDigits_[i]) + ".obj");
 	}
 }
 
@@ -189,7 +149,7 @@ void ResultUI::InitializeStateMachine() {
 	    [this]() {
 		    // Start状態への遷移時
 		    selectionState_ = SelectionState::ToTitle;
-		    UpdateArrowPosition();
+		    UpdateModelScale();
 	    },
 	    [this]() {
 		    // Start状態の更新処理
@@ -201,7 +161,7 @@ void ResultUI::InitializeStateMachine() {
 	    [this]() {
 		    // Quit状態への遷移時
 		    selectionState_ = SelectionState::ReStart;
-		    UpdateArrowPosition();
+		    UpdateModelScale();
 	    },
 	    [this]() {
 		    // Quit状態の更新処理
@@ -215,89 +175,94 @@ void ResultUI::InitializeStateMachine() {
 	stateMachine_.RequestState("ToTitle", 100);
 }
 
-void ResultUI::UpdateArrowPosition() {
-	if (!arrowUI_) {
-		return;
-	}
+std::unique_ptr<NumbersModel> ResultUI::CreateNumberModel(EngineSystem* engine, int num) {
+	auto modelManager = engine->GetComponent<ModelManager>();
+	auto& textureManager = TextureManager::GetInstance();
 
-	// 選択状態に応じて矢印の位置を更新（スタートUIのX方向のサイズを考慮）
+	auto numModelResource = modelManager->CreateStaticModel("Resources/Models/" + std::to_string(num) + "/" + std::to_string(num) + ".obj");
+	auto numTexture = textureManager.Load("Resources/SampleResources/white1x1.png");
+
+	auto numModel = std::make_unique<NumbersModel>();
+	numModel->Initialize(std::move(numModelResource), numTexture);
+
+	return numModel;
+}
+
+std::unique_ptr<ResultModel> ResultUI::CreateResultModel(EngineSystem* engine) {
+	auto modelManager = engine->GetComponent<ModelManager>();
+	auto& textureManager = TextureManager::GetInstance();
+
+	auto resultModelResource = modelManager->CreateStaticModel("Resources/Models/GameClear/GameClear.obj");
+	auto resultTexture = textureManager.Load("Resources/SampleResources/white1x1.png");
+
+	auto resultModel = std::make_unique<ResultModel>();
+	resultModel->Initialize(std::move(resultModelResource), resultTexture);
+
+	return resultModel;
+}
+
+std::unique_ptr<ToTitleModel> ResultUI::CreateToTitleModel(EngineSystem* engine) {
+	auto modelManager = engine->GetComponent<ModelManager>();
+	auto& textureManager = TextureManager::GetInstance();
+
+	auto toTitleModelResource = modelManager->CreateStaticModel("Resources/Models/ToTitle/ToTitle.obj");
+	auto toTitleTexture = textureManager.Load("Resources/SampleResources/white1x1.png");
+
+	auto toTitleModel = std::make_unique<ToTitleModel>();
+	toTitleModel->Initialize(std::move(toTitleModelResource), toTitleTexture);
+
+	return toTitleModel;
+}
+
+std::unique_ptr<ReStartModel> ResultUI::CreateReStartModel(EngineSystem* engine) {
+	auto modelManager = engine->GetComponent<ModelManager>();
+	auto& textureManager = TextureManager::GetInstance();
+
+	auto reStartModelResource = modelManager->CreateStaticModel("Resources/Models/ReStart/ReStart.obj");
+	auto reStartTexture = textureManager.Load("Resources/SampleResources/white1x1.png");
+
+	auto reStartModel = std::make_unique<ReStartModel>();
+	reStartModel->Initialize(std::move(reStartModelResource), reStartTexture);
+
+	return reStartModel;
+}
+
+std::unique_ptr<PeriodModel> ResultUI::CreatePeriodModel(EngineSystem* engine) {
+	auto modelManager = engine->GetComponent<ModelManager>();
+	auto& textureManager = TextureManager::GetInstance();
+
+	auto periodModelResource = modelManager->CreateStaticModel("Resources/Models/Voxel/Voxel.obj");
+	auto periodTexture = textureManager.Load("Resources/SampleResources/white1x1.png");
+
+	auto periodModel = std::make_unique<PeriodModel>();
+	periodModel->Initialize(std::move(periodModelResource), periodTexture);
+
+	return periodModel;
+}
+
+std::unique_ptr<ColonModel> ResultUI::CreateColonModel(EngineSystem* engine) { 
+	auto modelManager = engine->GetComponent<ModelManager>();
+	auto& textureManager = TextureManager::GetInstance();
+
+	auto colonModelResource = modelManager->CreateStaticModel("Resources/Models/Colon/Colon.obj");
+	auto colonTexture = textureManager.Load("Resources/SampleResources/white1x1.png");
+
+	auto colonModel = std::make_unique<ColonModel>();
+	colonModel->Initialize(std::move(colonModelResource), colonTexture);
+
+	return colonModel;
+}
+
+void ResultUI::UpdateModelScale() {
+	// 選択状態に応じてモデルのスケールを更新
 	switch (selectionState_) {
 	case SelectionState::ToTitle:
-		arrowUI_->GetTransform().translate = {kArrowOffsetX_ToTitle, kToTitleButtonY, 0.0f};
-		arrowUI_->SetTexture("Resources/GameResources/Title/arrow.png");
+		toTitleModel_->GetTransform().scale = {1.2f, 1.2f, 1.2f};
+		reStartModel_->GetTransform().scale = {1.0f, 1.0f, 1.0f};
 		break;
 	case SelectionState::ReStart:
-		arrowUI_->GetTransform().translate = {kArrowOffsetX_ReStart, kReStartButtonY, 0.0f};
-		arrowUI_->SetTexture("Resources/GameResources/Result/arrowLeft.png");
+		toTitleModel_->GetTransform().scale = {1.0f, 1.0f, 1.0f};
+		reStartModel_->GetTransform().scale = {1.2f, 1.2f, 1.2f};
 		break;
 	}
-}
-
-std::unique_ptr<SpriteObject> ResultUI::CreateResult() {
-	auto sprite = std::make_unique<SpriteObject>();
-	sprite->Initialize("Resources/GameResources/Result/GameClear.png");
-	sprite->GetTransform().translate = {0.0f, 290.0f, 0.0f};
-	sprite->SetAnchor({0.5f, 0.5f});
-	return sprite;
-}
-
-std::unique_ptr<SpriteObject> ResultUI::CreateToTitleUI() {
-	auto sprite = std::make_unique<SpriteObject>();
-	sprite->Initialize("Resources/GameResources/Result/ToTitle.png");
-	sprite->GetTransform().translate = {440.0f, -310.0f, 0.0f};
-	sprite->SetAnchor({0.5f, 0.5f});
-
-	return sprite;
-}
-
-std::unique_ptr<SpriteObject> ResultUI::CreateRestartUI() {
-	auto sprite = std::make_unique<SpriteObject>();
-	sprite->Initialize("Resources/GameResources/Result/Restart.png");
-	sprite->GetTransform().translate = {-450.0f, -300.0f, 0.0f};
-	sprite->SetAnchor({0.5f, 0.5f});
-
-	return sprite;
-}
-
-std::unique_ptr<SpriteObject> ResultUI::CreateRankingUI(int num) {
-	auto sprite = std::make_unique<SpriteObject>();
-	sprite->Initialize("Resources/GameResources/Result/Numbers/" + std::to_string(num) + ".png");
-	sprite->GetTransform().translate = {-450.0f, 80.0f - (num * 90.0f), 0.0f};
-	sprite->SetAnchor({0.5f, 0.5f});
-
-	return sprite;
-}
-
-std::unique_ptr<SpriteObject> ResultUI::CreateArrowUI() {
-	auto sprite = std::make_unique<SpriteObject>();
-	sprite->Initialize("Resources/GameResources/Result/arrowLeft.png");
-	sprite->GetTransform().translate = {kArrowOffsetX_ReStart, kToTitleButtonY, 0.0f};
-	sprite->SetAnchor({0.5f, 0.5f});
-
-	return sprite;
-}
-
-std::unique_ptr<SpriteObject> ResultUI::CreateTimerUI() {
-	auto sprite = std::make_unique<SpriteObject>();
-	sprite->Initialize("Resources/GameResources/Result/numbers/0.png");
-	sprite->GetTransform().translate = {0.0f, 0.0f, 0.0f};
-	sprite->SetAnchor({0.5f, 0.5f});
-
-	return sprite;
-}
-
-std::unique_ptr<SpriteObject> ResultUI::CreateColonUI() {
-	auto sprite = std::make_unique<SpriteObject>();
-	sprite->Initialize("Resources/GameResources/Result/Colon.png");
-	sprite->SetAnchor({0.5f, 0.5f});
-
-	return sprite;
-}
-
-std::unique_ptr<SpriteObject> ResultUI::CreatePeriodUI() { 
-	auto sprite = std::make_unique<SpriteObject>();
-	sprite->Initialize("Resources/GameResources/Result/Period.png");
-	sprite->SetAnchor({0.5f, 0.5f});
-
-	return sprite;
 }
