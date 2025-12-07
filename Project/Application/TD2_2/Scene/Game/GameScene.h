@@ -58,7 +58,7 @@ private:
    std::unique_ptr<BehaviorTree> bossBehaviorTree_;
 
    std::unique_ptr<CameraController> cameraController_;
-   
+
    // 雷エフェクトマネージャー
    std::unique_ptr<LightningEffectManager> lightningManager_;
 
@@ -81,7 +81,8 @@ private:
    std::unique_ptr<GaugeUI> playerGauge_;
    std::unique_ptr<GaugeUI> bossGauge_;
 
-   private:
+   float time_ = 0.0f;
+private:
    void RegisterAllColliders();
 
    void CheckCollisions();

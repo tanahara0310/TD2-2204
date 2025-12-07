@@ -372,8 +372,9 @@ void GameScene::Initialize(EngineSystem* engine) {
 }
 
 void GameScene::Update() {
-   // BaseScene::Update()の最初でCleanupGameObjects()が呼ばれる
    BaseScene::Update();
+
+   time_ += GameUtils::GetDeltaTime();
 
    // カメラコントローラーの更新
    if (cameraController_) {
@@ -408,10 +409,24 @@ void GameScene::Update() {
 
    if (boss_->GetHP() <= 0 || player_->GetHP() <= 0) {
 	  sceneManager_->ChangeScene("ResultScene");
-   }
 
-   // 雲の更新
-   //cloud_->Update();
+	  json clearTimeData = JsonManager::GetInstance().LoadJson("Resources/Data/CurrentClearTime.json");
+	  clearTimeData["CurrentClearTime"] = 50.0f; // 仮のクリアタイム
+
+	  JsonManager::GetInstance().SaveJson("Resources/Data/CurrentClearTime.json", clearTimeData);
+
+	  json resultData = JsonManager::GetInstance().LoadJson("Resources/Data/result.json");
+
+	  if (boss_->GetHP() <= 0) {
+		 resultData["isWin"] = true;
+	  }
+
+	  if (player_->GetHP() <= 0) {
+		 resultData["isWin"] = false;
+	  }
+
+	  JsonManager::GetInstance().SaveJson("Resources/Data/result.json", resultData);
+   }
 
    // 帯電ゲージの更新
 
