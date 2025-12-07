@@ -97,6 +97,9 @@ void GameScene::Initialize(EngineSystem* engine) {
 
 	  player->SetStartEffectFunction([this, damageEffectId]() {
 		 lightningManager_->SetEffectVisible(damageEffectId, true);
+		 if (biribiriSound_ && biribiriSound_->IsValid()) {
+			biribiriSound_->Play(false);
+		 }
 		 });
 
 	  player->SetStopEffectFunction([this, damageEffectId]() {
@@ -158,6 +161,9 @@ void GameScene::Initialize(EngineSystem* engine) {
 
 	  boss->SetStartEffectFunction([this, damageEffectId]() {
 		 lightningManager_->SetEffectVisible(damageEffectId, true);
+		 if (biribiriSound_ && biribiriSound_->IsValid()) {
+			biribiriSound_->Play(false);
+		 }
 		 });
 
 	  boss->SetStopEffectFunction([this, damageEffectId]() {
@@ -240,8 +246,10 @@ void GameScene::Initialize(EngineSystem* engine) {
 		 hitSound_ = soundManager->CreateSoundResource("Resources/Audio/SE/hit.mp3");
 		 damageSound_ = soundManager->CreateSoundResource("Resources/Audio/SE/damage.mp3");
 		 chargeSound_ = soundManager->CreateSoundResource("Resources/Audio/SE/charge.mp3");
+		 biribiriSound_ = soundManager->CreateSoundResource("Resources/Audio/SE/biribiri.mp3");
 		 chargeSound_->SetVolume(0.5f);
 		 damageSound_->SetVolume(1.0f);
+		 biribiriSound_->SetVolume(0.5f);
 	  }
 
 	  if (bgmSound_ && bgmSound_->IsValid()) {
