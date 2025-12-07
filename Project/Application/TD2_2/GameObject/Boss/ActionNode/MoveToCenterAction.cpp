@@ -23,7 +23,7 @@ void MoveToCenterAction::OnEnter() {
 NodeState MoveToCenterAction::OnExecute() {
    // 中心からの距離を確認
    Vector3 bossPos = boss_->GetWorldPosition();
-   Vector2 bossPos2D = { bossPos.x, bossPos.z };
+   Vector2 bossPos2D = { bossPos.x, bossPos.y };
    Vector2 centerPos = { 0.0f, 0.0f };
    
    Vector2 toCenter = centerPos - bossPos2D;
@@ -56,7 +56,7 @@ void MoveToCenterAction::SetupStateMachine() {
 
 Vector2 MoveToCenterAction::CalculateDirectionToCenter() const {
    Vector3 bossPos = boss_->GetWorldPosition();
-   Vector2 bossPos2D = { bossPos.x, bossPos.z };
+   Vector2 bossPos2D = { bossPos.x, bossPos.y };
    Vector2 centerPos = { 0.0f, 0.0f };
    
    Vector2 direction = centerPos - bossPos2D;
