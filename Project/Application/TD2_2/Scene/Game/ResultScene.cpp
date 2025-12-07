@@ -17,6 +17,18 @@ void ResultScene::Initialize(EngineSystem* engine) {
 
 	InputSource::Initialize(engine);
 
+	// 勝敗をJsonから取得
+	json resultData = JsonManager::GetInstance().LoadJson("Resources/Data/result.json");
+
+	// "isWin"キーから勝敗情報を取得、存在しない場合は負け
+	isWin_ = JsonManager::SafeGet<bool>(resultData, "isWin", false);
+
+	// 今回のクリアタイムをJsonから取得
+	json clearTimeData = JsonManager::GetInstance().LoadJson("Resources/Data/CurrentClearTime.json");
+
+	// "CurrentClearTime"キーからクリアタイムを取得、存在しない場合はデフォルト値の9999.999を使用
+	currentClearTime_ = JsonManager::SafeGet<float>(clearTimeData, "CurrentClearTime", 9999.999f);
+
 	// クリアタイムマネージャーの生成
 	clearTimeManager_ = std::make_unique<ClearTimeManager>("Resources/ClearTimes/ClearTimes.txt");
 
@@ -38,7 +50,7 @@ void ResultScene::Initialize(EngineSystem* engine) {
 	{
 		// UI初期化
 		resultUI_ = std::make_unique<ResultUI>();
-		auto sprites = resultUI_->Initialize(engine);
+		auto sprites = resultUI_->Initialize(engine, isWin_);
 
 		// スプライトをgameObjects_に追加
 		for (auto& sprite : sprites) {

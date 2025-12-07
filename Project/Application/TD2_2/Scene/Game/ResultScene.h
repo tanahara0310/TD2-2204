@@ -74,4 +74,7 @@ private:
 
 	// クリアタイムの管理
 	std::unique_ptr<ClearTimeManager> clearTimeManager_;
+
+	// 勝敗フラグ
+	bool isWin_ = false;
 };
