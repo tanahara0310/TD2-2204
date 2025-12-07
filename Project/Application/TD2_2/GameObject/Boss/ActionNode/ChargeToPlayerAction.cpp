@@ -43,7 +43,7 @@ void ChargeToPlayerAction::OnEnter() {
 
 	  boss_->SetIsCharging(true);
 
-      boss_->ChargeFunction();
+      boss_->StartChargeFunction();
    }
    
 }
@@ -62,6 +62,7 @@ NodeState ChargeToPlayerAction::OnExecute() {
 void ChargeToPlayerAction::OnExit() {
    if (boss_) {
       boss_->SetIsCharging(false);
+	  boss_->EndChargeFunction();
    }
 }
 

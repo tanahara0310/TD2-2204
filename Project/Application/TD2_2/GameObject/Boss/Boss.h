@@ -69,7 +69,13 @@ public:
 	  stopEffectFunction_ = func;
    }
 
-   void ChargeFunction();
+   void SetEffectColorFunction(const std::function<void(const Vector4&)>& func) {
+	  setEffectColorFunction_ = func;
+   }
+
+   void StartChargeFunction();
+
+   void EndChargeFunction();
 
    float GetStoredEnergy() const { return storedEnergy_; }
 
@@ -140,6 +146,8 @@ private:
    std::function<void()> stopEffectFunction_;
 
    std::function<void()> startEffectFunction_;
+
+   std::function<void(const Vector4&)> setEffectColorFunction_;
 
    float storedEnergy_ = 0.0f;
    float energyScale_ = 0.3f;

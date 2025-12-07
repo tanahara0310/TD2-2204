@@ -64,10 +64,9 @@ void Player::Update() {
 
    UpdateMovement();
 
-   // ダメージエフェクトの更新
-   UpdateDamageEffect();
-
    transform_.TransferMatrix();
+
+   UpdateEffect();
 }
 
 void Player::Draw(const ICamera* camera) {
@@ -303,6 +302,10 @@ void Player::Stun() {
 
    if (stunTimer_.IsFinished()) {
 	  stateMachine_->RequestState("Move", 0);
+
+	  if (stopEffectFunction_) {
+		 stopEffectFunction_();
+	  }
    }
 }
 
@@ -338,6 +341,14 @@ void Player::InitializeCharge() {
 	  startChargeFunction_();
    }
 
+   if (setEffectColorFunction_) {
+	  setEffectColorFunction_({ 1.0f, 1.0f, 0.0f, 1.0f });
+   }
+
+   if (startEffectFunction_) {
+	  startEffectFunction_();
+   }
+
    isCharging_ = true;
 }
 
@@ -346,6 +357,10 @@ void Player::InitializeMove() {
    maxSpeed_ = moveMaxSpeed_;
    StartModelSwapAnimation("Player1", "Player2", 0.02f, true);
    isCharging_ = false;
+
+   if (stopEffectFunction_) {
+	  stopEffectFunction_();
+   }
 }
 
 void Player::InitializeStun() {
@@ -354,6 +369,20 @@ void Player::InitializeStun() {
 
    float stunTime = stunDuration_ + enemyStoredEnergy_ * energyScale_;
    stunTimer_.Start(stunTime, false);
+
+   if (enemyStoredEnergy_ > 0.0f) {
+	  if (stopEffectFunction_) {
+		 stopEffectFunction_();
+	  }
+
+	  if (setEffectColorFunction_) {
+		 setEffectColorFunction_({ 0.5f, 0.0f, 0.5f, 1.0f });
+	  }
+
+	  if (startEffectFunction_) {
+		 startEffectFunction_();
+	  }
+   }
 
    // スタン時間に応じたシェイクを開始
    GameObject::StartShake(0.1f, stunTime);
@@ -380,6 +409,13 @@ void Player::InitializeDamage() {
 
    storedEnergy_ = 0.0f;
 
+   if (stopEffectFunction_) {
+	  stopEffectFunction_();
+   }
+
+   if (setEffectColorFunction_) {
+	  setEffectColorFunction_({ 0.2f, 0.8f, 1.0f, 1.0f });
+   }
 
    if (startEffectFunction_) {
 	  startEffectFunction_();
@@ -484,6 +520,10 @@ void Player::InitializePunk() {
 	  startDamageFunction_();
    }
 
+   if (setEffectColorFunction_) {
+	  setEffectColorFunction_({ 1.0f, 1.0f, 0.0f, 1.0f });
+   }
+
    if (startEffectFunction_) {
 	  startEffectFunction_();
    }
@@ -505,6 +545,6 @@ void Player::Punk() {
    }
 }
 
-void Player::UpdateDamageEffect() {
+void Player::UpdateEffect() {
    updateEffectFunction_(transform_.translate);
 }

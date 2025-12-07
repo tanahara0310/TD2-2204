@@ -54,9 +54,9 @@ void Boss::Update() {
 
    UpdateMovement();
 
-   UpdateEffect();
-
    transform_.TransferMatrix();
+
+   UpdateEffect();
 }
 
 void Boss::Draw(const ICamera* camera) {
@@ -172,9 +172,23 @@ void Boss::OnCollisionExit(GameObject* other) {
    isCharging_ = false;
 }
 
-void Boss::ChargeFunction() {
+void Boss::StartChargeFunction() {
    if (startChargeFunction_) {
 	  startChargeFunction_();
+   }
+
+   if (setEffectColorFunction_) {
+	  setEffectColorFunction_({ 0.5f, 0.0f, 0.5f, 1.0f });
+   }
+
+   if (startEffectFunction_) {
+	  startEffectFunction_();
+   }
+}
+
+void Boss::EndChargeFunction() {
+   if (stopEffectFunction_) {
+	  stopEffectFunction_();
    }
 }
 
@@ -307,6 +321,20 @@ void Boss::InitializeStun() {
    float stunTime = stunDuration_ + playerStoredEnergy_ * energyScale_;
    stunTimer_.Start(stunTime, false);
 
+   if (playerStoredEnergy_ > 0.0f) {
+	  if (stopEffectFunction_) {
+		 stopEffectFunction_();
+	  }
+
+	  if (setEffectColorFunction_) {
+		 setEffectColorFunction_({ 1.0f, 1.0f, 0.0f, 1.0f });
+	  }
+
+	  if (startEffectFunction_) {
+		 startEffectFunction_();
+	  }
+   }
+
    // シェイクの開始
    GameObject::StartShake(0.1f, stunTime);
 
@@ -325,6 +353,10 @@ void Boss::Stun() {
    if (stunTimer_.IsFinished()) {
 	  // スタン終了、通常状態に戻る
 	  stateMachine_->RequestState("Normal", 0);
+
+	  if (stopEffectFunction_) {
+		 stopEffectFunction_();
+	  }
    }
 }
 
@@ -341,6 +373,14 @@ void Boss::InitializeDamage() {
 
    if (startDamageFunction_) {
 	  startDamageFunction_();
+   }
+
+   if (stopEffectFunction_) {
+	  stopEffectFunction_();
+   }
+
+   if (setEffectColorFunction_) {
+	  setEffectColorFunction_({ 0.2f, 0.8f, 1.0f, 1.0f });
    }
 
    if (startEffectFunction_) {
@@ -436,10 +476,6 @@ void Boss::UpdateEnergy() {
    if (storedEnergy_ >= maxStoredEnergy_) {
 	  // エネルギーが最大に達したらパンク状態に遷移
 	  stateMachine_->RequestState("Punk", 1);
-
-	  if (startEffectFunction_) {
-		 startEffectFunction_();
-	  }
    }
 
    storedEnergy_ = std::clamp(storedEnergy_, 0.0f, maxStoredEnergy_);
@@ -468,6 +504,18 @@ void Boss::InitializePunk() {
 
    if (startDamageFunction_) {
 	  startDamageFunction_();
+   }
+
+   if (stopEffectFunction_) { 
+	  stopEffectFunction_();
+   }
+
+   if (setEffectColorFunction_) {
+	  setEffectColorFunction_({ 0.5f, 0.0f, 0.5f, 1.0f });
+   }
+
+   if (startEffectFunction_) {
+	  startEffectFunction_();
    }
 }
 

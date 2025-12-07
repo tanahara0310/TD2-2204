@@ -51,7 +51,8 @@ void Lightning::Update()
 		GeneratePath();
 		GenerateVoxels();
 		needsRegeneration_ = false;
-		animationFrameCounter_ = 0;
+		// animationFrameCounter_はリセットしない
+		// FadingIn/FadingOut中もアニメーションを継続させるため
 	}
 
 	if (config_.enableAnimation) {
