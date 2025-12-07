@@ -179,8 +179,8 @@ void GameScene::Initialize(EngineSystem* engine) {
 
    // 背景の生成と初期化
    {
-	  auto backgroundModel = modelManager->CreateStaticModel("Resources/Models/Background/Background.obj");
-	  auto backgroundTexture = textureManager.Load("Resources/Textures/Background.png");
+	  auto backgroundModel = modelManager->CreateStaticModel("Resources/Models/Background/Background2.obj");
+	  auto backgroundTexture = textureManager.Load("Resources/Textures/Background2.png");
 	  auto background = std::make_unique<Background>();
 	  background_ = background.get();
 	  background->Initialize(std::move(backgroundModel), backgroundTexture);
@@ -188,17 +188,16 @@ void GameScene::Initialize(EngineSystem* engine) {
    }
 
    // 雲
-   /*{
-	   modelManager->LoadModelResource("Resources/Models/Cloud", "Cloud.obj");
-	   auto cloudModel = modelManager->CreateStaticModel("Resources/Models/Cloud/Cloud.obj");
-	   auto cloudTexture = textureManager.Load("Resources/Textures/Cloud.png");
-	   auto cloud = std::make_unique<Cloud>();
-	   cloud_ = cloud.get();
-	   cloud->Initialize(std::move(cloudModel), cloudTexture, CloudDirection::LEFT);
-	   cloud->GetTransform().translate = {0.0f, 0.0f, 0.0f};
-
-	   gameObjects_.push_back(std::move(cloud));
-   }*/
+   {
+	  for (int i = 0; i < clouds_.size(); i++) {
+		 auto cloudModel = modelManager->CreateStaticModel("Resources/Models/Cloud/Cloud.obj");
+		 auto cloudTexture = textureManager.Load("Resources/Textures/Cloud.png");
+		 auto cloud = std::make_unique<Cloud>();
+		 clouds_[i] = cloud.get();
+		 cloud->Initialize(std::move(cloudModel), cloudTexture);
+		 gameObjects_.push_back(std::move(cloud));
+	  }
+   }
 
    // HPUIの初期化
    {
@@ -211,7 +210,7 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  }
 
 	  bossHitPointUI_ = std::make_unique<HitPoint>();
-	  auto bossSprites = bossHitPointUI_->Initialize({ 324.0f, 300.0f }, SettingObject::BOSS, boss_->GetMaxHP());
+	  auto bossSprites = bossHitPointUI_->Initialize({ 580.0f, 300.0f }, SettingObject::BOSS, boss_->GetMaxHP());
 	  // スプライトをgameObjects_に追加
 	  for (auto& sprite : bossSprites) {
 		 gameObjects_.push_back(std::move(sprite));
@@ -314,7 +313,6 @@ void GameScene::Initialize(EngineSystem* engine) {
 
 	  // ステージ中央に固定配置
 	  lightningManager_->CreateEffect({ 0.0f, -stageHalfHeight + frameHeight, 0.0f }, config, gameObjects_);
-
 	  lightningManager_->CreateEffect({ 0.0f, stageHalfHeight - frameHeight, 0.0f }, config, gameObjects_);
 
 	  config.segmentCount = 8;
@@ -322,7 +320,6 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  config.color = { 0.8f, 1.0f, 1.0f, 1.0f }; // 青白色
 
 	  lightningManager_->CreateEffect({ 0.0f, -stageHalfHeight + frameHeight, 0.0f }, config, gameObjects_);
-
 	  lightningManager_->CreateEffect({ 0.0f, stageHalfHeight - frameHeight, 0.0f }, config, gameObjects_);
 
 	  config.startOffset = { 0.0f, -stageHalfHeight - frameHeight, 0.0f };
@@ -332,7 +329,6 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  config.noiseSpeed = 30.0f;
 
 	  lightningManager_->CreateEffect({ -stageHalfWidth + frameWidth, 0.0f, 0.0f }, config, gameObjects_);
-
 	  lightningManager_->CreateEffect({ stageHalfWidth - frameWidth, 0.0f, 0.0f }, config, gameObjects_);
 
 	  config.segmentCount = 5;
@@ -340,7 +336,6 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  config.color = { 0.8f, 1.0f, 1.0f, 1.0f }; // 青白色
 
 	  lightningManager_->CreateEffect({ -stageHalfWidth + frameWidth, 0.0f, 0.0f }, config, gameObjects_);
-
 	  lightningManager_->CreateEffect({ stageHalfWidth - frameWidth, 0.0f, 0.0f }, config, gameObjects_);
    }
 
@@ -360,6 +355,7 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  bossGauge_ = std::make_unique<GaugeUI>();
 	  auto sprites = bossGauge_->Initialize(cameraManager_.get(), 5.0f);
 	  bossGauge_->SetTarget(boss_);
+	  bossGauge_->SetFillColor({ 0.5f, 0.0f, 0.5f, 1.0f });
 
 	  for (auto& sprite : sprites) {
 		 gameObjects_.push_back(std::move(sprite));

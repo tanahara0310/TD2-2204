@@ -133,7 +133,7 @@ void GaugeUI::Update() {
 		float blink = (std::sin(elapsedTime_ * blinkSpeed) * 0.5f + 0.5f); // 0〜1で点滅
 		spriteFill_->SetColor({1.0f, blink, blink, 1.0f});                 // 点滅
 	} else {
-		spriteFill_->SetColor({0.8f, 1.0f, 0.0f, 1.0f}); // 通常色
+		spriteFill_->SetColor(fillColor_); // 通常色
 		elapsedTime_ = 0.0f;
 	}
 
@@ -151,9 +151,7 @@ void GaugeUI::Update() {
 }
 
 void GaugeUI::SetFillColor(const Vector4& color) {
-	if (spriteFill_) {
-		spriteFill_->SetColor(color);
-	}
+   fillColor_ = color;
 }
 
 void GaugeUI::SetSegmentColor(const Vector4& color) {

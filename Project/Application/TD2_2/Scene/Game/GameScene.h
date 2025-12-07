@@ -3,6 +3,7 @@
 #include <vector>
 #include <list>
 #include <memory>
+#include <array>
 #include "Scene/BaseScene.h"
 #include "../../GameObject/Player/Player.h"
 #include "../../GameObject/Boss/Boss.h"
@@ -49,7 +50,7 @@ private:
    Background* background_;
    std::list<Bullet*> bullets_;
    std::list<Frame*> frames_;
-   Cloud* cloud_;
+   std::array<Cloud*, 4> clouds_;
 
    std::unique_ptr<CollisionManager> collisionManager_;
    std::unique_ptr<CollisionConfig> collisionConfig_;
