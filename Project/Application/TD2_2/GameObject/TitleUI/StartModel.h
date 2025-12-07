@@ -25,6 +25,9 @@ public:
 	
 	/// @brief 選択状態を取得
 	bool IsSelected() const { return isSelected_; }
+	
+	/// @brief オブジェクト名を取得
+	const char* GetObjectName() const override { return "StartModel"; }
 
 private:
 	/// @brief 呼吸アニメーションの更新

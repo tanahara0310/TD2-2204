@@ -59,6 +59,14 @@ public:
 
 	/// @brief 設定変更を反映（再生成をトリガー）
 	void ApplyConfigChanges() { RequestRegeneration(); }
+	
+	/// @brief 雷の色を設定（演出中に変更可能）
+	/// @param color 新しい色（RGBA）
+	void SetColor(const Vector4& color) { config_.color = color; }
+	
+	/// @brief 雷の色を取得
+	/// @return 現在の色（RGBA）
+	const Vector4& GetColor() const { return config_.color; }
 
 private:
 	/// @brief パスポイントを生成

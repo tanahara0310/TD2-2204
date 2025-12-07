@@ -59,6 +59,16 @@ public:
 
 	/// @brief エフェクトが表示中かどうか
 	bool IsEffectVisible(int effectId) const;
+	
+	/// @brief エフェクトの色を設定（演出中に変更可能）
+	/// @param effectId エフェクトID
+	/// @param color 新しい色（RGBA）
+	void SetEffectColor(int effectId, const Vector4& color);
+	
+	/// @brief エフェクトの色を取得
+	/// @param effectId エフェクトID
+	/// @return 現在の色（RGBA）、エフェクトが存在しない場合は白色を返す
+	Vector4 GetEffectColor(int effectId) const;
 
 private:
 	/// @brief 球面上の点を計算（均等分布）

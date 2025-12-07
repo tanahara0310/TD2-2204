@@ -28,25 +28,25 @@ std::vector<std::unique_ptr<IDrawable>> TitleUI::Initialize(EngineSystem* engine
 	titleModel_ = titleModel.get();
 	sprites.push_back(std::move(titleModel));
 	
-	// プレイヤープリセットモデルを作成（3つ縦に並べる）
-	// Y座標の間隔を狭める
-	const float kPresetSpacing = 2.0f; // 4.0から2.5に変更
-	const float kPresetStartY = -3.0f; // 中央のY座標を下げる
-	
-	// 1. HiyokoAfro（上）
-	auto hiyokoAfroModel = CreatePlayerPresetModel(engine, PresetType::HiyokoAfro, kPresetStartY + kPresetSpacing);
-	presetModels_.push_back(hiyokoAfroModel.get());
-	sprites.push_back(std::move(hiyokoAfroModel));
-	
-	// 2. Glass（中央）
-	auto glassModel = CreatePlayerPresetModel(engine, PresetType::Glass, kPresetStartY);
-	presetModels_.push_back(glassModel.get());
-	sprites.push_back(std::move(glassModel));
-	
-	// 3. Student（下）
-	auto studentModel = CreatePlayerPresetModel(engine, PresetType::Student, kPresetStartY - kPresetSpacing);
-	presetModels_.push_back(studentModel.get());
-	sprites.push_back(std::move(studentModel));
+	//// プレイヤープリセットモデルを作成（3つ縦に並べる）
+	//// Y座標の間隔を狭める
+	//const float kPresetSpacing = 2.0f; // 4.0から2.5に変更
+	//const float kPresetStartY = -3.0f; // 中央のY座標を下げる
+	//
+	//// 1. HiyokoAfro（上）
+	//auto hiyokoAfroModel = CreatePlayerPresetModel(engine, PresetType::HiyokoAfro, kPresetStartY + kPresetSpacing);
+	//presetModels_.push_back(hiyokoAfroModel.get());
+	//sprites.push_back(std::move(hiyokoAfroModel));
+	//
+	//// 2. Glass（中央）
+	//auto glassModel = CreatePlayerPresetModel(engine, PresetType::Glass, kPresetStartY);
+	//presetModels_.push_back(glassModel.get());
+	//sprites.push_back(std::move(glassModel));
+	//
+	//// 3. Student（下）
+	//auto studentModel = CreatePlayerPresetModel(engine, PresetType::Student, kPresetStartY - kPresetSpacing);
+	//presetModels_.push_back(studentModel.get());
+	//sprites.push_back(std::move(studentModel));
 
 	// ステートマシーンの初期化
 	InitializeStateMachine();

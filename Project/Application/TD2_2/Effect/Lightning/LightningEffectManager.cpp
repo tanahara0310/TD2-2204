@@ -307,3 +307,29 @@ bool LightningEffectManager::IsEffectVisible(int effectId) const
 	return effects_[effectId].state == AnimationState::Visible || 
 	       effects_[effectId].state == AnimationState::FadingIn;
 }
+
+void LightningEffectManager::SetEffectColor(int effectId, const Vector4& color)
+{
+	if (effectId < 0 || effectId >= static_cast<int>(effects_.size())) {
+		return;
+	}
+	
+	auto& effect = effects_[effectId];
+	effect.config.color = color;
+	
+	// 全てのライトニングの色を更新
+	for (auto& lightningData : effect.lightnings) {
+		if (lightningData.lightning) {
+			lightningData.lightning->SetColor(color);
+		}
+	}
+}
+
+Vector4 LightningEffectManager::GetEffectColor(int effectId) const
+{
+	if (effectId < 0 || effectId >= static_cast<int>(effects_.size())) {
+		return { 1.0f, 1.0f, 1.0f, 1.0f }; // デフォルトは白色
+	}
+	
+	return effects_[effectId].config.color;
+}
