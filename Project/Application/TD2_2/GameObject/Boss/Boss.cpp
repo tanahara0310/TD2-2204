@@ -54,6 +54,8 @@ void Boss::Update() {
 
    UpdateMovement();
 
+   UpdateEffect();
+
    transform_.TransferMatrix();
 }
 
@@ -341,11 +343,19 @@ void Boss::InitializeDamage() {
 	  startDamageFunction_();
    }
 
+   if (startEffectFunction_) {
+	  startEffectFunction_();
+   }
+
    storedEnergy_ = 0.0f;
 }
 
 void Boss::Damage() {
    if (GameObject::UpdateShake()) return;
+
+   if (stopEffectFunction_) {
+	  stopEffectFunction_();
+   }
 
    // HPを減らしてデスポーンステートに遷移
    hp_--;
@@ -426,9 +436,19 @@ void Boss::UpdateEnergy() {
    if (storedEnergy_ >= maxStoredEnergy_) {
 	  // エネルギーが最大に達したらパンク状態に遷移
 	  stateMachine_->RequestState("Punk", 1);
+
+	  if (startEffectFunction_) {
+		 startEffectFunction_();
+	  }
    }
 
    storedEnergy_ = std::clamp(storedEnergy_, 0.0f, maxStoredEnergy_);
+}
+
+void Boss::UpdateEffect() {
+   if (updateEffectFunction_) {
+	  updateEffectFunction_(GetWorldPosition());
+   }
 }
 
 void Boss::InitializePunk() {
@@ -459,5 +479,9 @@ void Boss::Punk() {
    if (punkTimer_.IsFinished()) {
 	  // スタン終了、通常状態に戻る
 	  stateMachine_->RequestState("Normal", 0);
+
+	  if (stopEffectFunction_) {
+		 stopEffectFunction_();
+	  }
    }
 }

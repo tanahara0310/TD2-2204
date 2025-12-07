@@ -57,6 +57,18 @@ public:
 	  startChargeFunction_ = func;
    }
 
+   void SetUpdateEffectFunction(const std::function<void(const Vector3&)>& func) {
+	  updateEffectFunction_ = func;
+   }
+
+   void SetStartEffectFunction(const std::function<void()>& func) {
+	  startEffectFunction_ = func;
+   }
+
+   void SetStopEffectFunction(const std::function<void()>& func) {
+	  stopEffectFunction_ = func;
+   }
+
    void ChargeFunction();
 
    float GetStoredEnergy() const { return storedEnergy_; }
@@ -123,6 +135,12 @@ private:
 
    std::function<void()> startChargeFunction_;
 
+   std::function<void(const Vector3&)> updateEffectFunction_;
+
+   std::function<void()> stopEffectFunction_;
+
+   std::function<void()> startEffectFunction_;
+
    float storedEnergy_ = 0.0f;
    float energyScale_ = 0.3f;
    float playerStoredEnergy_ = 0.0f;
@@ -178,4 +196,6 @@ private:
    void CheckDamageWallCollision();
 
    void UpdateEnergy();
+
+   void UpdateEffect();
 };
