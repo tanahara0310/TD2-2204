@@ -75,6 +75,7 @@ private:
    Sound hitSound_;
    Sound damageSound_;
    Sound chargeSound_;
+   Sound biribiriSound_;
 
    std::unique_ptr<GaugeUI> playerGauge_;
    std::unique_ptr<GaugeUI> bossGauge_;
