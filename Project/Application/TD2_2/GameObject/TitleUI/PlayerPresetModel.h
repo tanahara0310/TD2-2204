@@ -38,6 +38,9 @@ public:
 	
 	/// @brief プリセットタイプを取得
 	PresetType GetPresetType() const { return presetType_; }
+	
+	/// @brief オブジェクト名を取得
+	const char* GetObjectName() const override { return objectName_.c_str(); }
 
 private:
 	/// @brief 呼吸アニメーションの更新
@@ -46,6 +49,7 @@ private:
 private:
 	Vector3 baseScale_ = { 1.0f, 1.0f, 1.0f }; // 基準スケール
 	PresetType presetType_; // プリセットタイプ
+	std::string objectName_; // オブジェクト名（ImGui用）
 	
 	// 選択状態
 	bool isSelected_ = false;

@@ -18,6 +18,9 @@ public:
 	/// @brief 描画処理
 	/// @param camera カメラ
 	void Draw(const ICamera* camera) override;
+	
+	/// @brief オブジェクト名を取得
+	const char* GetObjectName() const override { return "TitleModel"; }
 
 private:
 	Vector3 baseScale_ = { 1.0f, 1.0f, 1.0f }; // 基準スケール

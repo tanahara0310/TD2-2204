@@ -8,6 +8,19 @@ void PlayerPresetModel::Initialize(std::unique_ptr<Model> model, TextureManager:
 	
 	presetType_ = presetType;
 	
+	// プリセットタイプに基づいてオブジェクト名を設定
+	switch (presetType) {
+	case PresetType::HiyokoAfro:
+		objectName_ = "PlayerPreset_HiyokoAfro";
+		break;
+	case PresetType::Glass:
+		objectName_ = "PlayerPreset_Glass";
+		break;
+	case PresetType::Student:
+		objectName_ = "PlayerPreset_Student";
+		break;
+	}
+	
 	// 初期位置とスケールの設定
 	// X座標は右側に配置、Y座標は引数で指定、Z座標は奥行き
 	transform_.translate = { 8.0f, yPosition, -57.6f };
