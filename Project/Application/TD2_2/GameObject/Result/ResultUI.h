@@ -26,7 +26,7 @@ public:
 	/// @brief 初期化（スプライトを作成してvectorで返す）
 	/// @param engine エンジンシステム
 	/// @return 作成したスプライトのunique_ptrのvector
-	std::vector<std::unique_ptr<IDrawable>> Initialize(EngineSystem* engine);
+	std::vector<std::unique_ptr<IDrawable>> Initialize(EngineSystem* engine, bool isWin);
 
 	/// @brief 更新
 	void Update();
@@ -65,7 +65,7 @@ private:
 	void InitializeStateMachine();
 
 	// リザルトモデルを作成
-	std::unique_ptr<ResultModel> CreateResultModel(EngineSystem* engine);
+	std::unique_ptr<ResultModel> CreateResultModel(EngineSystem* engine, bool isWin);
 
 	// 数字モデルを作成
 	std::unique_ptr<NumbersModel> CreateNumberModel(EngineSystem* engine, int num);
@@ -87,16 +87,16 @@ private:
 
 private:
 	// モデルのポインタ（所有権はgameObjects_が持つ）
-	ResultModel* resultModel_;
-	ToTitleModel* toTitleModel_;
-	ReStartModel* reStartModel_;
-	PeriodModel* periodModel_;
-	ColonModel* colonModel_;
-	std::vector<NumbersModel*> rankModels_;        // 順位モデル
-	std::vector<NumbersModel*> currentTimeModels_; // 今回のクリアタイムモデル
-	std::vector<NumbersModel*> rankTimeModels_;    // 1位から3位までのクリアタイムモデル
-	std::vector<PeriodModel*> periodModels_;       // 1位から3位までのピリオドモデル
-	std::vector<ColonModel*> colonModels_;         // 1位から3位までのピリオドモデル
+	ResultModel* resultModel_ = nullptr;
+	ToTitleModel* toTitleModel_ = nullptr;
+	ReStartModel* reStartModel_ = nullptr;
+	PeriodModel* periodModel_ = nullptr;
+	ColonModel* colonModel_ = nullptr;
+	std::vector<NumbersModel*> rankModels_{};      // 順位モデル
+	std::vector<NumbersModel*> currentTimeModels_{}; // 今回のクリアタイムモデル
+	std::vector<NumbersModel*> rankTimeModels_{};    // 1位から3位までのクリアタイムモデル
+	std::vector<PeriodModel*> periodModels_{};       // 1位から3位までのピリオドモデル
+	std::vector<ColonModel*> colonModels_{};         // 1位から3位までのピリオドモデル
 
 	// 選択状態
 	SelectionState selectionState_ = SelectionState::ToTitle;
@@ -109,4 +109,7 @@ private:
 
 	// ランキングタイマー文字列
 	std::array<std::array<int, 6>, 3> rankTimeDigits_;
+
+	// 勝敗フラグ
+	bool isWin_ = false;
 };

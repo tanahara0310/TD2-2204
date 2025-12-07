@@ -1,11 +1,11 @@
 #include "ResultUI.h"
 
-std::vector<std::unique_ptr<IDrawable>> ResultUI::Initialize([[maybe_unused]] EngineSystem* engine) {
+std::vector<std::unique_ptr<IDrawable>> ResultUI::Initialize([[maybe_unused]] EngineSystem* engine, bool isWin) {
 	std::vector<std::unique_ptr<IDrawable>> sprites;
 
 	// リザルトモデル作成
 	{
-		auto resultModel = CreateResultModel(engine);
+		auto resultModel = CreateResultModel(engine, isWin);
 		resultModel_ = resultModel.get();
 		sprites.push_back(std::move(resultModel));
 	}
@@ -27,8 +27,8 @@ std::vector<std::unique_ptr<IDrawable>> ResultUI::Initialize([[maybe_unused]] En
 	// ピリオドモデルを作成
 	{
 		auto periodModel = CreatePeriodModel(engine);
-		periodModel->GetTransform().translate = {6.5f, 5.0f, 0.0f};
-		periodModel->GetTransform().scale = {8.0f, 8.0f, 8.0f};
+		periodModel->GetTransform().translate = {2.1f, 1.7f, -47.0f};
+		periodModel->GetTransform().scale = {4.0f, 4.0f, 4.0f};
 		periodModel_ = periodModel.get();
 		sprites.push_back(std::move(periodModel));
 	}
@@ -199,11 +199,13 @@ std::unique_ptr<NumbersModel> ResultUI::CreateNumberModel(EngineSystem* engine, 
 	return numModel;
 }
 
-std::unique_ptr<ResultModel> ResultUI::CreateResultModel(EngineSystem* engine) {
+std::unique_ptr<ResultModel> ResultUI::CreateResultModel(EngineSystem* engine, bool isWin) {
 	auto modelManager = engine->GetComponent<ModelManager>();
 	auto& textureManager = TextureManager::GetInstance();
 
-	auto resultModelResource = modelManager->CreateStaticModel("Resources/Models/GameOver/GameOver.obj");
+	// 勝敗に応じてモデル切り替え
+	auto resultModelResource = modelManager->CreateStaticModel(isWin ? "Resources/Models/YouWin/YouWin.obj" : "Resources/Models/YouLose/YouLose.obj");
+
 	auto resultTexture = textureManager.Load("Resources/SampleResources/white1x1.png");
 
 	auto resultModel = std::make_unique<ResultModel>();

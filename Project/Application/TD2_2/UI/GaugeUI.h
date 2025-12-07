@@ -73,7 +73,7 @@ private:
 	float segmentWidth_ = 0.0f;
 
 	// Segmentが増える速度
-	float segmentDecreaseSpeed_ = 2.0f;
+	float segmentDecreaseSpeed_ = 0.1f;
 
 	// 位置オフセット
 	Vector2 screenOffset_ = {0.0f, -100.0f};
