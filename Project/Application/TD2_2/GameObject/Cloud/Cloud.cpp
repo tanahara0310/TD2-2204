@@ -5,10 +5,11 @@ void Cloud::Initialize(std::unique_ptr<Model> model, TextureManager::LoadedTextu
 	// 基底クラスの初期化を呼び出す
 	GameObject::Initialize(std::move(model), texture);
 
-	float posX = RangeFloat(-50.0f, -25.0f);
-	float randomPosY = RangeFloat(-10.0f, 5.0f);
+	float randomPosX = RangeFloat(-50.0f, -25.0f);
+	float randomPosY = RangeFloat(-15.0f, 5.0f);
+	float randomPosZ = RangeFloat(50.0f, 70.0f);
 
-	transform_.translate = {posX, randomPosY, 50.0f};
+	transform_.translate = {randomPosX, randomPosY, randomPosZ};
 
 	// 進行速度
 	velocityX_ = RangeFloat(0.05f, 0.1f);
