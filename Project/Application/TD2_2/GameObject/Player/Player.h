@@ -46,6 +46,10 @@ public:
 	  stopEffectFunction_ = func;
    }
 
+   void SetEffectColorFunction(const std::function<void(const Vector4&)>& func) {
+	  setEffectColorFunction_ = func;
+   }
+
    // 速度取得
    Vector2 GetVelocity() const { return velocity_; }
 
@@ -123,6 +127,8 @@ private:
 
    std::function<void(const Vector3&)> updateEffectFunction_;
 
+   std::function<void(const Vector4&)> setEffectColorFunction_;
+
    // 突進中フラグ
    bool isCharging_ = false;
 
@@ -187,5 +193,5 @@ private:
    void UpdateEnergy();
 
    /// @brief ダメージエフェクトの更新
-   void UpdateDamageEffect();
+   void UpdateEffect();
 };

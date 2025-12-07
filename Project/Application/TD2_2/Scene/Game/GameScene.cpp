@@ -110,6 +110,10 @@ void GameScene::Initialize(EngineSystem* engine) {
 		 lightningManager_->SetEffectPosition(damageEffectId, position);
 		 });
 
+	  player->SetEffectColorFunction([this, damageEffectId](const Vector4& color) {
+		 lightningManager_->SetEffectColor(damageEffectId, color);
+		 });
+
 	  player_ = player.get();
 	  gameObjects_.push_back(std::move(player));
    }
@@ -172,6 +176,10 @@ void GameScene::Initialize(EngineSystem* engine) {
 
 	  boss->SetUpdateEffectFunction([this, damageEffectId](const Vector3& position) {
 		 lightningManager_->SetEffectPosition(damageEffectId, position);
+		 });
+
+	  boss->SetEffectColorFunction([this, damageEffectId](const Vector4& color) {
+		 lightningManager_->SetEffectColor(damageEffectId, color);
 		 });
 
 	  gameObjects_.push_back(std::move(boss));
