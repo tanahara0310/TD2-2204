@@ -16,6 +16,7 @@
 #include "Engine/Input/KeyboardInput.h"
 #include "Engine/Input/GamepadInput.h"
 #include "Engine/WinApp/WinApp.h"
+#include "Engine/Utility/Random/RandomGenerator.h"
 #include "MathCore.h"
 #include <dinput.h>
 #include <cmath>
@@ -91,6 +92,19 @@ void TitleScene::Initialize(EngineSystem* engine) {
 		gameObjects_.push_back(std::move(background));
 	}
 
+	// 雷エフェクトマネージャーの初期化
+	{
+		auto modelManager = engine_->GetComponent<ModelManager>();
+		auto& textureManager = TextureManager::GetInstance();
+		
+		lightningManager_ = std::make_unique<LightningEffectManager>();
+		lightningManager_->Initialize(modelManager, &textureManager);
+		
+		// 初回の雷発生タイミングをランダムに設定
+		SetRandomLightningInterval();
+		lightningIntervalTimer_.Start(lightningIntervalTimer_.GetDuration(), false);
+	}
+
 	{
 		// UI初期化
 		titleUI_ = std::make_unique<TitleUI>();
@@ -99,6 +113,52 @@ void TitleScene::Initialize(EngineSystem* engine) {
 		// スプライトをgameObjects_に追加
 		for (auto& sprite : sprites) {
 			gameObjects_.push_back(std::move(sprite));
+		}
+		
+		// StartModel用のライトニングエフェクトを作成
+		if (titleUI_->GetStartModel()) {
+			LightningEffectManager::EffectConfig startEffectConfig;
+			startEffectConfig.useSphereDistribution = true;
+			startEffectConfig.sphereRadius = 2.0f;
+			startEffectConfig.sphereStartRadiusRatio = 0.5f;
+			startEffectConfig.randomOffsetRange = 0.8f; // オフセット範囲をさらに拡大
+			startEffectConfig.lightningCount = 3;
+			startEffectConfig.color = { 0.3f, 0.9f, 1.0f, 1.0f };
+			startEffectConfig.noiseScale = 0.8f;
+			startEffectConfig.noiseSpeed = 20.0f; // アニメーション速度を上げる
+			startEffectConfig.segmentCount = 10; // セグメント数を少し減らす
+			startEffectConfig.voxelScale = { 0.8f, 0.8f, 0.8f };
+			startEffectConfig.fadeInDuration = 0.05f; // フェードインを極めて速く
+			startEffectConfig.fadeOutDuration = 0.1f; // フェードアウトも速く
+			
+			startLightningEffectId_ = lightningManager_->CreateEffect(
+				titleUI_->GetStartModel()->GetWorldPosition(),
+				startEffectConfig,
+				gameObjects_
+			);
+		}
+		
+		// YameruModel用のライトニングエフェクトを作成
+		if (titleUI_->GetYameruModel()) {
+			LightningEffectManager::EffectConfig yameruEffectConfig;
+			yameruEffectConfig.useSphereDistribution = true;
+			yameruEffectConfig.sphereRadius = 2.0f;
+			yameruEffectConfig.sphereStartRadiusRatio = 0.5f;
+			yameruEffectConfig.randomOffsetRange = 0.8f; // オフセット範囲をさらに拡大
+			yameruEffectConfig.lightningCount = 3;
+			yameruEffectConfig.color = { 0.3f, 0.9f, 1.0f, 1.0f };
+			yameruEffectConfig.noiseScale = 0.8f;
+			yameruEffectConfig.noiseSpeed = 20.0f; // アニメーション速度を上げる
+			yameruEffectConfig.segmentCount = 10; // セグメント数を少し減らす
+			yameruEffectConfig.voxelScale = { 0.8f, 0.8f, 0.8f };
+			yameruEffectConfig.fadeInDuration = 0.05f; // フェードインを極めて速く
+			yameruEffectConfig.fadeOutDuration = 0.1f; // フェードアウトも速く
+			
+			yameruLightningEffectId_ = lightningManager_->CreateEffect(
+				titleUI_->GetYameruModel()->GetWorldPosition(),
+				yameruEffectConfig,
+				gameObjects_
+			);
 		}
 	}
 
@@ -229,6 +289,9 @@ void TitleScene::Update() {
 	if (titleUI_) {
 		titleUI_->Update();
 	}
+	
+	// ライトニングエフェクトの更新
+	UpdateLightningEffect(deltaTime);
 }
 
 
@@ -240,6 +303,89 @@ void TitleScene::UpdateSceneTransition(float deltaTime) {
 	if (transitionTimer_ >= kTransitionDuration) {
 		sceneManager_->ChangeScene("GameScene");
 	}
+}
+
+void TitleScene::UpdateLightningEffect(float deltaTime) {
+	if (!lightningManager_) {
+		return;
+	}
+	
+	// エフェクトマネージャーの更新
+	lightningManager_->UpdateAllEffects();
+	
+	// 選択中のUIモデルの位置を更新
+	if (titleUI_->GetStartModel() && startLightningEffectId_ >= 0) {
+		lightningManager_->SetEffectPosition(
+			startLightningEffectId_,
+			titleUI_->GetStartModel()->GetWorldPosition()
+		);
+	}
+	
+	if (titleUI_->GetYameruModel() && yameruLightningEffectId_ >= 0) {
+		lightningManager_->SetEffectPosition(
+			yameruLightningEffectId_,
+			titleUI_->GetYameruModel()->GetWorldPosition()
+		);
+	}
+	
+	// 雷が表示中の場合
+	if (isLightningActive_) {
+		// 表示タイマーを更新
+		lightningDisplayTimer_.Update(deltaTime);
+		
+		// 表示時間が終了したら非表示にする
+		if (lightningDisplayTimer_.IsFinished()) {
+			isLightningActive_ = false;
+			
+			// 全ての雷を非表示
+			if (startLightningEffectId_ >= 0) {
+				lightningManager_->SetEffectVisible(startLightningEffectId_, false);
+			}
+			if (yameruLightningEffectId_ >= 0) {
+				lightningManager_->SetEffectVisible(yameruLightningEffectId_, false);
+			}
+			
+			// 次の雷発生タイミングをランダムに設定
+			SetRandomLightningInterval();
+			lightningIntervalTimer_.Start(lightningIntervalTimer_.GetDuration(), false);
+		}
+	}
+	// 雷が非表示の場合
+	else {
+		// 出現間隔タイマーを更新
+		lightningIntervalTimer_.Update(deltaTime);
+		
+		// 出現タイミングになったら雷を表示
+		if (lightningIntervalTimer_.IsFinished()) {
+			isLightningActive_ = true;
+			
+			// 選択中のUIモデルにのみライトニングを表示
+			if (titleUI_->GetSelectionState() == TitleUI::SelectionState::Start) {
+				if (startLightningEffectId_ >= 0) {
+					lightningManager_->SetEffectVisible(startLightningEffectId_, true);
+				}
+			} else if (titleUI_->GetSelectionState() == TitleUI::SelectionState::Quit) {
+				if (yameruLightningEffectId_ >= 0) {
+					lightningManager_->SetEffectVisible(yameruLightningEffectId_, true);
+				}
+			}
+			
+			// 表示時間をランダムに設定して開始
+			SetRandomLightningDuration();
+			lightningDisplayTimer_.Start(lightningDisplayTimer_.GetDuration(), false);
+		}
+	}
+}
+
+void TitleScene::SetRandomLightningInterval() {
+	auto& random = RandomGenerator::GetInstance();
+	float interval = random.GetFloat(kLightningIntervalMin, kLightningIntervalMax);
+	lightningIntervalTimer_.SetDuration(interval);
+}
+
+void TitleScene::SetRandomLightningDuration() {
+	// 表示時間は固定（0.05秒の一瞬の閃光）
+	lightningDisplayTimer_.SetDuration(kLightningDisplayDuration);
 }
 
 void TitleScene::Draw() {

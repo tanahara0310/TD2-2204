@@ -10,6 +10,8 @@
 #include "../../GameObject/Background/Background.h"
 #include "../../Utility/KeyConfig.h"
 #include "../../Camera/TitleCameraController.h"
+#include "../../Effect/Lightning/LightningEffectManager.h"
+#include "Engine/Utility/Timer/GameTimer.h"
 
 
 class EngineSystem;
@@ -38,6 +40,15 @@ protected:
 private:
 	/// @brief シーン遷移の処理
 	void UpdateSceneTransition(float deltaTime);
+	
+	/// @brief 雷エフェクトの更新
+	void UpdateLightningEffect(float deltaTime);
+	
+	/// @brief 次の雷発生タイミングをランダムに設定
+	void SetRandomLightningInterval();
+	
+	/// @brief 雷の表示時間をランダムに設定
+	void SetRandomLightningDuration();
 
 private:
 	std::unique_ptr<TitleUI> titleUI_;
@@ -50,6 +61,23 @@ private:
 	
 	// タイトルカメラコントローラー
 	std::unique_ptr<TitleCameraController> cameraController_;
+	
+	// 雷エフェクトマネージャー
+	std::unique_ptr<LightningEffectManager> lightningManager_;
+	
+	// UIライトニングエフェクトID
+	int startLightningEffectId_ = -1;
+	int yameruLightningEffectId_ = -1;
+	
+	// ライトニングエフェクト用タイマー
+	GameTimer lightningIntervalTimer_;   // 雷の出現間隔タイマー
+	GameTimer lightningDisplayTimer_;    // 雷の表示時間タイマー
+	bool isLightningActive_ = false;     // 現在雷が表示中かどうか
+	
+	// ライトニングエフェクトの時間設定（定数）
+	static constexpr float kLightningIntervalMin = 2.0f;         // 最小出現間隔（長めに設定）
+	static constexpr float kLightningIntervalMax = 4.0f;         // 最大出現間隔（長めに設定）
+	static constexpr float kLightningDisplayDuration = 0.05f;    // 雷の表示時間（固定：一瞬の閃光）
 	
 	// スティック入力のクールダウン
 	float stickInputCooldown_ = 0.0f;
