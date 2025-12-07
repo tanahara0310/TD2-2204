@@ -131,10 +131,12 @@ void TitleScene::Update() {
 		}
 	}
 
+#ifdef _DEBUG
 	// カメラコントローラーのImGui表示
 	if (cameraController_) {
 		cameraController_->DrawImGui();
 	}
+#endif
 
 	if (!titleUI_) {
 		return;
