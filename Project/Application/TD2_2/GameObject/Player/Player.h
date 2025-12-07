@@ -34,14 +34,16 @@ public:
 	  startChargeFunction_ = func;
    }
 
-   // ライトニングエフェクトマネージャーを設定
-   void SetLightningManager(LightningEffectManager* manager) {
-	  lightningManager_ = manager;
+   void SetUpdateEffectFunction(const std::function<void(const Vector3&)>& func) {
+	  updateEffectFunction_ = func;
    }
 
-   // ダメージエフェクトIDを設定
-   void SetDamageEffectId(int effectId) {
-	  damageEffectId_ = effectId;
+   void SetStartEffectFunction(const std::function<void()>& func) {
+	  startEffectFunction_ = func;
+   }
+
+   void SetStopEffectFunction(const std::function<void()>& func) {
+	  stopEffectFunction_ = func;
    }
 
    // 速度取得
@@ -111,9 +113,15 @@ private:
 
    std::function<void()> damageFunction_;
 
+   std::function<void()> startEffectFunction_;
+
+   std::function<void()> stopEffectFunction_;
+
    std::function<void()> hitEnemyFunction_;
 
    std::function<void()> startChargeFunction_;
+
+   std::function<void(const Vector3&)> updateEffectFunction_;
 
    // 突進中フラグ
    bool isCharging_ = false;
@@ -126,10 +134,6 @@ private:
    float enemyStoredEnergy_ = 0.0f;
    float maxStoredEnergy_ = 5.0f;
    float energyDecayPerSecond_ = 0.5f;
-
-   // ライトニングエフェクト関連
-   LightningEffectManager* lightningManager_ = nullptr;
-   int damageEffectId_ = -1;
 
 private:
    /// @brief キーコンフィグの初期化

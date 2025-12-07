@@ -224,7 +224,7 @@ void Player::InitializeStateMachine() {
 
    stateMachine_->AddTransitionRule("Charge", { "Move" ,"Stun" ,"Damage", "Punk" });
    stateMachine_->AddTransitionRule("Move", { "Charge" ,"Stun" ,"Damage", "Punk" });
-   stateMachine_->AddTransitionRule("Stun", { "Move" ,"Damage" ,"Punk"});
+   stateMachine_->AddTransitionRule("Stun", { "Move" ,"Damage" ,"Punk" });
    stateMachine_->AddTransitionRule("Damage", { "Despawn" });
    stateMachine_->AddTransitionRule("Despawn", { "Respawn" });
    stateMachine_->AddTransitionRule("Respawn", { "Move" });
@@ -313,9 +313,8 @@ void Player::Damage() {
 
    if (GameObject::UpdateShake()) return;
 
-   // ダメージエフェクトを非表示
-   if (lightningManager_ && damageEffectId_ >= 0) {
-	  lightningManager_->SetEffectVisible(damageEffectId_, false);
+   if (stopEffectFunction_) {
+	  stopEffectFunction_();
    }
 
    // HPを減らしてデスポーンステートに遷移
@@ -381,9 +380,9 @@ void Player::InitializeDamage() {
 
    storedEnergy_ = 0.0f;
 
-   // ダメージエフェクトを表示
-   if (lightningManager_ && damageEffectId_ >= 0) {
-	  lightningManager_->SetEffectVisible(damageEffectId_, true);
+
+   if (startEffectFunction_) {
+	  startEffectFunction_();
    }
 }
 
@@ -485,9 +484,8 @@ void Player::InitializePunk() {
 	  startDamageFunction_();
    }
 
-   // ダメージエフェクトを表示
-   if (lightningManager_ && damageEffectId_ >= 0) {
-	  lightningManager_->SetEffectVisible(damageEffectId_, true);
+   if (startEffectFunction_) {
+	  startEffectFunction_();
    }
 }
 
@@ -497,9 +495,9 @@ void Player::Punk() {
    UpdateShake();
 
    if (punkTimer_.IsFinished()) {
-	  // ダメージエフェクトを非表示
-	  if (lightningManager_ && damageEffectId_ >= 0) {
-		 lightningManager_->SetEffectVisible(damageEffectId_, false);
+
+	  if (stopEffectFunction_) {
+		 stopEffectFunction_();
 	  }
 
 	  // スタン終了、通常状態に戻る
@@ -508,10 +506,5 @@ void Player::Punk() {
 }
 
 void Player::UpdateDamageEffect() {
-   if (!lightningManager_ || damageEffectId_ < 0) {
-	  return;
-   }
-
-   // ダメージエフェクトの位置を自機の位置に更新
-   lightningManager_->SetEffectPosition(damageEffectId_, transform_.translate);
+   updateEffectFunction_(transform_.translate);
 }

@@ -73,10 +73,7 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  player->RegisterModelResource("Damage", "Resources/Models/Player/Damage/PlayerDamage.obj");
 	  player->RegisterModelResource("Player1", "Resources/Models/Player/Player.obj");
 	  player->RegisterModelResource("Player2", "Resources/Models/PlayerPropeller/PlayerPropeller.obj");
-	  
-	  // LightningManagerを設定
-	  player->SetLightningManager(lightningManager_.get());
-	  
+
 	  // プレイヤー用のダメージエフェクトを作成（球面配置）
 	  LightningEffectManager::EffectConfig damageEffectConfig;
 	  damageEffectConfig.useSphereDistribution = true;
@@ -84,21 +81,32 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  damageEffectConfig.sphereStartRadiusRatio = 0.6f; // 内側60%の位置から開始
 	  damageEffectConfig.randomOffsetRange = 0.5f; // ランダムオフセット範囲
 	  damageEffectConfig.lightningCount = 4;
-	  damageEffectConfig.color = { 1.0f, 0.3f, 0.3f, 1.0f }; // 赤色
+	  damageEffectConfig.color = { 0.2f, 0.8f, 1.0f, 1.0f }; // 赤色
 	  damageEffectConfig.noiseScale = 1.2f;
-	  damageEffectConfig.noiseSpeed = 15.0f;
-	  damageEffectConfig.segmentCount = 8; // セグメント数を減らして短くする
+	  damageEffectConfig.noiseSpeed = 20.0f;
+	  damageEffectConfig.segmentCount = 4; // セグメント数を減らして短くする
 	  damageEffectConfig.voxelScale = { 2.0f, 2.0f, 2.0f }; // ボクセルスケールを小さく
 	  damageEffectConfig.fadeInDuration = 0.25f;  // フェードイン時間
 	  damageEffectConfig.fadeOutDuration = 0.35f; // フェードアウト時間
-	  
+
 	  int damageEffectId = lightningManager_->CreateEffect(
 		 player->GetWorldPosition(),
 		 damageEffectConfig,
 		 gameObjects_
 	  );
-	  player->SetDamageEffectId(damageEffectId);
-	  
+
+	  player->SetStartEffectFunction([this, damageEffectId]() {
+		 lightningManager_->SetEffectVisible(damageEffectId, true);
+		 });
+
+	  player->SetStopEffectFunction([this, damageEffectId]() {
+		 lightningManager_->SetEffectVisible(damageEffectId, false);
+		 });
+
+	  player->SetUpdateEffectFunction([this, damageEffectId](const Vector3& position) {
+		 lightningManager_->SetEffectPosition(damageEffectId, position);
+		 });
+
 	  player_ = player.get();
 	  gameObjects_.push_back(std::move(player));
    }
@@ -127,6 +135,39 @@ void GameScene::Initialize(EngineSystem* engine) {
 			chargeSound_->Play(false);
 		 }
 		 });
+
+	  LightningEffectManager::EffectConfig damageEffectConfig;
+	  damageEffectConfig.useSphereDistribution = true;
+	  damageEffectConfig.sphereRadius = 2.0f;
+	  damageEffectConfig.sphereStartRadiusRatio = 0.6f; // 内側60%の位置から開始
+	  damageEffectConfig.randomOffsetRange = 0.5f; // ランダムオフセット範囲
+	  damageEffectConfig.lightningCount = 4;
+	  damageEffectConfig.color = { 0.2f, 0.8f, 1.0f, 1.0f }; // 赤色
+	  damageEffectConfig.noiseScale = 1.2f;
+	  damageEffectConfig.noiseSpeed = 20.0f;
+	  damageEffectConfig.segmentCount = 4; // セグメント数を減らして短くする
+	  damageEffectConfig.voxelScale = { 2.0f, 2.0f, 2.0f }; // ボクセルスケールを小さく
+	  damageEffectConfig.fadeInDuration = 0.25f;  // フェードイン時間
+	  damageEffectConfig.fadeOutDuration = 0.35f; // フェードアウト時間
+
+	  int damageEffectId = lightningManager_->CreateEffect(
+		 boss->GetWorldPosition(),
+		 damageEffectConfig,
+		 gameObjects_
+	  );
+
+	  boss->SetStartEffectFunction([this, damageEffectId]() {
+		 lightningManager_->SetEffectVisible(damageEffectId, true);
+		 });
+
+	  boss->SetStopEffectFunction([this, damageEffectId]() {
+		 lightningManager_->SetEffectVisible(damageEffectId, false);
+		 });
+
+	  boss->SetUpdateEffectFunction([this, damageEffectId](const Vector3& position) {
+		 lightningManager_->SetEffectPosition(damageEffectId, position);
+		 });
+
 	  gameObjects_.push_back(std::move(boss));
    }
 
