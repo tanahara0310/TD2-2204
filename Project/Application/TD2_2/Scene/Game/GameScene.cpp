@@ -54,6 +54,15 @@ void GameScene::Initialize(EngineSystem* engine) {
 		 if (damageSound_ && damageSound_->IsValid()) {
 			damageSound_->Play(false);
 		 }
+
+		 // パーティクルを発生させる
+		 if (playerCollisionParticle_) {
+			playerCollisionParticle_->SetActive(true);
+			playerCollisionParticle_->SetEmitterPosition(player_->GetWorldPosition());
+			playerCollisionParticle_->Clear();
+			playerCollisionParticle_->GetMainModule().Restart(); // MainModuleをリセット
+			playerCollisionParticle_->Play();
+		 }
 		 });
 	  player->SetHitEnemyFunction([this]() {
 		 if (cameraController_) {
@@ -62,6 +71,15 @@ void GameScene::Initialize(EngineSystem* engine) {
 
 		 if (hitSound_ && hitSound_->IsValid()) {
 			hitSound_->Play(false);
+		 }
+
+		 // パーティクルを発生させる
+		 if (playerCollisionParticle_) {
+			playerCollisionParticle_->SetActive(true);
+			playerCollisionParticle_->SetEmitterPosition(player_->GetWorldPosition());
+			playerCollisionParticle_->Clear();
+			playerCollisionParticle_->GetMainModule().Restart(); // MainModuleをリセット
+			playerCollisionParticle_->Play();
 		 }
 		 });
 	  player->SetStartChargeFunction([this]() {
@@ -369,6 +387,122 @@ void GameScene::Initialize(EngineSystem* engine) {
 		 gameObjects_.push_back(std::move(sprite));
 	  }
    }
+
+   // ボクセルモデルパーティクルシステムの初期化
+   {
+	  auto dxCommon = engine_->GetComponent<DirectXCommon>();
+	  auto resourceFactory = engine_->GetComponent<ResourceFactory>();
+
+	  // ボクセルモデルを読み込む
+	  voxelModelForParticle_ = modelManager->CreateStaticModel("Resources/Models/Voxel/Voxel.obj");
+
+	  // ModelResourceを取得してParticleSystemに設定
+	  auto* voxelModelResource = modelManager->GetModelResource("Resources/Models/Voxel/Voxel.obj");
+
+	  // モデルパーティクルシステムを作成
+	  auto playerParticle = std::make_unique<ParticleSystem>();
+	  playerParticle->Initialize(dxCommon, resourceFactory);
+
+	  if (voxelModelResource) {
+		 playerParticle->SetModelResource(voxelModelResource);
+	  }
+
+	  // テスト用の白テクスチャを設定
+	  playerParticle->SetTexture("Resources/SampleResources/white1x1.png");
+
+	  // パーティクルシステムの基本設定
+	  playerParticle->SetEmitterPosition(player_->GetWorldPosition());
+	  playerParticle->SetBlendMode(BlendMode::kBlendModeNormal);
+
+	  // エミッションモジュールの設定
+	  {
+		 auto& emissionModule = playerParticle->GetEmissionModule();
+		 auto emissionData = emissionModule.GetEmissionData();
+		 emissionData.rateOverTime = 0; // 手動で発生させるため0
+		 emissionData.burstCount = 30; // 一度に30個のパーティクルを発生
+		 emissionModule.SetEmissionData(emissionData);
+	  }
+
+	  // 形状モジュールの設定
+	  {
+		 auto& shapeModule = playerParticle->GetShapeModule();
+		 auto shapeData = shapeModule.GetShapeData();
+		 shapeData.shapeType = ShapeModule::ShapeType::Sphere;
+		 shapeData.radius = 2.0f; // 発生範囲を広げる
+		 shapeData.emitFromSurface = true;
+		 shapeModule.SetShapeData(shapeData);
+	  }
+
+	  // 速度モジュールの設定
+	  {
+		 auto& velocityModule = playerParticle->GetVelocityModule();
+		 auto velocityData = velocityModule.GetVelocityData();
+		 velocityData.startSpeed = { 0.0f, 0.0f, 0.0f };
+		 velocityData.randomSpeedRange = { 12.0f, 12.0f, 12.0f }; // 速度を上げる
+		 velocityData.useRandomDirection = true;
+		 velocityModule.SetVelocityData(velocityData);
+	  }
+
+	  // MainModuleの設定
+	  {
+		 auto& mainModule = playerParticle->GetMainModule();
+		 auto& mainData = mainModule.GetMainData();
+		 mainData.startLifetime = 1.5f; // 寿命を延ばす
+		 mainData.startLifetimeRandomness = 0.4f;
+		 mainData.startColor = { 1.0f, 0.2f, 0.2f, 1.0f }; // 赤色
+		 mainData.startSize = { 1.0f, 1.0f, 1.0f }; // サイズを大きく
+		 mainData.startSizeRandomness = 0.3f; // サイズのランダム性を追加
+		 mainData.maxParticles = 200; // 最大数を増やす
+		 mainData.looping = false; // ワンショット再生
+		 mainData.playOnAwake = false; // 起動時は再生しない
+		 mainData.duration = 0.1f; // 短い持続時間（バースト発生用）
+		 mainData.gravityModifier = 1.5f; // 重力の影響を強化
+	  }
+
+	  // 色モジュールの設定（フェードアウト）
+	  {
+		 auto& colorModule = playerParticle->GetColorModule();
+		 auto colorData = colorModule.GetColorData();
+		 colorData.useGradient = true;
+		 colorData.endColor = { 0.8f, 0.0f, 0.0f, 0.0f }; // 暗い赤でフェードアウト
+		 colorModule.SetColorData(colorData);
+	  }
+
+	  // サイズモジュールの設定
+	  {
+		 auto& sizeModule = playerParticle->GetSizeModule();
+		 auto sizeData = sizeModule.GetSizeData();
+		 sizeData.sizeOverLifetime = true;
+		 sizeData.endSize = 0.5f; // 終了サイズ
+		 sizeData.sizeCurve = SizeModule::SizeData::SizeCurve::EaseOut;
+		 sizeModule.SetSizeData(sizeData);
+	  }
+
+	  // 回転モジュールの設定
+	  {
+		 auto& rotationModule = playerParticle->GetRotationModule();
+		 auto rotationData = rotationModule.GetRotationData();
+		 rotationData.use2DRotation = false; // 3D回転を使用
+		 rotationData.rotationSpeed = { 3.14f, 3.14f, 3.14f }; // 回転速度（ラジアン/秒）= 180度/秒
+		 rotationData.rotationSpeedRandomness = { 1.57f, 1.57f, 1.57f }; // ±90度のランダム性
+		 rotationData.rotationDirection = RotationModule::RotationData::RotationDirection::Random;
+		 rotationModule.SetRotationData(rotationData);
+	  }
+
+	  // 力場モジュールの設定（重力を強化）
+	  {
+		 auto& forceModule = playerParticle->GetForceModule();
+		 auto forceData = forceModule.GetForceData();
+		 forceData.gravity = { 0.0f, -30.0f, 0.0f }; // 重力を大幅に強化
+		 forceModule.SetForceData(forceData);
+	  }
+
+	  // 初期状態を非アクティブにして自動削除を防ぐ
+	  playerParticle->SetActive(false);
+
+	  playerCollisionParticle_ = playerParticle.get();
+	  gameObjects_.push_back(std::move(playerParticle));
+   }
 }
 
 void GameScene::Update() {
@@ -405,6 +539,13 @@ void GameScene::Update() {
 
    if (bossHitPointUI_) {
 	  bossHitPointUI_->SetHP(boss_->GetHP());
+   }
+
+   // パーティクルシステムの自動非アクティブ化（終了時）
+   if (playerCollisionParticle_ && playerCollisionParticle_->IsActive()) {
+	  if (playerCollisionParticle_->IsFinished()) {
+		 playerCollisionParticle_->SetActive(false);
+	  }
    }
 
    if (boss_->GetHP() <= 0 || player_->GetHP() <= 0) {

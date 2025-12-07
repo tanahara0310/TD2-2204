@@ -18,6 +18,7 @@
 #include "../../AI/BehaviorTree/BehaviorTree.h"
 #include "../../Effect/Lightning/LightningEffectManager.h"
 #include "../../UI/HitPoint/HitPoint.h"
+#include "Engine/Particle/ParticleSystem.h"
 
 class EngineSystem;
 class CameraManager;
@@ -80,6 +81,10 @@ private:
 
    std::unique_ptr<GaugeUI> playerGauge_;
    std::unique_ptr<GaugeUI> bossGauge_;
+
+   // パーティクルシステム（ボクセル用）
+   ParticleSystem* playerCollisionParticle_ = nullptr;
+   std::unique_ptr<Model> voxelModelForParticle_;
 
    float time_ = 0.0f;
 private:
