@@ -30,6 +30,28 @@ void TitleScene::Initialize(EngineSystem* engine) {
 
 	// カメラコントローラーの初期化
 	cameraController_ = std::make_unique<TitleCameraController>();
+	
+	// ポストエフェクトマネージャーの取得と色収差の設定
+	{
+		postEffectManager_ = engine_->GetComponent<PostEffectManager>();
+		if (postEffectManager_) {
+			// 色収差を有効化
+			postEffectManager_->SetEffectEnabled(PostEffectNames::ChromaticAberration, true);
+			
+			// 色収差のパラメータを設定
+			auto* chromaticAberration = postEffectManager_->GetEffect<ChromaticAberration>(PostEffectNames::ChromaticAberration);
+			if (chromaticAberration) {
+				ChromaticAberration::ChromaticAberrationParams params;
+				params.intensity = 2.0f;         // 控えめな強度
+				params.radialFactor = 0.8f;      // 放射状の強度
+				params.centerX = 0.5f;           // 画面中心
+				params.centerY = 0.5f;           // 画面中心
+				params.distortionScale = 0.8f;   // 歪み量
+				params.falloff = 1.5f;           // 端に向かう減衰
+				chromaticAberration->SetParams(params);
+			}
+		}
+	}
 
 	// KeyConfigの設定
 	{

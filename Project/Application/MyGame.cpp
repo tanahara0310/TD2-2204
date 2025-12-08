@@ -2,6 +2,7 @@
 #include <EngineSystem.h>
 #include "WinApp/WinApp.h"
 #include "TD2_2/Scene/TestScene/TestScene.h"
+#include "TD2_2/Scene/Game/RecommendedScene.h"
 #include "TD2_2/Scene/Game/TitleScene.h"
 #include "TD2_2/Scene/Game/GameScene.h"
 #include "TD2_2/Scene/Game/ResultScene.h"
@@ -19,19 +20,20 @@ void MyGame::Initialize()
 
 	// 全シーンを登録（アプリ層で実装）
 	//sceneManager_->RegisterScene<TestScene>("TestScene");
+	sceneManager_->RegisterScene<RecommendedScene>("RecommendedScene");
 	sceneManager_->RegisterScene<TitleScene>("TitleScene");
 	sceneManager_->RegisterScene<GameScene>("GameScene");
 	sceneManager_->RegisterScene<ResultScene>("ResultScene");
 
 	// 初期シーンを設定
-	sceneManager_->SetInitialScene("TitleScene");
+	sceneManager_->SetInitialScene("RecommendedScene");
 
 	// ===== コンソールログ出力とシーンマネージャーの設定 =====
 #ifdef _DEBUG
 	auto console = GetEngineSystem()->GetConsole();
 	if (console) {
 		console->LogInfo("MyGame: ゲーム初期化が完了しました");
-		console->LogInfo("MyGame: 初期シーン 'TitleScene' を読み込みました");
+		console->LogInfo("MyGame: 初期シーン 'RecommendedScene' を読み込みました");
 	}
 
 	// GameDebugUIにSceneManagerを設定
