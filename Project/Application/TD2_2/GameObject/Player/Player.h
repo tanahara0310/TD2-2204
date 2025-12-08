@@ -63,6 +63,9 @@ public:
    int GetHP() const { return hp_; }
    int GetMaxHP() const { return maxHp_; }
 
+   // HPを減らす
+   void DecreaseHP(int amount) { hp_ = (std::max)(0, hp_ - amount); }
+
    float GetStoredEnergy() const { return storedEnergy_; }
 private:
 

@@ -12,6 +12,7 @@
 #include "../../GameObject/GameObject.h"
 #include "../../GameObject/Bullet/Bullet.h"
 #include "../../GameObject/Cloud/Cloud.h"
+#include "../../GameObject/SparkColliderObject/SparkColliderObject.h"
 #include "../../Collider/CollisionManager.h"
 #include "../../Collider/CollisionConfig.h"
 #include "../../Camera/CameraController.h"
@@ -53,6 +54,9 @@ private:
    std::list<Frame*> frames_;
    std::array<Cloud*, 4> clouds_;
 
+   // スパーク当たり判定用オブジェクト
+   SparkColliderObject* sparkCollider_ = nullptr;
+
    std::unique_ptr<CollisionManager> collisionManager_;
    std::unique_ptr<CollisionConfig> collisionConfig_;
 
@@ -82,9 +86,8 @@ private:
    std::unique_ptr<GaugeUI> playerGauge_;
    std::unique_ptr<GaugeUI> bossGauge_;
 
-   // パーティクルシステム（ボクセル用）
-   ParticleSystem* playerCollisionParticle_ = nullptr;
-   std::unique_ptr<Model> voxelModelForParticle_;
+   // スパークエフェクトID
+   int sparkEffectId_ = -1;
 
    float time_ = 0.0f;
 private:
@@ -105,4 +108,18 @@ private:
    Bullet* CreateBullet(const Vector3& position, const Vector3& direction, BulletType type, float speed = 30.0f);
 
    void StartUIAnimation();
+
+   /// @brief パーティクルシステムを生成
+   /// @param presetPath プリセットファイルのパス
+   /// @return 生成されたパーティクルシステム
+   std::unique_ptr<ParticleSystem> CreateParticleSystem(const std::string& presetPath);
+
+   /// @brief パーティクルを発生させる
+   /// @param particleSystem パーティクルシステム
+   /// @param position 発生位置
+   void EmitParticle(ParticleSystem* particleSystem, const Vector3& position);
+
+   /// @brief パーティクルシステムの自動非アクティブ化をチェック
+   /// @param particleSystem パーティクルシステム
+   void CheckParticleAutoDeactivate(ParticleSystem* particleSystem);
 };

@@ -7,5 +7,6 @@ enum class CollisionLayer {
    Boss,
    LightningBullet,
    ElasticSphere,
+   Spark,
    Count
 };

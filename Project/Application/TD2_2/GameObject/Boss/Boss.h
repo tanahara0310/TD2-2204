@@ -73,6 +73,23 @@ public:
 	  setEffectColorFunction_ = func;
    }
 
+   // スパークエフェクト関連
+   void SetStartSparkEffectFunction(const std::function<void()>& func) {
+      startSparkEffectFunction_ = func;
+   }
+
+   void SetStopSparkEffectFunction(const std::function<void()>& func) {
+      stopSparkEffectFunction_ = func;
+   }
+
+   void SetUpdateSparkEffectFunction(const std::function<void(const Vector3&)>& func) {
+      updateSparkEffectFunction_ = func;
+   }
+
+   void StartSparkEffect();
+   void StopSparkEffect();
+   void UpdateSparkEffect();
+
    void StartChargeFunction();
 
    void EndChargeFunction();
@@ -148,6 +165,11 @@ private:
    std::function<void()> startEffectFunction_;
 
    std::function<void(const Vector4&)> setEffectColorFunction_;
+
+   // スパークエフェクト関連
+   std::function<void()> startSparkEffectFunction_;
+   std::function<void()> stopSparkEffectFunction_;
+   std::function<void(const Vector3&)> updateSparkEffectFunction_;
 
    float storedEnergy_ = 0.0f;
    float energyScale_ = 0.3f;

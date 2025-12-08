@@ -4,6 +4,7 @@
 #include "../../GameObject/Boss/ActionNode/MoveAction.h"
 #include "../../GameObject/Boss/ActionNode/MoveToCenterAction.h"
 #include "../../GameObject/Boss/ActionNode/ShootEightWayAction.h"
+#include "../../GameObject/Boss/ActionNode/SparkNode.h"
 #include "../../GameObject/Bullet/Bullet.h"
 #include "../Config/GameSceneConfig.h"
 #include "Application/TD2_2/Utility/GameUtils.h"
@@ -15,6 +16,7 @@
 #include "Engine/Graphics/Light/LightData.h"
 #include "Engine/Graphics/Light/LightManager.h"
 #include "Engine/Graphics/Render/RenderManager.h"
+#include "Engine/Particle/ParticlePresetManager.h"
 #include "EngineSystem/EngineSystem.h"
 #include "MathCore.h"
 #include "Scene/SceneManager.h"
@@ -54,15 +56,6 @@ void GameScene::Initialize(EngineSystem* engine) {
 		 if (damageSound_ && damageSound_->IsValid()) {
 			damageSound_->Play(false);
 		 }
-
-		 // パーティクルを発生させる
-		 if (playerCollisionParticle_) {
-			playerCollisionParticle_->SetActive(true);
-			playerCollisionParticle_->SetEmitterPosition(player_->GetWorldPosition());
-			playerCollisionParticle_->Clear();
-			playerCollisionParticle_->GetMainModule().Restart(); // MainModuleをリセット
-			playerCollisionParticle_->Play();
-		 }
 		 });
 	  player->SetHitEnemyFunction([this]() {
 		 if (cameraController_) {
@@ -71,15 +64,6 @@ void GameScene::Initialize(EngineSystem* engine) {
 
 		 if (hitSound_ && hitSound_->IsValid()) {
 			hitSound_->Play(false);
-		 }
-
-		 // パーティクルを発生させる
-		 if (playerCollisionParticle_) {
-			playerCollisionParticle_->SetActive(true);
-			playerCollisionParticle_->SetEmitterPosition(player_->GetWorldPosition());
-			playerCollisionParticle_->Clear();
-			playerCollisionParticle_->GetMainModule().Restart(); // MainModuleをリセット
-			playerCollisionParticle_->Play();
 		 }
 		 });
 	  player->SetStartChargeFunction([this]() {
@@ -144,6 +128,15 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  auto bossTexture = textureManager.Load("Resources/Textures/Boss.png");
 	  auto boss = std::make_unique<Boss>();
 	  boss_ = boss.get();
+
+	  // スパーク当たり判定用オブジェクトの生成
+	  constexpr float kSparkRadius = 5.0f;
+	  auto sparkColliderObj = std::make_unique<SparkColliderObject>();
+	  sparkColliderObj->Initialize(kSparkRadius);
+	  sparkCollider_ = sparkColliderObj.get();
+	  gameObjects_.push_back(std::move(sparkColliderObj));
+
+	  // ビヘイビアツリーの生成（sparkCollider_を使用するため、先にsparkCollider_を初期化）
 	  bossBehaviorTree_ = CreateBossBehaviorTree();
 	  boss->Initialize(std::move(bossModel), bossTexture);
 	  boss->SetBehaviorTree(std::move(bossBehaviorTree_));
@@ -161,13 +154,14 @@ void GameScene::Initialize(EngineSystem* engine) {
 		 }
 		 });
 
+	  // ボス用ダメージエフェクトの設定
 	  LightningEffectManager::EffectConfig damageEffectConfig;
 	  damageEffectConfig.useSphereDistribution = true;
 	  damageEffectConfig.sphereRadius = 2.0f;
 	  damageEffectConfig.sphereStartRadiusRatio = 0.6f; // 内側60%の位置から開始
 	  damageEffectConfig.randomOffsetRange = 0.5f; // ランダムオフセット範囲
 	  damageEffectConfig.lightningCount = 4;
-	  damageEffectConfig.color = { 0.2f, 0.8f, 1.0f, 1.0f }; // 赤色
+	  damageEffectConfig.color = { 0.2f, 0.8f, 1.0f, 1.0f }; // 青色
 	  damageEffectConfig.noiseScale = 1.2f;
 	  damageEffectConfig.noiseSpeed = 20.0f;
 	  damageEffectConfig.segmentCount = 4; // セグメント数を減らして短くする
@@ -198,6 +192,42 @@ void GameScene::Initialize(EngineSystem* engine) {
 
 	  boss->SetEffectColorFunction([this, damageEffectId](const Vector4& color) {
 		 lightningManager_->SetEffectColor(damageEffectId, color);
+		 });
+
+	  // スパークエフェクトの設定
+	  LightningEffectManager::EffectConfig sparkEffectConfig;
+	  sparkEffectConfig.useSphereDistribution = true;
+	  sparkEffectConfig.sphereRadius = kSparkRadius; // 当たり判定と同じ半径
+	  sparkEffectConfig.sphereStartRadiusRatio = 0.6f;
+	  sparkEffectConfig.randomOffsetRange = 0.5f;
+	  sparkEffectConfig.lightningCount = 16;
+	  sparkEffectConfig.color = { 0.5f, 0.0f, 0.5f, 1.0f };
+	  sparkEffectConfig.noiseScale = 2.0f;
+	  sparkEffectConfig.noiseSpeed = 20.0f;
+	  sparkEffectConfig.segmentCount = 5;
+	  sparkEffectConfig.voxelScale = { 2.0f, 2.0f, 2.0f };
+	  sparkEffectConfig.fadeInDuration = 0.25f;
+	  sparkEffectConfig.fadeOutDuration = 0.35f;
+
+	  sparkEffectId_ = lightningManager_->CreateEffect(
+		 boss->GetWorldPosition(),
+		 sparkEffectConfig,
+		 gameObjects_
+	  );
+
+	  boss->SetStartSparkEffectFunction([this]() {
+		 lightningManager_->SetEffectVisible(sparkEffectId_, true);
+		 if (biribiriSound_ && biribiriSound_->IsValid()) {
+			biribiriSound_->Play(false);
+		 }
+		 });
+
+	  boss->SetStopSparkEffectFunction([this]() {
+		 lightningManager_->SetEffectVisible(sparkEffectId_, false);
+		 });
+
+	  boss->SetUpdateSparkEffectFunction([this](const Vector3& position) {
+		 lightningManager_->SetEffectPosition(sparkEffectId_, position);
 		 });
 
 	  gameObjects_.push_back(std::move(boss));
@@ -291,8 +321,10 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  collisionConfig_->SetCollisionEnabled(CollisionLayer::Player, CollisionLayer::Boss, true);
 	  collisionConfig_->SetCollisionEnabled(CollisionLayer::Player, CollisionLayer::LightningBullet, true);
 	  collisionConfig_->SetCollisionEnabled(CollisionLayer::Player, CollisionLayer::ElasticSphere, true);
+	  collisionConfig_->SetCollisionEnabled(CollisionLayer::Player, CollisionLayer::Spark, true);
 	  collisionConfig_->SetCollisionEnabled(CollisionLayer::Boss, CollisionLayer::LightningBullet, false);
 	  collisionConfig_->SetCollisionEnabled(CollisionLayer::Boss, CollisionLayer::ElasticSphere, false);
+	  collisionConfig_->SetCollisionEnabled(CollisionLayer::Boss, CollisionLayer::Spark, false);
 	  collisionManager_ = std::make_unique<CollisionManager>(collisionConfig_.get());
    }
 
@@ -387,215 +419,104 @@ void GameScene::Initialize(EngineSystem* engine) {
 		 gameObjects_.push_back(std::move(sprite));
 	  }
    }
-
-   // ボクセルモデルパーティクルシステムの初期化
-   {
-	  auto dxCommon = engine_->GetComponent<DirectXCommon>();
-	  auto resourceFactory = engine_->GetComponent<ResourceFactory>();
-
-	  // ボクセルモデルを読み込む
-	  voxelModelForParticle_ = modelManager->CreateStaticModel("Resources/Models/Voxel/Voxel.obj");
-
-	  // ModelResourceを取得してParticleSystemに設定
-	  auto* voxelModelResource = modelManager->GetModelResource("Resources/Models/Voxel/Voxel.obj");
-
-	  // モデルパーティクルシステムを作成
-	  auto playerParticle = std::make_unique<ParticleSystem>();
-	  playerParticle->Initialize(dxCommon, resourceFactory);
-
-	  if (voxelModelResource) {
-		 playerParticle->SetModelResource(voxelModelResource);
-	  }
-
-	  // テスト用の白テクスチャを設定
-	  playerParticle->SetTexture("Resources/SampleResources/white1x1.png");
-
-	  // パーティクルシステムの基本設定
-	  playerParticle->SetEmitterPosition(player_->GetWorldPosition());
-	  playerParticle->SetBlendMode(BlendMode::kBlendModeNormal);
-
-	  // エミッションモジュールの設定
-	  {
-		 auto& emissionModule = playerParticle->GetEmissionModule();
-		 auto emissionData = emissionModule.GetEmissionData();
-		 emissionData.rateOverTime = 0; // 手動で発生させるため0
-		 emissionData.burstCount = 30; // 一度に30個のパーティクルを発生
-		 emissionModule.SetEmissionData(emissionData);
-	  }
-
-	  // 形状モジュールの設定
-	  {
-		 auto& shapeModule = playerParticle->GetShapeModule();
-		 auto shapeData = shapeModule.GetShapeData();
-		 shapeData.shapeType = ShapeModule::ShapeType::Sphere;
-		 shapeData.radius = 2.0f; // 発生範囲を広げる
-		 shapeData.emitFromSurface = true;
-		 shapeModule.SetShapeData(shapeData);
-	  }
-
-	  // 速度モジュールの設定
-	  {
-		 auto& velocityModule = playerParticle->GetVelocityModule();
-		 auto velocityData = velocityModule.GetVelocityData();
-		 velocityData.startSpeed = { 0.0f, 0.0f, 0.0f };
-		 velocityData.randomSpeedRange = { 12.0f, 12.0f, 12.0f }; // 速度を上げる
-		 velocityData.useRandomDirection = true;
-		 velocityModule.SetVelocityData(velocityData);
-	  }
-
-	  // MainModuleの設定
-	  {
-		 auto& mainModule = playerParticle->GetMainModule();
-		 auto& mainData = mainModule.GetMainData();
-		 mainData.startLifetime = 1.5f; // 寿命を延ばす
-		 mainData.startLifetimeRandomness = 0.4f;
-		 mainData.startColor = { 1.0f, 0.2f, 0.2f, 1.0f }; // 赤色
-		 mainData.startSize = { 1.0f, 1.0f, 1.0f }; // サイズを大きく
-		 mainData.startSizeRandomness = 0.3f; // サイズのランダム性を追加
-		 mainData.maxParticles = 200; // 最大数を増やす
-		 mainData.looping = false; // ワンショット再生
-		 mainData.playOnAwake = false; // 起動時は再生しない
-		 mainData.duration = 0.1f; // 短い持続時間（バースト発生用）
-		 mainData.gravityModifier = 1.5f; // 重力の影響を強化
-	  }
-
-	  // 色モジュールの設定（フェードアウト）
-	  {
-		 auto& colorModule = playerParticle->GetColorModule();
-		 auto colorData = colorModule.GetColorData();
-		 colorData.useGradient = true;
-		 colorData.endColor = { 0.8f, 0.0f, 0.0f, 0.0f }; // 暗い赤でフェードアウト
-		 colorModule.SetColorData(colorData);
-	  }
-
-	  // サイズモジュールの設定
-	  {
-		 auto& sizeModule = playerParticle->GetSizeModule();
-		 auto sizeData = sizeModule.GetSizeData();
-		 sizeData.sizeOverLifetime = true;
-		 sizeData.endSize = 0.5f; // 終了サイズ
-		 sizeData.sizeCurve = SizeModule::SizeData::SizeCurve::EaseOut;
-		 sizeModule.SetSizeData(sizeData);
-	  }
-
-	  // 回転モジュールの設定
-	  {
-		 auto& rotationModule = playerParticle->GetRotationModule();
-		 auto rotationData = rotationModule.GetRotationData();
-		 rotationData.use2DRotation = false; // 3D回転を使用
-		 rotationData.rotationSpeed = { 3.14f, 3.14f, 3.14f }; // 回転速度（ラジアン/秒）= 180度/秒
-		 rotationData.rotationSpeedRandomness = { 1.57f, 1.57f, 1.57f }; // ±90度のランダム性
-		 rotationData.rotationDirection = RotationModule::RotationData::RotationDirection::Random;
-		 rotationModule.SetRotationData(rotationData);
-	  }
-
-	  // 力場モジュールの設定（重力を強化）
-	  {
-		 auto& forceModule = playerParticle->GetForceModule();
-		 auto forceData = forceModule.GetForceData();
-		 forceData.gravity = { 0.0f, -30.0f, 0.0f }; // 重力を大幅に強化
-		 forceModule.SetForceData(forceData);
-	  }
-
-	  // 初期状態を非アクティブにして自動削除を防ぐ
-	  playerParticle->SetActive(false);
-
-	  playerCollisionParticle_ = playerParticle.get();
-	  gameObjects_.push_back(std::move(playerParticle));
-   }
 }
 
 void GameScene::Update() {
-   BaseScene::Update();
+	BaseScene::Update();
 
-   time_ += GameUtils::GetDeltaTime();
+	time_ += GameUtils::GetDeltaTime();
+
+
+#ifdef _DEBUG
+
+   auto input = engine_->GetComponent<KeyboardInput>();
+
+   // デバッグ用：カメラ切り替え
+   if (input->IsKeyTriggered(DIK_0)) {
+	  player_->DecreaseHP(1);
+   }
+
+#endif
 
    // カメラコントローラーの更新
    if (cameraController_) {
 	  cameraController_->Update();
    }
 
-   // 雷エフェクトの更新
-   if (lightningManager_) {
-	  lightningManager_->UpdateAllEffects();
-   }
+	// 雷エフェクトの更新
+	if (lightningManager_) {
+		lightningManager_->UpdateAllEffects();
+	}
 
-   StartUIAnimation();
+	StartUIAnimation();
 
-   // 削除予定の弾をリストから削除（gameObjects_からは次のフレームの最初に削除）
-   bullets_.remove_if([](Bullet* bullet) { return bullet == nullptr || !bullet->IsActive(); });
+	// 削除予定の弾をリストから削除（gameObjects_からは次のフレームの最初に削除）
+	bullets_.remove_if([](Bullet* bullet) { return bullet == nullptr || !bullet->IsActive(); });
 
-   // 新しいオブジェクトを追加
-   if (!newGameObjectsQueue_.empty()) {
-	  for (auto& newObj : newGameObjectsQueue_) {
-		 gameObjects_.push_back(std::move(newObj));
-	  }
-	  newGameObjectsQueue_.clear();
-   }
+	// 新しいオブジェクトを追加
+	if (!newGameObjectsQueue_.empty()) {
+		for (auto& newObj : newGameObjectsQueue_) {
+			gameObjects_.push_back(std::move(newObj));
+		}
+		newGameObjectsQueue_.clear();
+	}
 
-   if (playerHitPointUI_) {
-	  playerHitPointUI_->SetHP(player_->GetHP());
-   }
+	if (playerHitPointUI_) {
+		playerHitPointUI_->SetHP(player_->GetHP());
+	}
 
-   if (bossHitPointUI_) {
-	  bossHitPointUI_->SetHP(boss_->GetHP());
-   }
+	if (bossHitPointUI_) {
+		bossHitPointUI_->SetHP(boss_->GetHP());
+	}
 
-   // パーティクルシステムの自動非アクティブ化（終了時）
-   if (playerCollisionParticle_ && playerCollisionParticle_->IsActive()) {
-	  if (playerCollisionParticle_->IsFinished()) {
-		 playerCollisionParticle_->SetActive(false);
-	  }
-   }
-
-   if (boss_->GetHP() <= 0 || player_->GetHP() <= 0) {
-	  sceneManager_->ChangeScene("ResultScene");
+	if (boss_->GetHP() <= 0 || player_->GetHP() <= 0) {
+		sceneManager_->ChangeScene("ResultScene");
 
 	  json clearTimeData = JsonManager::GetInstance().LoadJson("Resources/Data/CurrentClearTime.json");
-	  clearTimeData["CurrentClearTime"] = 50.0f; // 仮のクリアタイム
+	  clearTimeData["CurrentClearTime"] = time_;
 
-	  JsonManager::GetInstance().SaveJson("Resources/Data/CurrentClearTime.json", clearTimeData);
+		JsonManager::GetInstance().SaveJson("Resources/Data/CurrentClearTime.json", clearTimeData);
 
-	  json resultData = JsonManager::GetInstance().LoadJson("Resources/Data/result.json");
+		json resultData = JsonManager::GetInstance().LoadJson("Resources/Data/result.json");
 
-	  if (boss_->GetHP() <= 0) {
-		 resultData["isWin"] = true;
-	  }
+		if (boss_->GetHP() <= 0) {
+			resultData["isWin"] = true;
+		}
 
-	  if (player_->GetHP() <= 0) {
-		 resultData["isWin"] = false;
-	  }
+		if (player_->GetHP() <= 0) {
+			resultData["isWin"] = false;
+		}
 
-	  JsonManager::GetInstance().SaveJson("Resources/Data/result.json", resultData);
-   }
+		JsonManager::GetInstance().SaveJson("Resources/Data/result.json", resultData);
+	}
 
-   // 帯電ゲージの更新
+	// 帯電ゲージの更新
 
-   if (playerGauge_) {
-	  playerGauge_->SetValue(player_->GetStoredEnergy());
-	  playerGauge_->Update();
-   }
+	if (playerGauge_) {
+		playerGauge_->SetValue(player_->GetStoredEnergy());
+		playerGauge_->Update();
+	}
 
-   if (bossGauge_) {
-	  bossGauge_->SetValue(boss_->GetStoredEnergy());
-	  bossGauge_->Update();
-   }
+	if (bossGauge_) {
+		bossGauge_->SetValue(boss_->GetStoredEnergy());
+		bossGauge_->Update();
+	}
 #ifdef _DEBUG
-   // カメラコントローラーのデバッグUI
-   if (cameraController_) {
-	  cameraController_->DrawImGui();
-   }
+	// カメラコントローラーのデバッグUI
+	if (cameraController_) {
+		cameraController_->DrawImGui();
+	}
 #endif
 
-   // コライダー登録
-   RegisterAllColliders();
+	// コライダー登録
+	RegisterAllColliders();
 
-   // 衝突判定
-   CheckCollisions();
+	// 衝突判定
+	CheckCollisions();
 }
 
 void GameScene::Draw() {
-   BaseScene::Draw();
+	BaseScene::Draw();
 }
 
 void GameScene::Finalize() {}
@@ -604,6 +525,11 @@ void GameScene::RegisterAllColliders() {
    collisionManager_->Clear();
    collisionManager_->RegisterCollider(player_->GetCollider());
    collisionManager_->RegisterCollider(boss_->GetCollider());
+
+   // スパークコライダーを登録
+   if (sparkCollider_ && sparkCollider_->GetCollider()) {
+	  collisionManager_->RegisterCollider(sparkCollider_->GetCollider());
+   }
 
    // 弾のコライダーを登録
    for (auto* bullet : bullets_) {
@@ -623,9 +549,10 @@ std::unique_ptr<BehaviorTree> GameScene::CreateBossBehaviorTree() {
 			.Action<FleeFromPlayerAction>(boss_, player_)
 			.Action<ChargeToPlayerAction>(boss_, player_)
 			.WeightedSelector()
-			.WeightedAction<MoveToCenterAction>(0.2f, boss_)
-			.WeightedAction<ShootEightWayAction>(0.3f, boss_, [this](const Vector3& pos, const Vector3& direction, float speed) { CreateBullet(pos, direction, BulletType::ElasticSphere, speed); })
-			.WeightedAction<ChargeToPlayerAction>(0.5f, boss_, player_)
+			.WeightedAction<MoveToCenterAction>(0.0f, boss_)
+			.WeightedAction<ShootEightWayAction>(0.0f, boss_, [this](const Vector3& pos, const Vector3& direction, float speed) { CreateBullet(pos, direction, BulletType::ElasticSphere, speed); })
+			.WeightedAction<ChargeToPlayerAction>(0.0f, boss_, player_)
+			.WeightedAction<SparkNode>(1.0f, boss_, sparkCollider_)
 			.End()
 			.End()
 			.Action<FleeFromPlayerAction>(boss_, player_)
@@ -635,129 +562,183 @@ std::unique_ptr<BehaviorTree> GameScene::CreateBossBehaviorTree() {
 }
 
 void GameScene::InitializeFrames() {
-   auto modelManager = engine_->GetComponent<ModelManager>();
-   auto& textureManager = TextureManager::GetInstance();
+	auto modelManager = engine_->GetComponent<ModelManager>();
+	auto& textureManager = TextureManager::GetInstance();
 
-   size_t row = static_cast<size_t>(GameSceneConfig::kStageSize.y / GameSceneConfig::kFrameSize.y);
-   size_t col = static_cast<size_t>(GameSceneConfig::kStageSize.x / GameSceneConfig::kFrameSize.x);
+	size_t row = static_cast<size_t>(GameSceneConfig::kStageSize.y / GameSceneConfig::kFrameSize.y);
+	size_t col = static_cast<size_t>(GameSceneConfig::kStageSize.x / GameSceneConfig::kFrameSize.x);
 
-   float startX = GameSceneConfig::kStageCenter.x - GameSceneConfig::kStageSize.x / 2.0f;
-   float startY = GameSceneConfig::kStageCenter.y - GameSceneConfig::kStageSize.y / 2.0f;
+	float startX = GameSceneConfig::kStageCenter.x - GameSceneConfig::kStageSize.x / 2.0f;
+	float startY = GameSceneConfig::kStageCenter.y - GameSceneConfig::kStageSize.y / 2.0f;
 
-   auto frameTexture = textureManager.Load("Resources/Textures/Frame.png");
+	auto frameTexture = textureManager.Load("Resources/Textures/Frame.png");
 
-   for (size_t y = 0; y <= row; ++y) {
-	  for (size_t x = 0; x <= col; ++x) {
+	for (size_t y = 0; y <= row; ++y) {
+		for (size_t x = 0; x <= col; ++x) {
 
-		 bool isEdge = (y == 0 || y == row || x == 0 || x == col);
-		 if (!isEdge)
-			continue;
+			bool isEdge = (y == 0 || y == row || x == 0 || x == col);
+			if (!isEdge)
+				continue;
 
-		 bool isCorner = (y == 0 || y == row) && (x == 0 || x == col);
+			bool isCorner = (y == 0 || y == row) && (x == 0 || x == col);
 
-		 std::unique_ptr<Model> model;
-		 float rotation = 0.0f;
-		 using std::numbers::pi_v;
+			std::unique_ptr<Model> model;
+			float rotation = 0.0f;
+			using std::numbers::pi_v;
 
-		 if (isCorner) {
-			model = modelManager->CreateStaticModel("Resources/Models/FrameCorner/FrameCorner.obj");
+			if (isCorner) {
+				model = modelManager->CreateStaticModel("Resources/Models/FrameCorner/FrameCorner.obj");
 
-			// 左下 → 右下 → 右上 → 左上 の順に +90°ずつ回転
-			if (x == 0 && y == 0) {
-			   rotation = 0.0f; // 左下
-			} else if (x == col && y == 0) {
-			   rotation = pi_v<float> / 2.0f; // 右下
-			} else if (x == col && y == row) {
-			   rotation = pi_v<float>; // 右上
-			} else if (x == 0 && y == row) {
-			   rotation = pi_v<float> *1.5f; // 左上
-			}
+				// 左下 → 右下 → 右上 → 左上 の順に +90°ずつ回転
+				if (x == 0 && y == 0) {
+					rotation = 0.0f; // 左下
+				} else if (x == col && y == 0) {
+					rotation = pi_v<float> / 2.0f; // 右下
+				} else if (x == col && y == row) {
+					rotation = pi_v<float>; // 右上
+				} else if (x == 0 && y == row) {
+					rotation = pi_v<float> *1.5f; // 左上
+				}
 
-		 } else {
-			model = modelManager->CreateStaticModel("Resources/Models/Frame/Frame.obj");
-
-			// 上下は横向き（回転なし）
-			// 左右は縦向き（+90°）
-			if (y == 0 || y == row) {
-			   rotation = 0.0f;
 			} else {
-			   rotation = pi_v<float> / 2.0f;
+				model = modelManager->CreateStaticModel("Resources/Models/Frame/Frame.obj");
+
+				// 上下は横向き（回転なし）
+				// 左右は縦向き（+90°）
+				if (y == 0 || y == row) {
+					rotation = 0.0f;
+				} else {
+					rotation = pi_v<float> / 2.0f;
+				}
 			}
-		 }
 
-		 auto frame = std::make_unique<Frame>();
-		 frame->Initialize(std::move(model), frameTexture);
+			auto frame = std::make_unique<Frame>();
+			frame->Initialize(std::move(model), frameTexture);
 
-		 frame->GetTransform().translate = { startX + x * GameSceneConfig::kFrameSize.x, startY + y * GameSceneConfig::kFrameSize.y, 0.0f };
+			frame->GetTransform().translate = { startX + x * GameSceneConfig::kFrameSize.x, startY + y * GameSceneConfig::kFrameSize.y, 0.0f };
 
-		 frame->GetTransform().rotate.z = rotation;
+			frame->GetTransform().rotate.z = rotation;
 
-		 frame->GetTransform().SetRotationMode(WorldTransform::RotationMode::Euler);
+			frame->GetTransform().SetRotationMode(WorldTransform::RotationMode::Euler);
 
-		 frames_.push_back(frame.get());
-		 gameObjects_.push_back(std::move(frame));
-	  }
-   }
+			frames_.push_back(frame.get());
+			gameObjects_.push_back(std::move(frame));
+		}
+	}
 }
 
 Bullet* GameScene::CreateBullet(const Vector3& position, const Vector3& direction, BulletType type, float speed) {
-   auto modelManager = engine_->GetComponent<ModelManager>();
-   auto& textureManager = TextureManager::GetInstance();
+	auto modelManager = engine_->GetComponent<ModelManager>();
+	auto& textureManager = TextureManager::GetInstance();
 
-   // タイプに応じたモデルとテクスチャのパス
-   std::string modelPath;
-   std::string texturePath;
-   CollisionLayer collisionLayer;
+	// タイプに応じたモデルとテクスチャのパス
+	std::string modelPath;
+	std::string texturePath;
+	CollisionLayer collisionLayer;
 
-   switch (type) {
-	  case BulletType::LightningBullet:
-		 modelPath = "Resources/Models/Ball/Ball.obj";
-		 texturePath = "Resources/Textures/Ball.png";
-		 collisionLayer = CollisionLayer::LightningBullet;
-		 break;
-	  case BulletType::ElasticSphere:
-		 modelPath = "Resources/Models/Ball/Ball.obj";
-		 texturePath = "Resources/Textures/Ball.png";
-		 collisionLayer = CollisionLayer::ElasticSphere;
-		 break;
-	  default:
-		 modelPath = "Resources/Models/Ball/Ball.obj";
-		 texturePath = "Resources/Textures/Ball.png";
-		 collisionLayer = CollisionLayer::LightningBullet;
-		 break;
-   }
+	switch (type) {
+	case BulletType::LightningBullet:
+		modelPath = "Resources/Models/Ball/Ball.obj";
+		texturePath = "Resources/Textures/Ball.png";
+		collisionLayer = CollisionLayer::LightningBullet;
+		break;
+	case BulletType::ElasticSphere:
+		modelPath = "Resources/Models/Ball/Ball.obj";
+		texturePath = "Resources/Textures/Ball.png";
+		collisionLayer = CollisionLayer::ElasticSphere;
+		break;
+	default:
+		modelPath = "Resources/Models/Ball/Ball.obj";
+		texturePath = "Resources/Textures/Ball.png";
+		collisionLayer = CollisionLayer::LightningBullet;
+		break;
+	}
 
-   // 弾のモデルとテクスチャを読み込み
-   auto bulletModel = modelManager->CreateStaticModel(modelPath);
-   auto bulletTexture = textureManager.Load(texturePath);
+	// 弾のモデルとテクスチャを読み込み
+	auto bulletModel = modelManager->CreateStaticModel(modelPath);
+	auto bulletTexture = textureManager.Load(texturePath);
 
-   // 弾を生成
-   auto bullet = std::make_unique<Bullet>();
-   bullet->Initialize(std::move(bulletModel), bulletTexture, direction);
-   bullet->SetWorldPosition(position);
-   bullet->SetSpeed(speed);
+	// 弾を生成
+	auto bullet = std::make_unique<Bullet>();
+	bullet->Initialize(std::move(bulletModel), bulletTexture, direction);
+	bullet->SetWorldPosition(position);
+	bullet->SetSpeed(speed);
 
-   // コライダーレイヤーを設定
-   if (bullet->GetCollider()) {
-	  bullet->GetCollider()->SetLayer(collisionLayer);
-   }
+	// コライダーレイヤーを設定
+	if (bullet->GetCollider()) {
+		bullet->GetCollider()->SetLayer(collisionLayer);
+	}
 
-   Bullet* bulletPtr = bullet.get();
-   bullets_.push_back(bulletPtr);
-   newGameObjectsQueue_.push_back(std::move(bullet));
+	Bullet* bulletPtr = bullet.get();
+	bullets_.push_back(bulletPtr);
+	newGameObjectsQueue_.push_back(std::move(bullet));
 
-   return bulletPtr;
+	return bulletPtr;
 }
 
 void GameScene::StartUIAnimation() {
-   if (!startUI_)
-	  return;
-   if (uiAnimationTimer_.IsFinished())
-	  return;
+	if (!startUI_)
+		return;
+	if (uiAnimationTimer_.IsFinished())
+		return;
 
-   uiAnimationTimer_.Update(GameUtils::GetDeltaTime());
+	uiAnimationTimer_.Update(GameUtils::GetDeltaTime());
 
-   float progress = uiAnimationTimer_.GetProgress();
-   float easedT = EasingUtil::ApplyComposite(progress, EasingUtil::Type::EaseOutQuint, EasingUtil::Type::EaseInQuint, 0.5f);
-   startUI_->GetTransform().translate.x = EasingUtil::Lerp(1280.0f, -1280.0f, easedT);
+	float progress = uiAnimationTimer_.GetProgress();
+	float easedT = EasingUtil::ApplyComposite(progress, EasingUtil::Type::EaseOutQuint, EasingUtil::Type::EaseInQuint, 0.5f);
+	startUI_->GetTransform().translate.x = EasingUtil::Lerp(1280.0f, -1280.0f, easedT);
+}
+
+std::unique_ptr<ParticleSystem> GameScene::CreateParticleSystem(const std::string& presetPath) {
+	auto dxCommon = engine_->GetComponent<DirectXCommon>();
+	auto resourceFactory = engine_->GetComponent<ResourceFactory>();
+	auto modelManager = engine_->GetComponent<ModelManager>();
+
+	// ModelResourceを取得（必要に応じてモデルを読み込む）
+	auto* voxelModelResource = modelManager->GetModelResource("Resources/Models/Voxel/Voxel.obj");
+	if (!voxelModelResource) {
+		modelManager->LoadModelResource("Resources/Models/Voxel", "Voxel.obj");
+		voxelModelResource = modelManager->GetModelResource("Resources/Models/Voxel/Voxel.obj");
+	}
+
+	// パーティクルシステムを作成
+	auto particleSystem = std::make_unique<ParticleSystem>();
+	particleSystem->Initialize(dxCommon, resourceFactory);
+
+	if (voxelModelResource) {
+		particleSystem->SetModelResource(voxelModelResource);
+	}
+
+	particleSystem->SetTexture("Resources/SampleResources/white1x1.png");
+
+	// プリセットファイルから設定を読み込む
+	ParticlePresetManager presetManager;
+	presetManager.LoadPreset(particleSystem.get(), presetPath);
+
+	// 初期状態を非アクティブに設定
+	particleSystem->SetActive(false);
+
+	return particleSystem;
+}
+
+void GameScene::EmitParticle(ParticleSystem* particleSystem, const Vector3& position) {
+	if (!particleSystem) {
+		return;
+	}
+
+	particleSystem->SetActive(true);
+	particleSystem->SetEmitterPosition(position);
+	particleSystem->Clear();
+	particleSystem->GetMainModule().Restart();
+	particleSystem->Play();
+}
+
+void GameScene::CheckParticleAutoDeactivate(ParticleSystem* particleSystem) {
+	if (!particleSystem || !particleSystem->IsActive()) {
+		return;
+	}
+
+	if (particleSystem->IsFinished()) {
+		particleSystem->SetActive(false);
+	}
 }

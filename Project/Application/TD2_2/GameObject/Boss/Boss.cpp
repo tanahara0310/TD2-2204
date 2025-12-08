@@ -533,3 +533,21 @@ void Boss::Punk() {
 	  }
    }
 }
+
+void Boss::StartSparkEffect() {
+   if (startSparkEffectFunction_) {
+      startSparkEffectFunction_();
+   }
+}
+
+void Boss::StopSparkEffect() {
+   if (stopSparkEffectFunction_) {
+      stopSparkEffectFunction_();
+   }
+}
+
+void Boss::UpdateSparkEffect() {
+   if (updateSparkEffectFunction_) {
+      updateSparkEffectFunction_(GetWorldPosition());
+   }
+}
