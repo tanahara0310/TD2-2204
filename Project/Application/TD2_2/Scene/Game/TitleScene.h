@@ -13,6 +13,9 @@
 #include "../../Effect/Lightning/LightningEffectManager.h"
 #include "Engine/Utility/Timer/GameTimer.h"
 
+// ポストエフェクト関連
+#include "Engine/Graphics/PostEffect/PostEffectManager.h"
+#include "Engine/Graphics/PostEffect/Effect/ChromaticAberration.h"
 
 class EngineSystem;
 class CameraManager;
@@ -64,6 +67,9 @@ private:
 	
 	// 雷エフェクトマネージャー
 	std::unique_ptr<LightningEffectManager> lightningManager_;
+	
+	// ポストエフェクトマネージャー
+	PostEffectManager* postEffectManager_ = nullptr;
 	
 	// UIライトニングエフェクトID
 	int startLightningEffectId_ = -1;

@@ -309,6 +309,9 @@
     <ClCompile Include="Application\TD2_2\Camera\CinematicPresetManager.cpp" />
     <ClCompile Include="Application\TD2_2\Camera\CameraControllerEditor.cpp" />
     <ClCompile Include="Application\TD2_2\Camera\DynamicCameraHelper.cpp" />
+    <ClCompile Include="Application\TD2_2\Scene\Game\RecommendedScene.cpp" />
+    <ClCompile Include="Application\TD2_2\GameObject\Recommended\ControllerModel.cpp" />
+    <ClCompile Include="Application\TD2_2\GameObject\Recommended\RecommendedModel.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Engine\WinApp\WinApp.h">
@@ -780,6 +783,9 @@
     <ClInclude Include="Application\TD2_2\Camera\CinematicPresetManager.h" />
     <ClInclude Include="Application\TD2_2\Camera\CameraControllerEditor.h" />
     <ClInclude Include="Application\TD2_2\Camera\DynamicCameraHelper.h" />
+    <ClInclude Include="Application\TD2_2\Scene\Game\RecommendedScene.h" />
+    <ClInclude Include="Application\TD2_2\GameObject\Recommended\ControllerModel.h" />
+    <ClInclude Include="Application\TD2_2\GameObject\Recommended\RecommendedModel.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Engine\Particle\README.md">
