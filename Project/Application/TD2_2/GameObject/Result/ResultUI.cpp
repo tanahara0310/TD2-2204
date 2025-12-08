@@ -53,18 +53,25 @@ std::vector<std::unique_ptr<IDrawable>> ResultUI::Initialize([[maybe_unused]] En
 
 	// タイマー用のモデルを作成
 	for (int i = 0; i < 6; i++) {
-		auto timer = CreateNumberModel(engine, i);
-
 		// 基本の位置
 		float x = i * 1.5f - 4.7f;
 
 		// iが2の倍数のときに余分なオフセットを加える
 		x += (i / 2) * 1.0f;
 
-		timer->GetTransform().translate = {x, 1.5f, -47.0f};
-		timer->GetTransform().scale = {2.5f, 2.5f, 2.5f};
-		currentTimeModels_.push_back(timer.get());
-		sprites.push_back(std::move(timer));
+		if (isWin) { // 勝利時はクリアタイマーを表示
+			auto timer = CreateNumberModel(engine, i);
+			timer->GetTransform().translate = {x, 1.5f, -47.0f};
+			timer->GetTransform().scale = {2.5f, 2.5f, 2.5f};
+			currentTimeModels_.push_back(timer.get());
+			sprites.push_back(std::move(timer));
+		} else { // 敗北時はハイフンを表示
+			auto hyphen = CreateHyphenModel(engine);
+			hyphen->GetTransform().translate = {x, 2.2f, -47.0f};
+			hyphen->GetTransform().scale = {8.0f, 4.0f, 1.0f};
+			hyphenModels_.push_back(hyphen.get());
+			sprites.push_back(std::move(hyphen));
+		}
 	}
 
 	// タイマー用のモデル(ランキング)を作成
@@ -264,6 +271,19 @@ std::unique_ptr<ColonModel> ResultUI::CreateColonModel(EngineSystem* engine) {
 	colonModel->Initialize(std::move(colonModelResource), colonTexture);
 
 	return colonModel;
+}
+
+std::unique_ptr<HyphenModel> ResultUI::CreateHyphenModel(EngineSystem* engine) { 
+	auto modelManager = engine->GetComponent<ModelManager>();
+	auto& textureManager = TextureManager::GetInstance();
+
+	auto hyphenModelResource = modelManager->CreateStaticModel("Resources/Models/Voxel/Voxel.obj");
+	auto hyphenTexture = textureManager.Load("Resources/SampleResources/white1x1.png");
+
+	auto hyphenModel = std::make_unique<HyphenModel>();
+	hyphenModel->Initialize(std::move(hyphenModelResource), hyphenTexture);
+
+	return hyphenModel;
 }
 
 void ResultUI::UpdateModelScale() {

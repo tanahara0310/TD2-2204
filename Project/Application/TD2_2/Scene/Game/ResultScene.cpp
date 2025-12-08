@@ -17,34 +17,36 @@ void ResultScene::Initialize(EngineSystem* engine) {
 
 	InputSource::Initialize(engine);
 
-	// 勝敗をJsonから取得
-	json resultData = JsonManager::GetInstance().LoadJson("Resources/Data/result.json");
+	if (!isWin_) {
+		// 勝敗をJsonから取得
+		json resultData = JsonManager::GetInstance().LoadJson("Resources/Data/result.json");
 
-	// "isWin"キーから勝敗情報を取得、存在しない場合は負け
-	isWin_ = JsonManager::SafeGet<bool>(resultData, "isWin", false);
+		// "isWin"キーから勝敗情報を取得、存在しない場合は負け
+		isWin_ = JsonManager::SafeGet<bool>(resultData, "isWin", false);
 
-	// 今回のクリアタイムをJsonから取得
-	json clearTimeData = JsonManager::GetInstance().LoadJson("Resources/Data/CurrentClearTime.json");
+		// 今回のクリアタイムをJsonから取得
+		json clearTimeData = JsonManager::GetInstance().LoadJson("Resources/Data/CurrentClearTime.json");
 
-	// "CurrentClearTime"キーからクリアタイムを取得、存在しない場合はデフォルト値の9999.999を使用
-	currentClearTime_ = JsonManager::SafeGet<float>(clearTimeData, "CurrentClearTime", 9999.999f);
+		// "CurrentClearTime"キーからクリアタイムを取得、存在しない場合はデフォルト値の9999.999を使用
+		currentClearTime_ = JsonManager::SafeGet<float>(clearTimeData, "CurrentClearTime", 9999.999f);
 
-	// クリアタイムマネージャーの生成
-	clearTimeManager_ = std::make_unique<ClearTimeManager>("Resources/ClearTimes/ClearTimes.txt");
+		// クリアタイムマネージャーの生成
+		clearTimeManager_ = std::make_unique<ClearTimeManager>("Resources/ClearTimes/ClearTimes.txt");
 
-	// クリアタイムの読み込み
-	clearTimeManager_->LoadTimes();
+		// クリアタイムの読み込み
+		clearTimeManager_->LoadTimes();
 
-	// クリアタイムの登録
-	clearTimeManager_->RegisterTime(currentClearTime_);
+		// クリアタイムの登録
+		clearTimeManager_->RegisterTime(currentClearTime_);
 
-	// 上位3つのクリアタイムを取得
-	for (int i = 0; i < 3; ++i) {
-		clearTimes_[i] = clearTimeManager_->GetTimes()[i];
+		// 上位3つのクリアタイムを取得
+		for (int i = 0; i < 3; ++i) {
+			clearTimes_[i] = clearTimeManager_->GetTimes()[i];
+		}
+
+		// クリアタイマーを文字列に変換
+		timerDigits_ = FormatTime(currentClearTime_);
 	}
-
-	// クリアタイマーを文字列に変換
-	timerDigits_ = FormatTime(currentClearTime_);
 
 	// resultUI
 	{
@@ -57,14 +59,13 @@ void ResultScene::Initialize(EngineSystem* engine) {
 			gameObjects_.push_back(std::move(sprite));
 		}
 
-		// タイマー文字列を受け取る
-		resultUI_->SetTimerString(timerDigits_);
+		if (isWin_) {
+			// タイマー文字列を受け取る
+			resultUI_->SetTimerString(timerDigits_);
+		}
 
 		// クリアタイム上位三つを文字列に変換
-		resultUI_->SetRankTimeStrings({
-			FormatTime(clearTimes_[0]),
-			FormatTime(clearTimes_[1]),
-			FormatTime(clearTimes_[2])});
+		resultUI_->SetRankTimeStrings({FormatTime(clearTimes_[0]), FormatTime(clearTimes_[1]), FormatTime(clearTimes_[2])});
 	}
 
 	// KeyConfigの設定
