@@ -9,6 +9,8 @@ void ResultModel::Initialize(std::unique_ptr<Model> model, TextureManager::Loade
 	transform_.TransferMatrix();
 }
 
+void ResultModel::Update() { transform_.TransferMatrix(); }
+
 void ResultModel::Draw(const ICamera* camera) {
 	if (!model_ || !camera) {
 		return;

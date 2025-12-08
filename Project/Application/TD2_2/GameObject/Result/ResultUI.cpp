@@ -1,4 +1,5 @@
 #include "ResultUI.h"
+#include "../../Utility/GameUtils.h"
 
 std::vector<std::unique_ptr<IDrawable>> ResultUI::Initialize([[maybe_unused]] EngineSystem* engine, bool isWin) {
 	std::vector<std::unique_ptr<IDrawable>> sprites;
@@ -132,6 +133,20 @@ void ResultUI::Update() {
 	// ステートマシーンの更新
 	stateMachine_.Update();
 
+	// リザルトモデルとsin波で上下に移動させる
+	elapsedTime_ += 1.0f / 60.0f; // 仮のデルタタイム
+	resultModel_->GetTransform().translate.y = 3.3f + std ::sin(elapsedTime_ * 3.0f) * 0.1f;
+
+	// 「タイトルへ」モデルのアニメーション
+	if (isAnimationToTitle_) {
+
+	}
+
+	// 「リスタート」モデルのアニメーション
+	if (isAnimationReStart_) {
+	
+	}
+
 	// 選択演出の更新
 	UpdateSelectionEffect();
 }
@@ -211,7 +226,7 @@ std::unique_ptr<ResultModel> ResultUI::CreateResultModel(EngineSystem* engine, b
 	auto& textureManager = TextureManager::GetInstance();
 
 	// 勝敗に応じてモデル切り替え
-	auto resultModelResource = modelManager->CreateStaticModel(isWin ? "Resources/Models/YouWin/YouWin.obj" : "Resources/Models/YouLose/YouLose.obj");
+	auto resultModelResource = modelManager->CreateStaticModel(isWin ? "Resources/Models/Win/Win.obj" : "Resources/Models/Lose/Lose.obj");
 
 	auto resultTexture = textureManager.Load("Resources/SampleResources/white1x1.png");
 
@@ -260,7 +275,7 @@ std::unique_ptr<PeriodModel> ResultUI::CreatePeriodModel(EngineSystem* engine) {
 	return periodModel;
 }
 
-std::unique_ptr<ColonModel> ResultUI::CreateColonModel(EngineSystem* engine) { 
+std::unique_ptr<ColonModel> ResultUI::CreateColonModel(EngineSystem* engine) {
 	auto modelManager = engine->GetComponent<ModelManager>();
 	auto& textureManager = TextureManager::GetInstance();
 
@@ -273,7 +288,7 @@ std::unique_ptr<ColonModel> ResultUI::CreateColonModel(EngineSystem* engine) {
 	return colonModel;
 }
 
-std::unique_ptr<HyphenModel> ResultUI::CreateHyphenModel(EngineSystem* engine) { 
+std::unique_ptr<HyphenModel> ResultUI::CreateHyphenModel(EngineSystem* engine) {
 	auto modelManager = engine->GetComponent<ModelManager>();
 	auto& textureManager = TextureManager::GetInstance();
 
