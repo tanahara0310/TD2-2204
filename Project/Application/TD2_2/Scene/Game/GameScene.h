@@ -12,6 +12,7 @@
 #include "../../GameObject/GameObject.h"
 #include "../../GameObject/Bullet/Bullet.h"
 #include "../../GameObject/Cloud/Cloud.h"
+#include "../../GameObject/SparkColliderObject/SparkColliderObject.h"
 #include "../../Collider/CollisionManager.h"
 #include "../../Collider/CollisionConfig.h"
 #include "../../Camera/CameraController.h"
@@ -52,6 +53,9 @@ private:
    std::list<Frame*> frames_;
    std::array<Cloud*, 4> clouds_;
 
+   // スパーク当たり判定用オブジェクト
+   SparkColliderObject* sparkCollider_ = nullptr;
+
    std::unique_ptr<CollisionManager> collisionManager_;
    std::unique_ptr<CollisionConfig> collisionConfig_;
 
@@ -80,6 +84,9 @@ private:
 
    std::unique_ptr<GaugeUI> playerGauge_;
    std::unique_ptr<GaugeUI> bossGauge_;
+
+   // スパークエフェクトID
+   int sparkEffectId_ = -1;
 
    float time_ = 0.0f;
 private:

@@ -4,6 +4,7 @@
 #include "../../GameObject/Boss/ActionNode/MoveAction.h"
 #include "../../GameObject/Boss/ActionNode/MoveToCenterAction.h"
 #include "../../GameObject/Boss/ActionNode/ShootEightWayAction.h"
+#include "../../GameObject/Boss/ActionNode/SparkNode.h"
 #include "../../GameObject/Bullet/Bullet.h"
 #include "../Config/GameSceneConfig.h"
 #include "Application/TD2_2/Utility/GameUtils.h"
@@ -126,6 +127,15 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  auto bossTexture = textureManager.Load("Resources/Textures/Boss.png");
 	  auto boss = std::make_unique<Boss>();
 	  boss_ = boss.get();
+
+	  // スパーク当たり判定用オブジェクトの生成
+	  constexpr float kSparkRadius = 5.0f;
+	  auto sparkColliderObj = std::make_unique<SparkColliderObject>();
+	  sparkColliderObj->Initialize(kSparkRadius);
+	  sparkCollider_ = sparkColliderObj.get();
+	  gameObjects_.push_back(std::move(sparkColliderObj));
+
+	  // ビヘイビアツリーの生成（sparkCollider_を使用するため、先にsparkCollider_を初期化）
 	  bossBehaviorTree_ = CreateBossBehaviorTree();
 	  boss->Initialize(std::move(bossModel), bossTexture);
 	  boss->SetBehaviorTree(std::move(bossBehaviorTree_));
@@ -143,13 +153,14 @@ void GameScene::Initialize(EngineSystem* engine) {
 		 }
 		 });
 
+	  // ボス用ダメージエフェクトの設定
 	  LightningEffectManager::EffectConfig damageEffectConfig;
 	  damageEffectConfig.useSphereDistribution = true;
 	  damageEffectConfig.sphereRadius = 2.0f;
 	  damageEffectConfig.sphereStartRadiusRatio = 0.6f; // 内側60%の位置から開始
 	  damageEffectConfig.randomOffsetRange = 0.5f; // ランダムオフセット範囲
 	  damageEffectConfig.lightningCount = 4;
-	  damageEffectConfig.color = { 0.2f, 0.8f, 1.0f, 1.0f }; // 赤色
+	  damageEffectConfig.color = { 0.2f, 0.8f, 1.0f, 1.0f }; // 青色
 	  damageEffectConfig.noiseScale = 1.2f;
 	  damageEffectConfig.noiseSpeed = 20.0f;
 	  damageEffectConfig.segmentCount = 4; // セグメント数を減らして短くする
@@ -180,6 +191,42 @@ void GameScene::Initialize(EngineSystem* engine) {
 
 	  boss->SetEffectColorFunction([this, damageEffectId](const Vector4& color) {
 		 lightningManager_->SetEffectColor(damageEffectId, color);
+		 });
+
+	  // スパークエフェクトの設定
+	  LightningEffectManager::EffectConfig sparkEffectConfig;
+	  sparkEffectConfig.useSphereDistribution = true;
+	  sparkEffectConfig.sphereRadius = kSparkRadius; // 当たり判定と同じ半径
+	  sparkEffectConfig.sphereStartRadiusRatio = 0.6f;
+	  sparkEffectConfig.randomOffsetRange = 0.5f;
+	  sparkEffectConfig.lightningCount = 16;
+	  sparkEffectConfig.color = { 0.5f, 0.0f, 0.5f, 1.0f };
+	  sparkEffectConfig.noiseScale = 2.0f;
+	  sparkEffectConfig.noiseSpeed = 20.0f;
+	  sparkEffectConfig.segmentCount = 5;
+	  sparkEffectConfig.voxelScale = { 2.0f, 2.0f, 2.0f };
+	  sparkEffectConfig.fadeInDuration = 0.25f;
+	  sparkEffectConfig.fadeOutDuration = 0.35f;
+
+	  sparkEffectId_ = lightningManager_->CreateEffect(
+		 boss->GetWorldPosition(),
+		 sparkEffectConfig,
+		 gameObjects_
+	  );
+
+	  boss->SetStartSparkEffectFunction([this]() {
+		 lightningManager_->SetEffectVisible(sparkEffectId_, true);
+		 if (biribiriSound_ && biribiriSound_->IsValid()) {
+			biribiriSound_->Play(false);
+		 }
+		 });
+
+	  boss->SetStopSparkEffectFunction([this]() {
+		 lightningManager_->SetEffectVisible(sparkEffectId_, false);
+		 });
+
+	  boss->SetUpdateSparkEffectFunction([this](const Vector3& position) {
+		 lightningManager_->SetEffectPosition(sparkEffectId_, position);
 		 });
 
 	  gameObjects_.push_back(std::move(boss));
@@ -273,8 +320,10 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  collisionConfig_->SetCollisionEnabled(CollisionLayer::Player, CollisionLayer::Boss, true);
 	  collisionConfig_->SetCollisionEnabled(CollisionLayer::Player, CollisionLayer::LightningBullet, true);
 	  collisionConfig_->SetCollisionEnabled(CollisionLayer::Player, CollisionLayer::ElasticSphere, true);
+	  collisionConfig_->SetCollisionEnabled(CollisionLayer::Player, CollisionLayer::Spark, true);
 	  collisionConfig_->SetCollisionEnabled(CollisionLayer::Boss, CollisionLayer::LightningBullet, false);
 	  collisionConfig_->SetCollisionEnabled(CollisionLayer::Boss, CollisionLayer::ElasticSphere, false);
+	  collisionConfig_->SetCollisionEnabled(CollisionLayer::Boss, CollisionLayer::Spark, false);
 	  collisionManager_ = std::make_unique<CollisionManager>(collisionConfig_.get());
    }
 
@@ -376,6 +425,17 @@ void GameScene::Update() {
 
    time_ += GameUtils::GetDeltaTime();
 
+#ifdef _DEBUG
+
+   auto input = engine_->GetComponent<KeyboardInput>();
+
+   // デバッグ用：カメラ切り替え
+   if (input->IsKeyTriggered(DIK_0)) {
+	  player_->DecreaseHP(1);
+   }
+
+#endif
+
    // カメラコントローラーの更新
    if (cameraController_) {
 	  cameraController_->Update();
@@ -411,7 +471,7 @@ void GameScene::Update() {
 	  sceneManager_->ChangeScene("ResultScene");
 
 	  json clearTimeData = JsonManager::GetInstance().LoadJson("Resources/Data/CurrentClearTime.json");
-	  clearTimeData["CurrentClearTime"] = 50.0f; // 仮のクリアタイム
+	  clearTimeData["CurrentClearTime"] = time_;
 
 	  JsonManager::GetInstance().SaveJson("Resources/Data/CurrentClearTime.json", clearTimeData);
 
@@ -464,6 +524,11 @@ void GameScene::RegisterAllColliders() {
    collisionManager_->RegisterCollider(player_->GetCollider());
    collisionManager_->RegisterCollider(boss_->GetCollider());
 
+   // スパークコライダーを登録
+   if (sparkCollider_ && sparkCollider_->GetCollider()) {
+	  collisionManager_->RegisterCollider(sparkCollider_->GetCollider());
+   }
+
    // 弾のコライダーを登録
    for (auto* bullet : bullets_) {
 	  if (bullet && bullet->IsActive() && bullet->GetCollider()) {
@@ -482,9 +547,10 @@ std::unique_ptr<BehaviorTree> GameScene::CreateBossBehaviorTree() {
 			.Action<FleeFromPlayerAction>(boss_, player_)
 			.Action<ChargeToPlayerAction>(boss_, player_)
 			.WeightedSelector()
-			.WeightedAction<MoveToCenterAction>(0.2f, boss_)
-			.WeightedAction<ShootEightWayAction>(0.3f, boss_, [this](const Vector3& pos, const Vector3& direction, float speed) { CreateBullet(pos, direction, BulletType::ElasticSphere, speed); })
-			.WeightedAction<ChargeToPlayerAction>(0.5f, boss_, player_)
+			.WeightedAction<MoveToCenterAction>(0.0f, boss_)
+			.WeightedAction<ShootEightWayAction>(0.0f, boss_, [this](const Vector3& pos, const Vector3& direction, float speed) { CreateBullet(pos, direction, BulletType::ElasticSphere, speed); })
+			.WeightedAction<ChargeToPlayerAction>(0.0f, boss_, player_)
+			.WeightedAction<SparkNode>(1.0f, boss_, sparkCollider_)
 			.End()
 			.End()
 			.Action<FleeFromPlayerAction>(boss_, player_)
