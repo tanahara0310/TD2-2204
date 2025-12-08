@@ -39,7 +39,7 @@ void ChargeToPlayerAction::OnEnter() {
 	  boss_->AddAcceleration({ chargeDirection_.x * chargeSpeed_, chargeDirection_.y * chargeSpeed_ });
 	  boss_->SetVelocity({ 0.0f, 0.0f });
 
-	  boss_->StartRotateAroundAxis(chargeDuration_, 3.0f);
+	  boss_->StartRotateAroundAxis(chargeDuration_, 2.0f);
 
 	  boss_->SetIsCharging(true);
 

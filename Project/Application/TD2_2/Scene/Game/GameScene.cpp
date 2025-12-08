@@ -79,13 +79,13 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  // プレイヤー用のダメージエフェクトを作成（球面配置）
 	  LightningEffectManager::EffectConfig damageEffectConfig;
 	  damageEffectConfig.useSphereDistribution = true;
-	  damageEffectConfig.sphereRadius = 2.0f;
-	  damageEffectConfig.sphereStartRadiusRatio = 0.6f; // 内側60%の位置から開始
-	  damageEffectConfig.randomOffsetRange = 0.5f; // ランダムオフセット範囲
-	  damageEffectConfig.lightningCount = 6;
+	  damageEffectConfig.sphereRadius = 2.3f;
+	  damageEffectConfig.sphereStartRadiusRatio = 0.75f; // 内側60%の位置から開始
+	  damageEffectConfig.randomOffsetRange = 0.0f; // ランダムオフセット範囲
+	  damageEffectConfig.lightningCount = 4;
 	  damageEffectConfig.color = { 0.2f, 0.8f, 1.0f, 1.0f }; // 赤色
-	  damageEffectConfig.noiseScale = 1.2f;
-	  damageEffectConfig.noiseSpeed = 20.0f;
+	  damageEffectConfig.noiseScale = 1.5f;
+	  damageEffectConfig.noiseSpeed = 15.0f;
 	  damageEffectConfig.segmentCount = 4; // セグメント数を減らして短くする
 	  damageEffectConfig.voxelScale = { 2.0f, 2.0f, 2.0f }; // ボクセルスケールを小さく
 	  damageEffectConfig.fadeInDuration = 0.25f;  // フェードイン時間
@@ -157,13 +157,13 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  // ボス用ダメージエフェクトの設定
 	  LightningEffectManager::EffectConfig damageEffectConfig;
 	  damageEffectConfig.useSphereDistribution = true;
-	  damageEffectConfig.sphereRadius = 2.0f;
-	  damageEffectConfig.sphereStartRadiusRatio = 0.6f; // 内側60%の位置から開始
-	  damageEffectConfig.randomOffsetRange = 0.5f; // ランダムオフセット範囲
-	  damageEffectConfig.lightningCount = 6;
+	  damageEffectConfig.sphereRadius = 2.3f;
+	  damageEffectConfig.sphereStartRadiusRatio = 0.75f; // 内側60%の位置から開始
+	  damageEffectConfig.randomOffsetRange = 0.0f; // ランダムオフセット範囲
+	  damageEffectConfig.lightningCount = 4;
 	  damageEffectConfig.color = { 0.2f, 0.8f, 1.0f, 1.0f }; // 青色
-	  damageEffectConfig.noiseScale = 1.2f;
-	  damageEffectConfig.noiseSpeed = 20.0f;
+	  damageEffectConfig.noiseScale = 1.5f;
+	  damageEffectConfig.noiseSpeed = 15.0f;
 	  damageEffectConfig.segmentCount = 4; // セグメント数を減らして短くする
 	  damageEffectConfig.voxelScale = { 2.0f, 2.0f, 2.0f }; // ボクセルスケールを小さく
 	  damageEffectConfig.fadeInDuration = 0.25f;  // フェードイン時間
@@ -304,7 +304,7 @@ void GameScene::Initialize(EngineSystem* engine) {
 		 biribiriSound_ = soundManager->CreateSoundResource("Resources/Audio/SE/biribiri.mp3");
 		 chargeSound_->SetVolume(0.5f);
 		 damageSound_->SetVolume(1.0f);
-		 biribiriSound_->SetVolume(0.5f);
+		 biribiriSound_->SetVolume(0.3f);
 	  }
 
 	  if (bgmSound_ && bgmSound_->IsValid()) {

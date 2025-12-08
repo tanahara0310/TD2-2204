@@ -121,6 +121,9 @@ void SparkNode::Active() {
 
    // スパークエフェクトの位置を更新
    if (boss_) {
+      boss_->SetAcceleration({ 0.0f, 0.0f });
+      boss_->SetVelocity({ 0.0f, 0.0f });
+      boss_->SetDirection({ 0.0f, 0.0f });
       boss_->UpdateSparkEffect();
    }
 
