@@ -18,6 +18,12 @@ void MoveToCenterAction::Reset() {
 void MoveToCenterAction::OnEnter() {
    // タイマー開始
    moveTimer_.Start(duration_, false);
+
+   if (boss_) {
+      // 初期加速度をリセット
+      boss_->SetAcceleration({ 0.0f, 0.0f });
+	  boss_->SetMaxSpeed(10.0f);
+   }
 }
 
 NodeState MoveToCenterAction::OnExecute() {
@@ -77,4 +83,5 @@ void MoveToCenterAction::ExecuteMove() {
    // 加速度を設定
    Vector2 acceleration = direction * moveSpeed_;
    boss_->SetAcceleration(acceleration);
+   boss_->SetDirection(direction);
 }

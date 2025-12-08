@@ -1,16 +1,28 @@
 #include "CameraController.h"
+#include "CinematicSequence.h"
+#include "CinematicPresetManager.h"
 #include "MathCore.h"
 #include "Application/TD2_2/Utility/GameUtils.h"
 #include "Engine/Math/Easing/EasingUtil.h"
 #include "Engine/Utility/Random/RandomGenerator.h"
+#include "Engine/Utility/JsonManager/JsonManager.h"
 #include <algorithm>
 #include <cmath>
 
 #ifdef _DEBUG
 #include <imgui.h>
+#include "CameraControllerEditor.h"
 #endif
 
 using namespace MathCore;
+
+CameraController::~CameraController() {
+#ifdef _DEBUG
+	// 手動でメモリ解放
+	delete editor_;
+	editor_ = nullptr;
+#endif
+}
 
 void CameraController::Initialize(Camera* camera, GameObject* object1, GameObject* object2)
 {
@@ -37,6 +49,11 @@ void CameraController::Initialize(Camera* camera, GameObject* object1, GameObjec
 	// カメラに初期設定を適用
 	camera_->SetTranslate(currentCameraPos_);
 	camera_->SetRotate(CalculateCameraRotation());
+
+#ifdef _DEBUG
+	// エディターの初期化
+	editor_ = new CameraControllerEditor(this);
+#endif
 }
 
 void CameraController::Update()
@@ -49,6 +66,26 @@ void CameraController::Update()
 
 	// シェイクの更新
 	UpdateShake(deltaTime);
+
+	// シーケンスが実行中の場合
+	if (activeSequence_ && activeSequence_->IsActive()) {
+		UpdateSequence(deltaTime);
+		return;
+	}
+
+	// カメラ演出が実行中の場合
+	if (cinematicActive_) {
+		UpdateCinematic(deltaTime);
+		return;
+	}
+
+	// 通常の追従モード
+	UpdateNormalMode();
+}
+
+void CameraController::UpdateNormalMode()
+{
+	float deltaTime = GameUtils::GetDeltaTime();
 
 	// ターゲット位置を計算（2つのオブジェクトの中点）
 	Vector3 newTargetPos = CalculateTargetPosition();
@@ -105,6 +142,382 @@ void CameraController::Update()
 	// カメラに適用
 	camera_->SetTranslate(finalCameraPos);
 	camera_->SetRotate(CalculateCameraRotation());
+}
+
+void CameraController::UpdateCinematic(float deltaTime)
+{
+	if (!cinematicActive_) {
+		return;
+	}
+
+	// タイマー更新
+	cinematicTimer_.Update(deltaTime);
+
+	// 演出が終了した場合
+	if (cinematicTimer_.IsFinished()) {
+		StopCinematic();
+		return;
+	}
+
+	float progress = cinematicTimer_.GetProgress();
+
+	// イージング適用
+	float t = progress;
+	if (cinematicConfig_.useEasing) {
+		EasingUtil::Type easingType = GetEasingTypeFromString(cinematicConfig_.easingType);
+		t = EasingUtil::Apply(progress, easingType);
+	}
+
+	Vector3 cameraPos;
+	Vector3 cameraRotation;
+
+	switch (cinematicConfig_.type) {
+	case CinematicType::FixedPosition:
+		// 固定位置
+		cameraPos = cinematicConfig_.startPosition;
+		cameraRotation = cinematicConfig_.startRotation;
+		break;
+
+	case CinematicType::LookAt:
+		// 特定位置を注視
+		cameraPos = cinematicConfig_.startPosition;
+		// 注視点方向を向く回転を計算
+		{
+			Vector3 direction = Vector::Normalize({
+				cinematicConfig_.targetPosition.x - cameraPos.x,
+				cinematicConfig_.targetPosition.y - cameraPos.y,
+				cinematicConfig_.targetPosition.z - cameraPos.z
+			});
+			
+			float yaw = std::atan2(direction.x, direction.z);
+			float pitch = std::asin(-direction.y);
+			cameraRotation = { pitch, yaw, 0.0f };
+		}
+		break;
+
+	case CinematicType::Dolly:
+		// 移動演出
+		cameraPos = EasingUtil::LerpVector3(
+			cinematicConfig_.startPosition,
+			cinematicConfig_.endPosition,
+			t
+		);
+		cameraRotation = EasingUtil::LerpVector3(
+			cinematicConfig_.startRotation,
+			cinematicConfig_.endRotation,
+			t
+		);
+		break;
+
+	case CinematicType::Arc:
+		// 円弧移動
+		{
+			Vector3 midPoint = {
+				(cinematicConfig_.startPosition.x + cinematicConfig_.endPosition.x) * 0.5f,
+				(cinematicConfig_.startPosition.y + cinematicConfig_.endPosition.y) * 0.5f,
+				(cinematicConfig_.startPosition.z + cinematicConfig_.endPosition.z) * 0.5f
+			};
+			
+			float arcHeight = cinematicConfig_.orbitRadius;
+			midPoint.y += arcHeight;
+			
+			// ベジェ曲線風の補間
+			Vector3 p0 = cinematicConfig_.startPosition;
+			Vector3 p1 = midPoint;
+			Vector3 p2 = cinematicConfig_.endPosition;
+			
+			float s = 1.0f - t;
+			cameraPos = {
+				s * s * p0.x + 2.0f * s * t * p1.x + t * t * p2.x,
+				s * s * p0.y + 2.0f * s * t * p1.y + t * t * p2.y,
+				s * s * p0.z + 2.0f * s * t * p1.z + t * t * p2.z
+			};
+			
+			cameraRotation = EasingUtil::LerpVector3(
+				cinematicConfig_.startRotation,
+				cinematicConfig_.endRotation,
+				t
+			);
+		}
+		break;
+
+	case CinematicType::Orbit:
+		// 対象の周りを回転
+		{
+			orbitAngle_ += deltaTime * cinematicConfig_.orbitSpeed;
+			
+			float radius = cinematicConfig_.orbitRadius;
+			cameraPos = {
+				cinematicConfig_.targetPosition.x + std::cos(orbitAngle_) * radius,
+				cinematicConfig_.targetPosition.y + cinematicConfig_.startPosition.y,
+				cinematicConfig_.targetPosition.z + std::sin(orbitAngle_) * radius
+			};
+			
+			// ターゲットを見る回転
+			Vector3 direction = Vector::Normalize({
+				cinematicConfig_.targetPosition.x - cameraPos.x,
+				cinematicConfig_.targetPosition.y - cameraPos.y,
+				cinematicConfig_.targetPosition.z - cameraPos.z
+			});
+			
+			float yaw = std::atan2(direction.x, direction.z);
+			float pitch = std::asin(-direction.y);
+			cameraRotation = { pitch, yaw, 0.0f };
+		}
+		break;
+
+	default:
+		cameraPos = cinematicConfig_.startPosition;
+		cameraRotation = cinematicConfig_.startRotation;
+		break;
+	}
+
+	// シェイクオフセットを適用
+	Vector3 finalCameraPos = {
+		cameraPos.x + shakeOffset_.x,
+		cameraPos.y + shakeOffset_.y,
+		cameraPos.z + shakeOffset_.z
+	};
+
+	// カメラに適用
+	camera_->SetTranslate(finalCameraPos);
+	camera_->SetRotate(cameraRotation);
+	
+	// 現在の状態を更新（演出終了後のスムーズな切り替え用）
+	currentCameraPos_ = cameraPos;
+	
+	// カメラの向きから注視点を計算（通常追従モードへの移行時に使用）
+	// ただし、演出中のカメラが通常追従モードの俯角と異なる場合があるため、
+	// 演出終了後の最初のフレームで targetPosition_ が急激に変化しないよう、
+	// 実際のオブジェクトの中点に近い値を使用
+	if (object1_ && object2_) {
+		// 実際のオブジェクトの中点を計算
+		Vector3 objectMidpoint = CalculateTargetPosition();
+		
+		// 演出中の注視点と実際の中点をブレンド
+		// 演出の進行度に応じて、徐々に実際の中点に近づける
+		float blendFactor = cinematicTimer_.GetProgress();
+		// 演出の後半（50%以降）で徐々に実際の中点に近づける
+		if (blendFactor > 0.5f) {
+			float transitionT = (blendFactor - 0.5f) * 2.0f; // 0.5～1.0 を 0.0～1.0 にマップ
+			transitionT = EasingUtil::Apply(transitionT, EasingUtil::Type::EaseInQuad);
+			targetPosition_ = EasingUtil::LerpVector3(
+				CalculateLookAtTarget(cameraPos, cameraRotation),
+				objectMidpoint,
+				transitionT
+			);
+		} else {
+			targetPosition_ = CalculateLookAtTarget(cameraPos, cameraRotation);
+		}
+	} else {
+		targetPosition_ = CalculateLookAtTarget(cameraPos, cameraRotation);
+	}
+}
+
+void CameraController::StartCinematic(const CinematicConfig& config)
+{
+	cinematicConfig_ = config;
+	cinematicActive_ = true;
+	cinematicTimer_.Start(config.duration, false);
+	orbitAngle_ = 0.0f;
+}
+
+void CameraController::StopCinematic()
+{
+	if (!cinematicActive_) {
+		return;
+	}
+
+	cinematicActive_ = false;
+	cinematicTimer_.Stop();
+
+	// 演出終了時に通常追従モードへスムーズに移行するため、
+	// 現在のカメラ位置と状態を維持したまま、
+	// 通常追従モードの計算に必要な情報を適切に初期化
+
+	// 現在のターゲット位置を維持（既に UpdateCinematic で更新済み）
+	// targetPosition_ はそのまま使用
+
+	// 現在のカメラ位置も維持（既に UpdateCinematic で更新済み）
+	// currentCameraPos_ はそのまま使用
+
+	// 現在の距離を計算し直す（通常追従モードの基準に合わせる）
+	// カメラ位置からターゲットへの実際の距離を計算
+	Vector3 cameraToTarget = {
+		targetPosition_.x - currentCameraPos_.x,
+		targetPosition_.y - currentCameraPos_.y,
+		targetPosition_.z - currentCameraPos_.z
+	};
+	
+	float actualDistance = Vector::Length(cameraToTarget);
+	
+	// 俯角を考慮した補正
+	// 通常追従モードと同じ計算方法で距離を調整
+	float cosAngle = std::cos(pitchAngle_);
+	if (cosAngle > 0.01f) {
+		// Z軸方向の距離成分から本来の距離を逆算
+		currentDistance_ = std::abs(cameraToTarget.z) / cosAngle;
+	} else {
+		currentDistance_ = actualDistance;
+	}
+
+	// 最小・最大距離でクランプ
+	currentDistance_ = std::clamp(currentDistance_, minDistance_, maxDistance_);
+	
+	// 演出終了時の距離が通常追従モードの理想距離から大きく離れている場合、
+	// オブジェクト間の距離から理想的なカメラ距離を計算し、
+	// 現在の距離をその理想距離に近づける（急激な変化を防ぐ）
+	if (object1_ && object2_) {
+		float objectDistance = CalculateObjectDistance();
+		float idealDistance = CalculateCameraDistance(objectDistance);
+		
+		// 演出終了時の距離と理想距離の差が大きい場合（5以上）、
+		// 中間の値を使用して急激な変化を緩和
+		float distanceDiff = std::abs(currentDistance_ - idealDistance);
+		if (distanceDiff > 5.0f) {
+			// 差が大きいほど、より積極的に理想距離に近づける
+			float blendFactor = std::clamp(distanceDiff / 30.0f, 0.3f, 0.7f);
+			currentDistance_ = currentDistance_ * (1.0f - blendFactor) + idealDistance * blendFactor;
+		}
+	}
+}
+
+bool CameraController::IsCinematicActive() const
+{
+	return cinematicActive_;
+}
+
+float CameraController::GetCinematicProgress() const
+{
+	if (!cinematicActive_) {
+		return 0.0f;
+	}
+	return cinematicTimer_.GetProgress();
+}
+
+bool CameraController::StartCinematicFromJson(const std::string& jsonPath)
+{
+	try {
+		auto& jsonManager = JsonManager::GetInstance();
+		json cinematicData = jsonManager.LoadJson(jsonPath);
+
+		CinematicConfig config;
+		
+		// タイプの読み込み
+		std::string typeStr = JsonManager::SafeGet<std::string>(cinematicData, "type", "None");
+		if (typeStr == "FixedPosition") {
+			config.type = CinematicType::FixedPosition;
+		} else if (typeStr == "LookAt") {
+			config.type = CinematicType::LookAt;
+		} else if (typeStr == "Dolly") {
+			config.type = CinematicType::Dolly;
+		} else if (typeStr == "Arc") {
+			config.type = CinematicType::Arc;
+		} else if (typeStr == "Orbit") {
+			config.type = CinematicType::Orbit;
+		} else {
+			config.type = CinematicType::None;
+		}
+
+		// 基本パラメータ
+		config.duration = JsonManager::SafeGet<float>(cinematicData, "duration", 3.0f);
+		config.startPosition = JsonManager::SafeGetVector3(cinematicData, "startPosition", {0, 0, 0});
+		config.endPosition = JsonManager::SafeGetVector3(cinematicData, "endPosition", {0, 0, 0});
+		config.targetPosition = JsonManager::SafeGetVector3(cinematicData, "targetPosition", {0, 0, 0});
+		config.startRotation = JsonManager::SafeGetVector3(cinematicData, "startRotation", {0, 0, 0});
+		config.endRotation = JsonManager::SafeGetVector3(cinematicData, "endRotation", {0, 0, 0});
+		config.orbitRadius = JsonManager::SafeGet<float>(cinematicData, "orbitRadius", 10.0f);
+		config.orbitSpeed = JsonManager::SafeGet<float>(cinematicData, "orbitSpeed", 1.0f);
+		config.useEasing = JsonManager::SafeGet<bool>(cinematicData, "useEasing", true);
+		config.easingType = JsonManager::SafeGet<std::string>(cinematicData, "easingType", "EaseInOutQuad");
+
+		StartCinematic(config);
+		return true;
+	}
+	catch (...) {
+		return false;
+	}
+}
+
+bool CameraController::SaveCinematicToJson(const std::string& jsonPath) const
+{
+	try {
+		auto& jsonManager = JsonManager::GetInstance();
+		json cinematicData;
+
+		// タイプの保存
+		std::string typeStr = "None";
+		switch (cinematicConfig_.type) {
+		case CinematicType::FixedPosition: typeStr = "FixedPosition"; break;
+		case CinematicType::LookAt: typeStr = "LookAt"; break;
+		case CinematicType::Dolly: typeStr = "Dolly"; break;
+		case CinematicType::Arc: typeStr = "Arc"; break;
+		case CinematicType::Orbit: typeStr = "Orbit"; break;
+		default: typeStr = "None"; break;
+		}
+		cinematicData["type"] = typeStr;
+
+		// パラメータの保存
+		cinematicData["duration"] = cinematicConfig_.duration;
+		cinematicData["startPosition"] = JsonManager::Vector3ToJson(cinematicConfig_.startPosition);
+		cinematicData["endPosition"] = JsonManager::Vector3ToJson(cinematicConfig_.endPosition);
+		cinematicData["targetPosition"] = JsonManager::Vector3ToJson(cinematicConfig_.targetPosition);
+		cinematicData["startRotation"] = JsonManager::Vector3ToJson(cinematicConfig_.startRotation);
+		cinematicData["endRotation"] = JsonManager::Vector3ToJson(cinematicConfig_.endRotation);
+		cinematicData["orbitRadius"] = cinematicConfig_.orbitRadius;
+		cinematicData["orbitSpeed"] = cinematicConfig_.orbitSpeed;
+		cinematicData["useEasing"] = cinematicConfig_.useEasing;
+		cinematicData["easingType"] = cinematicConfig_.easingType;
+
+		return jsonManager.SaveJson(jsonPath, cinematicData);
+	}
+	catch (...) {
+		return false;
+	}
+}
+
+Vector3 CameraController::CalculateLookAtTarget(const Vector3& position, const Vector3& rotation) const
+{
+	// カメラの前方向ベクトルを計算
+	float distance = 10.0f; // 適当な距離
+	
+	float cosPitch = std::cos(rotation.x);
+	float sinPitch = std::sin(rotation.x);
+	float cosYaw = std::cos(rotation.y);
+	float sinYaw = std::sin(rotation.y);
+	
+	Vector3 forward = {
+		sinYaw * cosPitch,
+		-sinPitch,
+		cosYaw * cosPitch
+	};
+	
+	return {
+		position.x + forward.x * distance,
+		position.y + forward.y * distance,
+		position.z + forward.z * distance
+	};
+}
+
+EasingUtil::Type CameraController::GetEasingTypeFromString(const std::string& typeStr) const
+{
+	if (typeStr == "Linear") return EasingUtil::Type::Linear;
+	if (typeStr == "EaseInQuad") return EasingUtil::Type::EaseInQuad;
+	if (typeStr == "EaseOutQuad") return EasingUtil::Type::EaseOutQuad;
+	if (typeStr == "EaseInOutQuad") return EasingUtil::Type::EaseInOutQuad;
+	if (typeStr == "EaseInCubic") return EasingUtil::Type::EaseInCubic;
+	if (typeStr == "EaseOutCubic") return EasingUtil::Type::EaseOutCubic;
+	if (typeStr == "EaseInOutCubic") return EasingUtil::Type::EaseInOutCubic;
+	if (typeStr == "EaseInQuart") return EasingUtil::Type::EaseInQuart;
+	if (typeStr == "EaseOutQuart") return EasingUtil::Type::EaseOutQuart;
+	if (typeStr == "EaseInOutQuart") return EasingUtil::Type::EaseInOutQuart;
+	if (typeStr == "EaseInQuint") return EasingUtil::Type::EaseInQuint;
+	if (typeStr == "EaseOutQuint") return EasingUtil::Type::EaseOutQuint;
+	if (typeStr == "EaseInOutQuint") return EasingUtil::Type::EaseInOutQuint;
+	if (typeStr == "EaseInBack") return EasingUtil::Type::EaseInBack;
+	if (typeStr == "EaseOutBack") return EasingUtil::Type::EaseOutBack;
+	if (typeStr == "EaseInOutBack") return EasingUtil::Type::EaseInOutBack;
+	return EasingUtil::Type::EaseInOutQuad; // デフォルト
 }
 
 void CameraController::StartShake(float duration, float magnitude, float frequency, float damping)
@@ -340,7 +753,6 @@ Vector3 CameraController::CalculatePlayerPriorityTargetPosition(const Vector3& m
 
 	// カメラの俯角を考慮
 	float cosAngle = std::cos(pitchAngle_);
-
 	// 現在のカメラ距離での可視範囲を計算
 	float horizontalDistance = cameraDistance * cosAngle;
 	float visibleHalfWidth = horizontalDistance * std::tan(effectiveHalfFovX);
@@ -544,147 +956,94 @@ Vector3 CameraController::CalculateCameraRotation() const
 	return { pitchAngle_, 0.0f, 0.0f };
 }
 
+bool CameraController::StartCinematicByName(const std::string& presetName)
+{
+	auto& presetManager = CinematicPresetManager::GetInstance();
+	const auto* config = presetManager.GetPreset(presetName);
+	
+	if (config) {
+		StartCinematic(*config);
+		return true;
+	}
+	
+	return false;
+}
+
+void CameraController::StartSequence(std::shared_ptr<CinematicSequence> sequence)
+{
+	// 既存の演出を停止
+	StopCinematic();
+	
+	activeSequence_ = sequence;
+	if (activeSequence_) {
+		activeSequence_->Start();
+	}
+}
+
+bool CameraController::StartSequenceByName(const std::string& sequenceName)
+{
+	auto& presetManager = CinematicPresetManager::GetInstance();
+	auto sequence = presetManager.GetSequence(sequenceName);
+	
+	if (sequence) {
+		StartSequence(sequence);
+		return true;
+	}
+	
+	return false;
+}
+
+bool CameraController::IsSequenceActive() const
+{
+	return activeSequence_ && activeSequence_->IsActive();
+}
+
+void CameraController::StopSequence()
+{
+	if (activeSequence_) {
+		activeSequence_->Stop();
+		activeSequence_.reset();
+	}
+}
+
+void CameraController::UpdateSequence(float deltaTime)
+{
+	if (!activeSequence_ || !activeSequence_->IsActive()) {
+		return;
+	}
+	
+	// シーケンスの更新
+	activeSequence_->Update(deltaTime);
+	
+	// 現在のカットを取得
+	const CinematicCut* currentCut = activeSequence_->GetCurrentCut();
+	if (!currentCut) {
+		return;
+	}
+	
+	// 現在のカットの演出設定を適用して演出を実行
+	// カット切り替わり時に自動的に演出が開始される
+	if (!cinematicActive_ || cinematicConfig_.type != currentCut->config.type ||
+		cinematicConfig_.startPosition.x != currentCut->config.startPosition.x) {
+		// 新しいカットの演出を開始
+		StartCinematic(currentCut->config);
+	}
+	
+	// 演出の更新（UpdateCinematicが呼ばれる）
+	UpdateCinematic(deltaTime);
+	
+	// シーケンスが終了したらリセット
+	if (!activeSequence_->IsActive()) {
+		activeSequence_.reset();
+	}
+}
+
 #ifdef _DEBUG
 void CameraController::DrawImGui()
 {
-	if (ImGui::Begin("Camera Controller")) {
-		ImGui::Text("=== Camera Parameters ===");
-
-		// 距離設定
-		ImGui::DragFloat("Min Distance", &minDistance_, 0.1f, 1.0f, 50.0f);
-		ImGui::DragFloat("Max Distance", &maxDistance_, 0.1f, 1.0f, 100.0f);
-		ImGui::DragFloat("Distance Scale", &distanceScale_, 0.01f, 0.5f, 5.0f);
-		ImGui::DragFloat("Margin Distance", &marginDistance_, 0.1f, 0.0f, 20.0f);
-
-		ImGui::Separator();
-
-		// カメラ位置・角度
-		ImGui::DragFloat("Height Offset", &heightOffset_, 0.1f, -10.0f, 20.0f);
-		ImGui::SliderAngle("Pitch Angle", &pitchAngle_, 0.0f, 90.0f);
-
-		ImGui::Separator();
-
-		// 画面パディング
-		ImGui::SliderFloat("Screen Padding", &screenPadding_, 0.0f, 0.4f, "%.2f");
-		ImGui::TextWrapped("画面端からの余白（0.15 = 15%%）");
-
-		ImGui::Separator();
-
-		// スムーズ設定
-		ImGui::DragFloat("Smooth Speed", &smoothSpeed_, 0.1f, 0.1f, 20.0f);
-		ImGui::TextWrapped("推奨値: 3.0-8.0 (低いほど滑らか、高いほど反応が速い)");
-
-		ImGui::Separator();
-
-		// ステージ境界設定
-		if (ImGui::CollapsingHeader("Stage Bounds")) {
-			ImGui::Checkbox("Use Stage Bounds", &useStageBounds_);
-			ImGui::TextWrapped("ステージ境界制限を有効にすると、カメラがステージ外を映さなくなります");
-
-			if (useStageBounds_) {
-				ImGui::Separator();
-				ImGui::Text("境界設定:");
-				ImGui::DragFloat("Min X", &stageBoundsMinX_, 0.5f, -200.0f, stageBoundsMaxX_);
-				ImGui::DragFloat("Max X", &stageBoundsMaxX_, 0.5f, stageBoundsMinX_, 200.0f);
-				ImGui::DragFloat("Min Y", &stageBoundsMinY_, 0.5f, -200.0f, stageBoundsMaxY_);
-				ImGui::DragFloat("Max Y", &stageBoundsMaxY_, 0.5f, stageBoundsMinY_, 200.0f);
-
-				ImGui::Separator();
-				ImGui::Text("ステージサイズ:");
-				float stageWidth = stageBoundsMaxX_ - stageBoundsMinX_;
-				float stageHeight = stageBoundsMaxY_ - stageBoundsMinY_;
-				ImGui::Text("幅: %.2f", stageWidth);
-				ImGui::Text("高さ: %.2f", stageHeight);
-			}
-		}
-
-		ImGui::Separator();
-
-		// カメラシェイク設定
-		if (ImGui::CollapsingHeader("Camera Shake")) {
-			ImGui::Text("状態: %s", IsShaking() ? "シェイク中" : "停止中");
-
-			if (IsShaking()) {
-				float progress = shakeTimer_.GetProgress();
-				ImGui::ProgressBar(progress, ImVec2(-1, 0), "進行度");
-				ImGui::Text("残り時間: %.2f秒", shakeTimer_.GetRemainingTime());
-			}
-
-			ImGui::Separator();
-			ImGui::Text("プリセット版:");
-			ImGui::TextWrapped("ボタンをクリックするだけでシェイクが開始されます");
-
-			if (ImGui::Button("小シェイク (0.3秒)", ImVec2(150, 0))) {
-				StartShake(ShakeIntensity::Small);
-			}
-			ImGui::SameLine();
-			ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "軽い衝撃用");
-
-			if (ImGui::Button("中シェイク (0.5秒)", ImVec2(150, 0))) {
-				StartShake(ShakeIntensity::Medium);
-			}
-			ImGui::SameLine();
-			ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "通常攻撃用");
-
-			if (ImGui::Button("大シェイク (0.8秒)", ImVec2(150, 0))) {
-				StartShake(ShakeIntensity::Large);
-			}
-			ImGui::SameLine();
-			ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "強力攻撃用");
-
-			ImGui::Separator();
-			ImGui::Text("カスタム版:");
-
-			static float customDuration = 1.0f;
-			static float customMagnitude = 0.3f;
-			static float customFrequency = 20.0f;
-			static float customDamping = 0.8f;
-
-			ImGui::DragFloat("継続時間", &customDuration, 0.1f, 0.1f, 5.0f);
-			ImGui::DragFloat("揺れの大きさ", &customMagnitude, 0.01f, 0.0f, 2.0f);
-			ImGui::DragFloat("周波数", &customFrequency, 1.0f, 1.0f, 60.0f);
-			ImGui::SliderFloat("減衰率", &customDamping, 0.0f, 1.0f);
-
-			if (ImGui::Button("カスタムシェイク開始", ImVec2(200, 0))) {
-				StartShake(customDuration, customMagnitude, customFrequency, customDamping);
-			}
-
-			ImGui::Separator();
-
-			if (ImGui::Button("シェイク停止", ImVec2(100, 0))) {
-				StopShake();
-			}
-		}
-
-		ImGui::Separator();
-
-		// 現在の状態表示
-		ImGui::Text("=== Current Status ===");
-		ImGui::Text("Target Position: (%.2f, %.2f, %.2f)",
-			targetPosition_.x, targetPosition_.y, targetPosition_.z);
-		ImGui::Text("Camera Position: (%.2f, %.2f, %.2f)",
-			currentCameraPos_.x, currentCameraPos_.y, currentCameraPos_.z);
-		
-		if (IsShaking()) {
-			ImGui::Text("Shake Offset: (%.3f, %.3f, %.3f)",
-				shakeOffset_.x, shakeOffset_.y, shakeOffset_.z);
-		}
-
-		ImGui::Text("Current Distance: %.2f", currentDistance_);
-
-		if (object1_ && object2_) {
-			float objDist = CalculateObjectDistance();
-			float horzDist = CalculateHorizontalDistance();
-			float vertDist = CalculateVerticalDistance();
-			ImGui::Text("Object Distance (3D): %.2f", objDist);
-			ImGui::Text("Horizontal Distance (X): %.2f", horzDist);
-			ImGui::Text("Vertical Distance (Y): %.2f", vertDist);
-			
-			ImGui::Separator();
-			ImGui::Text("Aspect Ratio: 16:9 (%.2f)", kAspectRatio);
-			ImGui::Text("FOV Y: %.2f rad (%.1f deg)", kFovY, kFovY * 180.0f / 3.14159f);
-		}
+	if (editor_) {
+		editor_->DrawImGui();
 	}
-	ImGui::End();
 }
 #endif
+

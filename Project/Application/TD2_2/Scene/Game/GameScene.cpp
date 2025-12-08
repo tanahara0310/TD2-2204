@@ -21,6 +21,7 @@
 #include "MathCore.h"
 #include "Scene/SceneManager.h"
 #include <numbers>
+#include "../../Camera/CinematicPresetManager.h"
 
 void GameScene::Initialize(EngineSystem* engine) {
    // 基底クラスの初期化
@@ -32,6 +33,9 @@ void GameScene::Initialize(EngineSystem* engine) {
    // ゲームオブジェクトの初期化
    auto modelManager = engine_->GetComponent<ModelManager>();
    auto& textureManager = TextureManager::GetInstance();
+
+   auto& cinematicPresetManager = CinematicPresetManager::GetInstance();
+   cinematicPresetManager.RegisterDefaultPresets();
 
    // 雷エフェクトマネージャーの初期化
    {
@@ -241,6 +245,7 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  background_ = background.get();
 	  background->Initialize(std::move(backgroundModel), backgroundTexture);
 	  gameObjects_.push_back(std::move(background));
+
    }
 
    // 雲
@@ -273,6 +278,7 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  }
    }
 
+   // UIの初期化
    {
 	  // UIの生成と初期化
 	  auto ui = std::make_unique<SpriteObject>();
@@ -294,6 +300,7 @@ void GameScene::Initialize(EngineSystem* engine) {
 
    uiAnimationTimer_.Start(3.0f);
 
+   // サウンドの初期化
    {
 	  auto soundManager = engine_->GetComponent<SoundManager>();
 	  if (soundManager) {
@@ -347,16 +354,18 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  cameraController_->SetDistanceScale(1.8f);
 	  cameraController_->SetHeightOffset(0.0f);
 	  cameraController_->SetPitchAngle(0.0f);
-	  cameraController_->SetSmoothSpeed(20.0f);
-	  cameraController_->SetMarginDistance(8.0f);
+	  cameraController_->SetSmoothSpeed(8.0f);
+	  cameraController_->SetMarginDistance(5.0f);  // 20.0f → 5.0f に変更（近づく処理を有効化）
 	  cameraController_->SetScreenPadding(0.35f);
 
 	  cameraController_->SetStageBounds(
 		 GameSceneConfig::kStageCenter.x - stageHalfWidth - frameWidth, GameSceneConfig::kStageCenter.x + stageHalfWidth + frameWidth,
 		 GameSceneConfig::kStageCenter.y - stageHalfHeight - frameHeight, GameSceneConfig::kStageCenter.y + stageHalfHeight + frameHeight);
+
+	  cameraController_->StartCinematicByName("Opening");
    }
 
-   // テスト用：直線雷を1本配置
+   // 雷
    {
 	  frameWidth = GameSceneConfig::kFrameSize.x;
 	  frameHeight = GameSceneConfig::kFrameSize.y;
@@ -402,6 +411,7 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  playerGauge_ = std::make_unique<GaugeUI>();
 	  auto sprites = playerGauge_->Initialize(cameraManager_.get(), 5.0f);
 	  playerGauge_->SetTarget(player_);
+	  playerGauge_->SetSegmentColor({ 0.8f, 0.0f, 0.0f, 1.0f });
 
 	  for (auto& sprite : sprites) {
 		 gameObjects_.push_back(std::move(sprite));
@@ -414,6 +424,7 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  auto sprites = bossGauge_->Initialize(cameraManager_.get(), 5.0f);
 	  bossGauge_->SetTarget(boss_);
 	  bossGauge_->SetFillColor({ 0.5f, 0.0f, 0.5f, 1.0f });
+	  bossGauge_->SetSegmentColor({ 0.8f, 0.0f, 0.0f, 1.0f });
 
 	  for (auto& sprite : sprites) {
 		 gameObjects_.push_back(std::move(sprite));
@@ -549,10 +560,10 @@ std::unique_ptr<BehaviorTree> GameScene::CreateBossBehaviorTree() {
 			.Action<FleeFromPlayerAction>(boss_, player_)
 			.Action<ChargeToPlayerAction>(boss_, player_)
 			.WeightedSelector()
-			.WeightedAction<MoveToCenterAction>(0.0f, boss_)
-			.WeightedAction<ShootEightWayAction>(0.0f, boss_, [this](const Vector3& pos, const Vector3& direction, float speed) { CreateBullet(pos, direction, BulletType::ElasticSphere, speed); })
-			.WeightedAction<ChargeToPlayerAction>(0.0f, boss_, player_)
-			.WeightedAction<SparkNode>(1.0f, boss_, sparkCollider_)
+			.WeightedAction<MoveToCenterAction>(0.3f, boss_)
+			.WeightedAction<ShootEightWayAction>(0.2f, boss_, [this](const Vector3& pos, const Vector3& direction, float speed) { CreateBullet(pos, direction, BulletType::ElasticSphere, speed); })
+			.WeightedAction<ChargeToPlayerAction>(0.4f, boss_, player_)
+			.WeightedAction<SparkNode>(0.1f, boss_, sparkCollider_)
 			.End()
 			.End()
 			.Action<FleeFromPlayerAction>(boss_, player_)

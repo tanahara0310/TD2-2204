@@ -1,0 +1,46 @@
+{
+  "cuts": [
+    {
+      "name": "衝撃のズームイン",
+      "duration": 0.8,
+      "type": "Dolly",
+      "startPosition": [0.0, 5.0, -40.0],
+      "endPosition": [0.0, 3.0, -20.0],
+      "targetPosition": [0.0, 0.0, 0.0],
+      "startRotation": [0.0, 0.0, 0.0],
+      "endRotation": [0.1, 0.0, 0.0],
+      "orbitRadius": 10.0,
+      "orbitSpeed": 1.0,
+      "useEasing": true,
+      "easingType": "EaseInQuad"
+    },
+    {
+      "name": "回転撮影",
+      "duration": 2.5,
+      "type": "Orbit",
+      "startPosition": [0.0, 5.0, 0.0],
+      "endPosition": [0.0, 5.0, 0.0],
+      "targetPosition": [0.0, 0.0, 0.0],
+      "startRotation": [0.0, 0.0, 0.0],
+      "endRotation": [0.0, 0.0, 0.0],
+      "orbitRadius": 25.0,
+      "orbitSpeed": 1.2,
+      "useEasing": true,
+      "easingType": "EaseInOutQuad"
+    },
+    {
+      "name": "引きのショット",
+      "duration": 1.5,
+      "type": "Dolly",
+      "startPosition": [0.0, 10.0, -30.0],
+      "endPosition": [0.0, 20.0, -50.0],
+      "targetPosition": [0.0, 0.0, 0.0],
+      "startRotation": [0.15, 0.0, 0.0],
+      "endRotation": [0.3, 0.0, 0.0],
+      "orbitRadius": 10.0,
+      "orbitSpeed": 1.0,
+      "useEasing": true,
+      "easingType": "EaseOutQuad"
+    }
+  ]
+}
