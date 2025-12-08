@@ -9,18 +9,14 @@
 #endif
 
 namespace {
-	// 定数をキャッシュ
-	constexpr float kVoxelSpacing = 0.5f;      // 0.3f → 0.5f に変更（配置間隔をさらに広げる）
-	constexpr float kVoxelScale = 3.0f;        // 1.5f → 3.0f に変更（ボクセルを3倍に）
-	constexpr float kMinDistance = kVoxelSpacing * 0.1f;
+	// 定数をキャッシュ（voxelSpacingはConfigから参照するため固定値を削除）
+	constexpr float kVoxelScale = 3.0f;
 	constexpr float kNoiseFrequency = 15.0f;
 	constexpr float kEdgeFadeStart = 0.15f;
 	constexpr float kEdgeFadeEnd = 0.85f;
 	constexpr float kEdgeFadeInvStart = 1.0f / kEdgeFadeStart;
 	constexpr float kEdgeFadeInvEnd = 1.0f / (1.0f - kEdgeFadeEnd);
-	
-	// アニメーション更新の間引き（毎フレームではなく数フレームに1回）
-	constexpr int kAnimationUpdateInterval = 4; // 3 → 4 に変更（4フレームに1回）
+	constexpr int kAnimationUpdateInterval = 4;
 }
 
 Lightning::~Lightning() = default;
@@ -179,9 +175,10 @@ bool Lightning::DrawImGui()
 		
 		ImGui::Text("ボクセル数: %zu", children_.size());
 		if (ImGui::IsItemHovered()) {
-			ImGui::SetTooltip("パス全体の距離÷0.2で自動計算される");
+			ImGui::SetTooltip("パス全体の距離÷間隔で自動計算される");
 		}
 		
+		ImGui::Text("配置間隔: %.2f", config_.voxelSpacing);
 		ImGui::Text("プール内ボクセル: %zu", voxelPool_.size());
 		if (ImGui::IsItemHovered()) {
 			ImGui::SetTooltip("再利用待ちのボクセル数（パフォーマンス最適化用）");
@@ -392,65 +389,53 @@ void Lightning::UpdateVoxelPositions()
 		return;
 	}
 
-	// 必要数の事前計算（最適化: sqrt呼び出しを減らす）
+	float minDistance = config_.voxelSpacing * 0.1f;
+
+	// 必要数の事前計算
 	size_t requiredVoxels = 0;
-	
 	for (size_t i = 0; i < pathPoints_.size() - 1; ++i) {
 		Vector3 diff = pathPoints_[i + 1] - pathPoints_[i];
 		float distanceSq = diff.x * diff.x + diff.y * diff.y + diff.z * diff.z;
-		
-		if (distanceSq >= kMinDistance * kMinDistance) {
-			// sqrt を ceilf の中でのみ使用
-			int voxelCount = static_cast<int>(std::ceilf(std::sqrt(distanceSq) / kVoxelSpacing));
+		if (distanceSq >= minDistance * minDistance) {
+			int voxelCount = static_cast<int>(std::ceilf(std::sqrt(distanceSq) / config_.voxelSpacing));
 			requiredVoxels += voxelCount;
 		}
 	}
 	requiredVoxels += 1;
-	
-	// 許容範囲を広げる（スケールが大きくなったため）
+
 	int voxelDiff = static_cast<int>(requiredVoxels) - static_cast<int>(children_.size());
-	if (std::abs(voxelDiff) > 3) { // 5 → 3 に変更（スケールが大きいので厳しめに）
+	if (std::abs(voxelDiff) > 3) {
 		RequestRegeneration();
 		return;
 	}
 
 	size_t voxelIndex = 0;
-
 	for (size_t i = 0; i < pathPoints_.size() - 1; ++i) {
 		Vector3 start = pathPoints_[i];
 		Vector3 end = pathPoints_[i + 1];
 		Vector3 segmentDiff = end - start;
 		float distanceSq = segmentDiff.x * segmentDiff.x + segmentDiff.y * segmentDiff.y + segmentDiff.z * segmentDiff.z;
-
-		if (distanceSq < kMinDistance * kMinDistance) {
+		if (distanceSq < minDistance * minDistance) {
 			continue;
 		}
-
 		float distance = std::sqrt(distanceSq);
-		int voxelCount = static_cast<int>(std::ceilf(distance / kVoxelSpacing));
+		int voxelCount = static_cast<int>(std::ceilf(distance / config_.voxelSpacing));
 		float invVoxelCount = 1.0f / static_cast<float>(voxelCount);
-
 		for (int j = 0; j < voxelCount; ++j) {
 			if (voxelIndex >= children_.size()) {
 				return;
 			}
-
 			float t = static_cast<float>(j) * invVoxelCount;
 			Vector3 position = start + segmentDiff * t;
-
-			// Voxelにキャスト（子オブジェクトは全てVoxelと仮定）
 			if (auto* voxel = static_cast<Voxel*>(children_[voxelIndex].get())) {
 				voxel->GetTransform().translate = position;
-				// スケールは変更しない（GenerateVoxelsで既に設定済み）
 			}
 			voxelIndex++;
 		}
 	}
-	
 	if (voxelIndex < children_.size()) {
 		if (auto* voxel = static_cast<Voxel*>(children_[voxelIndex].get())) {
 			voxel->GetTransform().translate = pathPoints_.back();
-			// スケールは変更しない
 		}
 	}
 }
@@ -459,34 +444,22 @@ void Lightning::PlaceVoxelsBetween(const Vector3& start, const Vector3& end)
 {
 	Vector3 diff = end - start;
 	float distanceSq = diff.x * diff.x + diff.y * diff.y + diff.z * diff.z;
-
-	// 距離が短すぎる場合は配置しない（最適化)
-	if (distanceSq < kMinDistance * kMinDistance) {
+	float minDistance = config_.voxelSpacing * 0.1f;
+	if (distanceSq < minDistance * minDistance) {
 		return;
 	}
-
 	float distance = std::sqrt(distanceSq);
-
-	// 必要なボクセル数（配置間隔を広げて数を削減）
-	int voxelCount = static_cast<int>(std::ceilf(distance / kVoxelSpacing));
+	int voxelCount = static_cast<int>(std::ceilf(distance / config_.voxelSpacing));
 	if (voxelCount < 1) {
 		voxelCount = 1;
 	}
-
 	float invVoxelCount = 1.0f / static_cast<float>(voxelCount);
-
-	// ボクセルを配置（プールから再利用）
 	for (int i = 0; i < voxelCount; ++i) {
-		// 位置計算
 		float t = static_cast<float>(i) * invVoxelCount;
 		Vector3 position = start + diff * t;
-
-		// プールからボクセルを取得（再利用）
 		auto voxel = GetVoxelFromPool();
 		voxel->GetTransform().translate = position;
-		voxel->GetTransform().scale = config_.voxelScale; // 設定からスケールを取得
-
-		// 子オブジェクトとして追加
+		voxel->GetTransform().scale = config_.voxelScale;
 		AddChild(std::move(voxel));
 	}
 }
