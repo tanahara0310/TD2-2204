@@ -20,6 +20,14 @@ public:
 	
 	/// @brief オブジェクト名を取得
 	const char* GetObjectName() const override { return "GekitotsuModel"; }
+	
+	/// @brief 色を設定
+	/// @param color 色（RGBA）
+	void SetColor(const Vector4& color);
+	
+	/// @brief 色を取得
+	/// @return 色（RGBA）
+	Vector4 GetColor() const;
 
 private:
 	Vector3 baseScale_ = { 1.0f, 1.0f, 1.0f }; // 基準スケール

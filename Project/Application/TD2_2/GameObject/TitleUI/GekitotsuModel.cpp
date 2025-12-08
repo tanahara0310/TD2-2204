@@ -1,5 +1,9 @@
 #include "GekitotsuModel.h"
 
+#ifdef _DEBUG
+#include <imgui.h>
+#endif
+
 void GekitotsuModel::Initialize(std::unique_ptr<Model> model, TextureManager::LoadedTexture texture) {
 	// 基底クラスの初期化
 	GameObject::Initialize(std::move(model), texture);
@@ -21,6 +25,19 @@ void GekitotsuModel::Draw(const ICamera* camera) {
 		return;
 	}
 
-	// モデルの描画
+	// モデルの描画（マテリアルの色はそのまま使用）
 	model_->Draw(transform_, camera, texture_.gpuHandle);
+}
+
+void GekitotsuModel::SetColor(const Vector4& color) {
+	if (model_ && model_->GetMaterialManager()) {
+		model_->GetMaterialManager()->SetColor(color);
+	}
+}
+
+Vector4 GekitotsuModel::GetColor() const {
+	if (model_ && model_->GetMaterialManager()) {
+		return model_->GetMaterialManager()->GetColor();
+	}
+	return { 1.0f, 1.0f, 1.0f, 1.0f };
 }

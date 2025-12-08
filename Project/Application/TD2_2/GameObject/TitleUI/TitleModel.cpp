@@ -21,6 +21,19 @@ void TitleModel::Draw(const ICamera* camera) {
 		return;
 	}
 
-	// モデルの描画
+	// モデルの描画（マテリアルの色はそのまま使用）
 	model_->Draw(transform_, camera, texture_.gpuHandle);
+}
+
+void TitleModel::SetColor(const Vector4& color) {
+	if (model_ && model_->GetMaterialManager()) {
+		model_->GetMaterialManager()->SetColor(color);
+	}
+}
+
+Vector4 TitleModel::GetColor() const {
+	if (model_ && model_->GetMaterialManager()) {
+		return model_->GetMaterialManager()->GetColor();
+	}
+	return { 1.0f, 1.0f, 1.0f, 1.0f };
 }

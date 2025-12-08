@@ -33,6 +33,9 @@ public:
 	  // アニメーション設定
 	  float fadeInDuration = 0.2f;  // フェードイン時間
 	  float fadeOutDuration = 0.3f; // フェードアウト時間
+
+	  // 初期表示設定（従来モードのみ適用）
+	  bool initialVisible = true;   // trueで初期表示、falseで初期非表示
    };
 
    LightningEffectManager() = default;
@@ -58,7 +61,7 @@ public:
    /// @brief エフェクトの表示状態を設定（アニメーション付き）
    void SetEffectVisible(int effectId, bool visible);
 
-   /// @brief エフェクトの即時表示制御（アニメーションなし、アルファ直接切替）
+   /// @brief 即座に表示状態を切り替える（フェード無し）
    void SetEffectVisibleImmediate(int effectId, bool visible);
 
    /// @brief エフェクトが表示中かどうか
