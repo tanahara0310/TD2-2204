@@ -22,7 +22,6 @@
 #include "../../Effect/Lightning/LightningEffectManager.h"
 #include "Engine/Utility/Random/RandomGenerator.h"
 
-
 void TitleScene::Initialize(EngineSystem* engine) {
 	BaseScene::Initialize(engine);
 
@@ -111,10 +110,11 @@ void TitleScene::Initialize(EngineSystem* engine) {
 
 		LightningEffectManager::EffectConfig config;
 		config.segmentCount = 4;               // 直線に近い少ないセグメント
-		config.noiseScale = 0.05f;             // ノイズ極小
-		config.noiseSpeed = 5.0f;              // ノイズ速度も低め
+		config.noiseScale = 0.8f;             // ノイズ極小
+		config.noiseSpeed = 60.0f;              // ノイズ速度も低め
 		config.randomOffsetRange = 0.02f;      // 始点終点の揺らぎ範囲も極小
-		config.voxelScale = { 0.5f, 0.5f, 0.5f }; // ボクセルサイズ小さめ
+		config.voxelScale = { 0.8f, 0.8f, 0.8f }; // ボクセルサイズ小さめ
+		config.initialVisible = false; // タイトルでは初期非表示
 
 		// 色設定
 		Vector4 startColor = { 0.6f, 0.9f, 1.0f, 1.0f };
