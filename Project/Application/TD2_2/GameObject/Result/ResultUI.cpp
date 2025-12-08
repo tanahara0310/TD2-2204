@@ -139,12 +139,12 @@ void ResultUI::Update() {
 
 	// 「タイトルへ」モデルのアニメーション
 	if (isAnimationToTitle_) {
-
+		toTitleModel_->GetTransform().rotate.y += std::numbers::pi_v<float>;
 	}
 
 	// 「リスタート」モデルのアニメーション
 	if (isAnimationReStart_) {
-	
+		toTitleModel_->GetTransform().rotate.y += std::numbers::pi_v<float>;
 	}
 
 	// 選択演出の更新

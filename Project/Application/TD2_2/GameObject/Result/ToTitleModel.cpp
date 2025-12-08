@@ -6,6 +6,9 @@ void ToTitleModel::Initialize(std::unique_ptr<Model> model, TextureManager::Load
 
 	transform_.translate = {4.0f, -4.0f, -47.0f};
 
+	// クォータニオン回転モードに切り替え（Quaternion を使う）
+	transform_.SetRotationMode(WorldTransform::RotationMode::Quaternion);
+
 	transform_.TransferMatrix();
 }
 
@@ -17,6 +20,20 @@ void ToTitleModel::Update() {
 
 	// 呼吸アニメーションの更新
 	UpdateBreathingAnimation(deltaTime);
+
+	// Y軸回転（クォータニオンによる増分回転を適用）
+	//{
+	//	// 回転速度（ラジアン / 秒） -- 必要に応じて調整
+	//	const float kYawSpeed = 1.0f; // 1 rad/s
+	//	float angleDelta = kYawSpeed * deltaTime;
+
+	//	// 増分クォータニオンを作成して既存の回転に合成する
+	//	Quaternion dq = MathCore::QuaternionMath::MakeRotateAxisAngle({0.0f, 1.0f, 0.0f}, angleDelta);
+	//	transform_.quaternionRotate = MathCore::QuaternionMath::Multiply(dq, transform_.quaternionRotate);
+
+	//	// 数値安定化のため正規化
+	//	transform_.quaternionRotate = MathCore::QuaternionMath::Normalize(transform_.quaternionRotate);
+	//}
 
 	transform_.TransferMatrix(); 
 }

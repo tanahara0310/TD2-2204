@@ -19,6 +19,9 @@ public:
 	/// @brief 選択状態を取得
 	bool IsSelected() const { return isSelected_; }
 
+	/// @brief 回転アニメーションフラグを設定
+	void SetIsAnimation(bool isAnimation) { isRotateAnimation_ = isAnimation; }
+
 private:
 	/// @brief 呼吸アニメーションの更新
 	void UpdateBreathingAnimation(float deltaTime);
@@ -34,4 +37,8 @@ private:
 	static constexpr float kBreathSpeed = 3.0f;     // 呼吸の速度
 	static constexpr float kBreathAmplitude = 0.1f; // 呼吸の振幅（スケールの変化量）
 	static constexpr float kBaseScale = 1.0f;       // 基本スケール
+
+	float angleY_ = 0.0f;
+
+	bool isRotateAnimation_ = false;
 };
