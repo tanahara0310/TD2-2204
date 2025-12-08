@@ -27,30 +27,106 @@ void LightningEffectManager::Initialize(ModelManager* modelManager, TextureManag
 std::vector<Vector3> LightningEffectManager::GenerateSpherePoints(int count, float radius)
 {
    std::vector<Vector3> points;
+   auto& random = RandomGenerator::GetInstance();
 
-   // ⭐︎ 変更：フィボナッチスフィアによる点の生成
-   const float phi = (1.0f + std::sqrt(5.0f)) / 2.0f; // 黄金比
-   const float angleIncrement = 2.0f * std::numbers::pi_v<float> *phi;
+   // 特定の少数カウントでは正多面体の頂点を使用（均等性が保証される）
+   if (count == 4) {
+	  // 正四面体の頂点
+	  const float a = 1.0f / std::sqrt(3.0f);
+	  points = {
+		 { a,  a,  a},
+		 { a, -a, -a},
+		 {-a,  a, -a},
+		 {-a, -a,  a}
+	  };
+   } else if (count == 6) {
+	  // 正八面体の頂点（軸方向）
+	  points = {
+		 { 1.0f,  0.0f,  0.0f},
+		 {-1.0f,  0.0f,  0.0f},
+		 { 0.0f,  1.0f,  0.0f},
+		 { 0.0f, -1.0f,  0.0f},
+		 { 0.0f,  0.0f,  1.0f},
+		 { 0.0f,  0.0f, -1.0f}
+	  };
+   } else if (count == 8) {
+	  // 立方体の頂点
+	  const float a = 1.0f / std::sqrt(3.0f);
+	  points = {
+		 { a,  a,  a},
+		 { a,  a, -a},
+		 { a, -a,  a},
+		 { a, -a, -a},
+		 {-a,  a,  a},
+		 {-a,  a, -a},
+		 {-a, -a,  a},
+		 {-a, -a, -a}
+	  };
+   } else if (count == 12) {
+	  // 正二十面体の頂点
+	  const float phi = (1.0f + std::sqrt(5.0f)) / 2.0f; // 黄金比
+	  const float a = 1.0f / std::sqrt(1.0f + phi * phi);
+	  const float b = phi * a;
+	  points = {
+		 { 0,  a,  b}, { 0,  a, -b}, { 0, -a,  b}, { 0, -a, -b},
+		 { a,  b,  0}, { a, -b,  0}, {-a,  b,  0}, {-a, -b,  0},
+		 { b,  0,  a}, { b,  0, -a}, {-b,  0,  a}, {-b,  0, -a}
+	  };
+   } else if (count == 20) {
+	  // 正十二面体の頂点
+	  const float phi = (1.0f + std::sqrt(5.0f)) / 2.0f;
+	  const float invPhi = 1.0f / phi;
+	  const float a = 1.0f / std::sqrt(3.0f);
+	  points = {
+		 // 立方体の頂点
+		 { a,  a,  a}, { a,  a, -a}, { a, -a,  a}, { a, -a, -a},
+		 {-a,  a,  a}, {-a,  a, -a}, {-a, -a,  a}, {-a, -a, -a},
+		 // 長方形の頂点（3つの直交する長方形）
+		 { 0,  invPhi * a,  phi * a}, { 0,  invPhi * a, -phi * a},
+		 { 0, -invPhi * a,  phi * a}, { 0, -invPhi * a, -phi * a},
+		 { invPhi * a,  phi * a,  0}, { invPhi * a, -phi * a,  0},
+		 {-invPhi * a,  phi * a,  0}, {-invPhi * a, -phi * a,  0},
+		 { phi * a,  0,  invPhi * a}, { phi * a,  0, -invPhi * a},
+		 {-phi * a,  0,  invPhi * a}, {-phi * a,  0, -invPhi * a}
+	  };
+   } else {
+	  // その他のカウント：改良版フィボナッチスフィア
+	  const float goldenRatio = (1.0f + std::sqrt(5.0f)) / 2.0f;
+	  const float angleIncrement = 2.0f * std::numbers::pi_v<float> / (goldenRatio * goldenRatio);
 
-   for (int i = 0; i < count; ++i) {
-	  float z = 1.0f - (2.0f * i) / (count - 1); // Z軸上の位置 (-1.0f ～ 1.0f)
-	  float r = std::sqrt(std::max(0.0f, 1.0f - z * z)); // 半径（球の断面）
+	  for (int i = 0; i < count; ++i) {
+		 // インデックスを0.5オフセットして端点の偏りを軽減
+		 float t = (static_cast<float>(i) + 0.5f) / static_cast<float>(count);
+		 float z = 1.0f - 2.0f * t; // Z軸上の位置 (1.0f ～ -1.0f)
+		 float r = std::sqrt(std::max(0.0f, 1.0f - z * z));
 
-	  float theta = angleIncrement * i;
+		 float theta = angleIncrement * i;
 
-	  float x = r * std::cos(theta);
-	  float y = r * std::sin(theta);
+		 float x = r * std::cos(theta);
+		 float y = r * std::sin(theta);
 
-	  // 半径にもランダム性を追加 (既存のコードを維持)
-	  auto& random = RandomGenerator::GetInstance();
-	  float radiusVariation = random.GetFloat(0.9f, 1.1f);
-
-	  points.push_back({
-		  x * radius * radiusVariation,
-		  y * radius * radiusVariation,
-		  z * radius * radiusVariation
-		 });
+		 points.push_back({x, y, z});
+	  }
    }
+
+   // 正規化して半径を適用し、わずかなランダム性を追加
+   for (auto& point : points) {
+	  // 正規化
+	  float length = std::sqrt(point.x * point.x + point.y * point.y + point.z * point.z);
+	  if (length > 0.0f) {
+		 point.x /= length;
+		 point.y /= length;
+		 point.z /= length;
+	  }
+
+	  // 半径とわずかなランダム性を適用
+	  float radiusVariation = random.GetFloat(0.95f, 1.05f);
+	  point.x *= radius * radiusVariation;
+	  point.y *= radius * radiusVariation;
+	  point.z *= radius * radiusVariation;
+   }
+
+   // シャッフルは行わない（均等配置を維持するため）
 
    return points;
 }
@@ -95,9 +171,9 @@ int LightningEffectManager::CreateEffect(const Vector3& position, const EffectCo
 		 // 終点：球面上に小さなランダムオフセット
 		 float endRadiusVariation = random.GetFloat(0.95f, 1.05f);
 		 Vector3 endPoint = {
-			 point.x * endRadiusVariation + random.GetFloat(-config.randomOffsetRange * 0.3f, config.randomOffsetRange * 0.3f),
-			 point.y * endRadiusVariation + random.GetFloat(-config.randomOffsetRange * 0.3f, config.randomOffsetRange * 0.3f),
-			 point.z * endRadiusVariation + random.GetFloat(-config.randomOffsetRange * 0.3f, config.randomOffsetRange * 0.3f)
+		     point.x * endRadiusVariation,
+			 point.y * endRadiusVariation,
+			 point.z * endRadiusVariation
 		 };
 
 		 Lightning::Config lightningConfig;
@@ -184,7 +260,7 @@ void LightningEffectManager::UpdateAllEffects()
 	  if (effect.state == AnimationState::Visible) {
 
 		 // ノイズの基準時間（currentTime + ランダムオフセット）
-		 float time = currentTime * 5.0f + effect.startEndNoiseOffset; // 5.0f はノイズ速度の例
+		 float time = currentTime + effect.startEndNoiseOffset; // 5.0f はノイズ速度の例
 		 float noiseRange = effect.config.randomOffsetRange; // 既存のランダムオフセット範囲を使用
 
 		 for (auto& lightningData : effect.lightnings) {
@@ -303,6 +379,8 @@ void LightningEffectManager::UpdateAllEffects()
 				  lightningData.lightning->ApplyConfigChanges();
 			   }
 			}
+
+			effect.startEndNoiseOffset = GameUtils::RandomFloat(0.0f, 1000.0f);
 		 }
 	  }
    }

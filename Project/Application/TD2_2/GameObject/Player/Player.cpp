@@ -366,7 +366,7 @@ void Player::InitializeCharge() {
 
    chargeTimer_.Start(chargeDuration_, false);
 
-   StartRotateAroundAxis(chargeDuration_, 3.0f);
+   StartRotateAroundAxis(chargeDuration_, 2.0f);
 
    direction_ = GetMoveDirection() * chargeSpeed_;
 
