@@ -567,7 +567,10 @@ std::string ParticlePresetManager::GetFileNameWithoutExtension(const std::string
 
 bool ParticlePresetManager::SaveCurrentPreset(ParticleSystem* particleSystem)
 {
-	// TODO: MainModule対応
-	(void)particleSystem;
-	return false;
+	if (currentPresetPath_.empty()) {
+		std::cerr << "Error: No preset path set for overwrite save." << std::endl;
+		return false;
+	}
+
+	return SavePreset(particleSystem, currentPresetPath_);
 }

@@ -16,6 +16,7 @@
 #include "Engine/Graphics/Light/LightData.h"
 #include "Engine/Graphics/Light/LightManager.h"
 #include "Engine/Graphics/Render/RenderManager.h"
+#include "Engine/Particle/ParticlePresetManager.h"
 #include "EngineSystem/EngineSystem.h"
 #include "MathCore.h"
 #include "Scene/SceneManager.h"
@@ -421,9 +422,10 @@ void GameScene::Initialize(EngineSystem* engine) {
 }
 
 void GameScene::Update() {
-   BaseScene::Update();
+	BaseScene::Update();
 
-   time_ += GameUtils::GetDeltaTime();
+	time_ += GameUtils::GetDeltaTime();
+
 
 #ifdef _DEBUG
 
@@ -441,80 +443,80 @@ void GameScene::Update() {
 	  cameraController_->Update();
    }
 
-   // 雷エフェクトの更新
-   if (lightningManager_) {
-	  lightningManager_->UpdateAllEffects();
-   }
+	// 雷エフェクトの更新
+	if (lightningManager_) {
+		lightningManager_->UpdateAllEffects();
+	}
 
-   StartUIAnimation();
+	StartUIAnimation();
 
-   // 削除予定の弾をリストから削除（gameObjects_からは次のフレームの最初に削除）
-   bullets_.remove_if([](Bullet* bullet) { return bullet == nullptr || !bullet->IsActive(); });
+	// 削除予定の弾をリストから削除（gameObjects_からは次のフレームの最初に削除）
+	bullets_.remove_if([](Bullet* bullet) { return bullet == nullptr || !bullet->IsActive(); });
 
-   // 新しいオブジェクトを追加
-   if (!newGameObjectsQueue_.empty()) {
-	  for (auto& newObj : newGameObjectsQueue_) {
-		 gameObjects_.push_back(std::move(newObj));
-	  }
-	  newGameObjectsQueue_.clear();
-   }
+	// 新しいオブジェクトを追加
+	if (!newGameObjectsQueue_.empty()) {
+		for (auto& newObj : newGameObjectsQueue_) {
+			gameObjects_.push_back(std::move(newObj));
+		}
+		newGameObjectsQueue_.clear();
+	}
 
-   if (playerHitPointUI_) {
-	  playerHitPointUI_->SetHP(player_->GetHP());
-   }
+	if (playerHitPointUI_) {
+		playerHitPointUI_->SetHP(player_->GetHP());
+	}
 
-   if (bossHitPointUI_) {
-	  bossHitPointUI_->SetHP(boss_->GetHP());
-   }
+	if (bossHitPointUI_) {
+		bossHitPointUI_->SetHP(boss_->GetHP());
+	}
 
-   if (boss_->GetHP() <= 0 || player_->GetHP() <= 0) {
-	  sceneManager_->ChangeScene("ResultScene");
+	if (boss_->GetHP() <= 0 || player_->GetHP() <= 0) {
+		sceneManager_->ChangeScene("ResultScene");
 
 	  json clearTimeData = JsonManager::GetInstance().LoadJson("Resources/Data/CurrentClearTime.json");
 	  clearTimeData["CurrentClearTime"] = time_;
 
-	  JsonManager::GetInstance().SaveJson("Resources/Data/CurrentClearTime.json", clearTimeData);
+		JsonManager::GetInstance().SaveJson("Resources/Data/CurrentClearTime.json", clearTimeData);
 
-	  json resultData = JsonManager::GetInstance().LoadJson("Resources/Data/result.json");
+		json resultData = JsonManager::GetInstance().LoadJson("Resources/Data/result.json");
 
-	  if (boss_->GetHP() <= 0) {
-		 resultData["isWin"] = true;
-	  }
+		if (boss_->GetHP() <= 0) {
+			resultData["isWin"] = true;
+		}
 
-	  if (player_->GetHP() <= 0) {
-		 resultData["isWin"] = false;
-	  }
+		if (player_->GetHP() <= 0) {
+			resultData["isWin"] = false;
+		}
 
-	  JsonManager::GetInstance().SaveJson("Resources/Data/result.json", resultData);
-   }
+		JsonManager::GetInstance().SaveJson("Resources/Data/result.json", resultData);
+	}
 
-   // 帯電ゲージの更新
+	// 帯電ゲージの更新
 
-   if (playerGauge_) {
-	  playerGauge_->SetValue(player_->GetStoredEnergy());
-	  playerGauge_->Update();
-   }
+	if (playerGauge_) {
+		playerGauge_->SetValue(player_->GetStoredEnergy());
+		playerGauge_->Update();
+	}
 
-   if (bossGauge_) {
-	  bossGauge_->SetValue(boss_->GetStoredEnergy());
-	  bossGauge_->Update();
-   }
+	if (bossGauge_) {
+		bossGauge_->SetValue(boss_->GetStoredEnergy());
+		bossGauge_->Update();
+	}
 #ifdef _DEBUG
-   // カメラコントローラーのデバッグUI
-   if (cameraController_) {
-	  cameraController_->DrawImGui();
-   }
+	// カメラコントローラーのデバッグUI
+	if (cameraController_) {
+		cameraController_->DrawImGui();
+	}
 #endif
 
-   // コライダー登録
-   RegisterAllColliders();
+	// コライダー登録
+	RegisterAllColliders();
 
-   // 衝突判定
-   CheckCollisions();
+	// 衝突判定
+	CheckCollisions();
 }
 
 void GameScene::Draw() {
-   BaseScene::Draw();
+	BaseScene::Draw();
 }
 
 void GameScene::Finalize() {}
@@ -560,129 +562,183 @@ std::unique_ptr<BehaviorTree> GameScene::CreateBossBehaviorTree() {
 }
 
 void GameScene::InitializeFrames() {
-   auto modelManager = engine_->GetComponent<ModelManager>();
-   auto& textureManager = TextureManager::GetInstance();
+	auto modelManager = engine_->GetComponent<ModelManager>();
+	auto& textureManager = TextureManager::GetInstance();
 
-   size_t row = static_cast<size_t>(GameSceneConfig::kStageSize.y / GameSceneConfig::kFrameSize.y);
-   size_t col = static_cast<size_t>(GameSceneConfig::kStageSize.x / GameSceneConfig::kFrameSize.x);
+	size_t row = static_cast<size_t>(GameSceneConfig::kStageSize.y / GameSceneConfig::kFrameSize.y);
+	size_t col = static_cast<size_t>(GameSceneConfig::kStageSize.x / GameSceneConfig::kFrameSize.x);
 
-   float startX = GameSceneConfig::kStageCenter.x - GameSceneConfig::kStageSize.x / 2.0f;
-   float startY = GameSceneConfig::kStageCenter.y - GameSceneConfig::kStageSize.y / 2.0f;
+	float startX = GameSceneConfig::kStageCenter.x - GameSceneConfig::kStageSize.x / 2.0f;
+	float startY = GameSceneConfig::kStageCenter.y - GameSceneConfig::kStageSize.y / 2.0f;
 
-   auto frameTexture = textureManager.Load("Resources/Textures/Frame.png");
+	auto frameTexture = textureManager.Load("Resources/Textures/Frame.png");
 
-   for (size_t y = 0; y <= row; ++y) {
-	  for (size_t x = 0; x <= col; ++x) {
+	for (size_t y = 0; y <= row; ++y) {
+		for (size_t x = 0; x <= col; ++x) {
 
-		 bool isEdge = (y == 0 || y == row || x == 0 || x == col);
-		 if (!isEdge)
-			continue;
+			bool isEdge = (y == 0 || y == row || x == 0 || x == col);
+			if (!isEdge)
+				continue;
 
-		 bool isCorner = (y == 0 || y == row) && (x == 0 || x == col);
+			bool isCorner = (y == 0 || y == row) && (x == 0 || x == col);
 
-		 std::unique_ptr<Model> model;
-		 float rotation = 0.0f;
-		 using std::numbers::pi_v;
+			std::unique_ptr<Model> model;
+			float rotation = 0.0f;
+			using std::numbers::pi_v;
 
-		 if (isCorner) {
-			model = modelManager->CreateStaticModel("Resources/Models/FrameCorner/FrameCorner.obj");
+			if (isCorner) {
+				model = modelManager->CreateStaticModel("Resources/Models/FrameCorner/FrameCorner.obj");
 
-			// 左下 → 右下 → 右上 → 左上 の順に +90°ずつ回転
-			if (x == 0 && y == 0) {
-			   rotation = 0.0f; // 左下
-			} else if (x == col && y == 0) {
-			   rotation = pi_v<float> / 2.0f; // 右下
-			} else if (x == col && y == row) {
-			   rotation = pi_v<float>; // 右上
-			} else if (x == 0 && y == row) {
-			   rotation = pi_v<float> *1.5f; // 左上
-			}
+				// 左下 → 右下 → 右上 → 左上 の順に +90°ずつ回転
+				if (x == 0 && y == 0) {
+					rotation = 0.0f; // 左下
+				} else if (x == col && y == 0) {
+					rotation = pi_v<float> / 2.0f; // 右下
+				} else if (x == col && y == row) {
+					rotation = pi_v<float>; // 右上
+				} else if (x == 0 && y == row) {
+					rotation = pi_v<float> *1.5f; // 左上
+				}
 
-		 } else {
-			model = modelManager->CreateStaticModel("Resources/Models/Frame/Frame.obj");
-
-			// 上下は横向き（回転なし）
-			// 左右は縦向き（+90°）
-			if (y == 0 || y == row) {
-			   rotation = 0.0f;
 			} else {
-			   rotation = pi_v<float> / 2.0f;
+				model = modelManager->CreateStaticModel("Resources/Models/Frame/Frame.obj");
+
+				// 上下は横向き（回転なし）
+				// 左右は縦向き（+90°）
+				if (y == 0 || y == row) {
+					rotation = 0.0f;
+				} else {
+					rotation = pi_v<float> / 2.0f;
+				}
 			}
-		 }
 
-		 auto frame = std::make_unique<Frame>();
-		 frame->Initialize(std::move(model), frameTexture);
+			auto frame = std::make_unique<Frame>();
+			frame->Initialize(std::move(model), frameTexture);
 
-		 frame->GetTransform().translate = { startX + x * GameSceneConfig::kFrameSize.x, startY + y * GameSceneConfig::kFrameSize.y, 0.0f };
+			frame->GetTransform().translate = { startX + x * GameSceneConfig::kFrameSize.x, startY + y * GameSceneConfig::kFrameSize.y, 0.0f };
 
-		 frame->GetTransform().rotate.z = rotation;
+			frame->GetTransform().rotate.z = rotation;
 
-		 frame->GetTransform().SetRotationMode(WorldTransform::RotationMode::Euler);
+			frame->GetTransform().SetRotationMode(WorldTransform::RotationMode::Euler);
 
-		 frames_.push_back(frame.get());
-		 gameObjects_.push_back(std::move(frame));
-	  }
-   }
+			frames_.push_back(frame.get());
+			gameObjects_.push_back(std::move(frame));
+		}
+	}
 }
 
 Bullet* GameScene::CreateBullet(const Vector3& position, const Vector3& direction, BulletType type, float speed) {
-   auto modelManager = engine_->GetComponent<ModelManager>();
-   auto& textureManager = TextureManager::GetInstance();
+	auto modelManager = engine_->GetComponent<ModelManager>();
+	auto& textureManager = TextureManager::GetInstance();
 
-   // タイプに応じたモデルとテクスチャのパス
-   std::string modelPath;
-   std::string texturePath;
-   CollisionLayer collisionLayer;
+	// タイプに応じたモデルとテクスチャのパス
+	std::string modelPath;
+	std::string texturePath;
+	CollisionLayer collisionLayer;
 
-   switch (type) {
-	  case BulletType::LightningBullet:
-		 modelPath = "Resources/Models/Ball/Ball.obj";
-		 texturePath = "Resources/Textures/Ball.png";
-		 collisionLayer = CollisionLayer::LightningBullet;
-		 break;
-	  case BulletType::ElasticSphere:
-		 modelPath = "Resources/Models/Ball/Ball.obj";
-		 texturePath = "Resources/Textures/Ball.png";
-		 collisionLayer = CollisionLayer::ElasticSphere;
-		 break;
-	  default:
-		 modelPath = "Resources/Models/Ball/Ball.obj";
-		 texturePath = "Resources/Textures/Ball.png";
-		 collisionLayer = CollisionLayer::LightningBullet;
-		 break;
-   }
+	switch (type) {
+	case BulletType::LightningBullet:
+		modelPath = "Resources/Models/Ball/Ball.obj";
+		texturePath = "Resources/Textures/Ball.png";
+		collisionLayer = CollisionLayer::LightningBullet;
+		break;
+	case BulletType::ElasticSphere:
+		modelPath = "Resources/Models/Ball/Ball.obj";
+		texturePath = "Resources/Textures/Ball.png";
+		collisionLayer = CollisionLayer::ElasticSphere;
+		break;
+	default:
+		modelPath = "Resources/Models/Ball/Ball.obj";
+		texturePath = "Resources/Textures/Ball.png";
+		collisionLayer = CollisionLayer::LightningBullet;
+		break;
+	}
 
-   // 弾のモデルとテクスチャを読み込み
-   auto bulletModel = modelManager->CreateStaticModel(modelPath);
-   auto bulletTexture = textureManager.Load(texturePath);
+	// 弾のモデルとテクスチャを読み込み
+	auto bulletModel = modelManager->CreateStaticModel(modelPath);
+	auto bulletTexture = textureManager.Load(texturePath);
 
-   // 弾を生成
-   auto bullet = std::make_unique<Bullet>();
-   bullet->Initialize(std::move(bulletModel), bulletTexture, direction);
-   bullet->SetWorldPosition(position);
-   bullet->SetSpeed(speed);
+	// 弾を生成
+	auto bullet = std::make_unique<Bullet>();
+	bullet->Initialize(std::move(bulletModel), bulletTexture, direction);
+	bullet->SetWorldPosition(position);
+	bullet->SetSpeed(speed);
 
-   // コライダーレイヤーを設定
-   if (bullet->GetCollider()) {
-	  bullet->GetCollider()->SetLayer(collisionLayer);
-   }
+	// コライダーレイヤーを設定
+	if (bullet->GetCollider()) {
+		bullet->GetCollider()->SetLayer(collisionLayer);
+	}
 
-   Bullet* bulletPtr = bullet.get();
-   bullets_.push_back(bulletPtr);
-   newGameObjectsQueue_.push_back(std::move(bullet));
+	Bullet* bulletPtr = bullet.get();
+	bullets_.push_back(bulletPtr);
+	newGameObjectsQueue_.push_back(std::move(bullet));
 
-   return bulletPtr;
+	return bulletPtr;
 }
 
 void GameScene::StartUIAnimation() {
-   if (!startUI_)
-	  return;
-   if (uiAnimationTimer_.IsFinished())
-	  return;
+	if (!startUI_)
+		return;
+	if (uiAnimationTimer_.IsFinished())
+		return;
 
-   uiAnimationTimer_.Update(GameUtils::GetDeltaTime());
+	uiAnimationTimer_.Update(GameUtils::GetDeltaTime());
 
-   float progress = uiAnimationTimer_.GetProgress();
-   float easedT = EasingUtil::ApplyComposite(progress, EasingUtil::Type::EaseOutQuint, EasingUtil::Type::EaseInQuint, 0.5f);
-   startUI_->GetTransform().translate.x = EasingUtil::Lerp(1280.0f, -1280.0f, easedT);
+	float progress = uiAnimationTimer_.GetProgress();
+	float easedT = EasingUtil::ApplyComposite(progress, EasingUtil::Type::EaseOutQuint, EasingUtil::Type::EaseInQuint, 0.5f);
+	startUI_->GetTransform().translate.x = EasingUtil::Lerp(1280.0f, -1280.0f, easedT);
+}
+
+std::unique_ptr<ParticleSystem> GameScene::CreateParticleSystem(const std::string& presetPath) {
+	auto dxCommon = engine_->GetComponent<DirectXCommon>();
+	auto resourceFactory = engine_->GetComponent<ResourceFactory>();
+	auto modelManager = engine_->GetComponent<ModelManager>();
+
+	// ModelResourceを取得（必要に応じてモデルを読み込む）
+	auto* voxelModelResource = modelManager->GetModelResource("Resources/Models/Voxel/Voxel.obj");
+	if (!voxelModelResource) {
+		modelManager->LoadModelResource("Resources/Models/Voxel", "Voxel.obj");
+		voxelModelResource = modelManager->GetModelResource("Resources/Models/Voxel/Voxel.obj");
+	}
+
+	// パーティクルシステムを作成
+	auto particleSystem = std::make_unique<ParticleSystem>();
+	particleSystem->Initialize(dxCommon, resourceFactory);
+
+	if (voxelModelResource) {
+		particleSystem->SetModelResource(voxelModelResource);
+	}
+
+	particleSystem->SetTexture("Resources/SampleResources/white1x1.png");
+
+	// プリセットファイルから設定を読み込む
+	ParticlePresetManager presetManager;
+	presetManager.LoadPreset(particleSystem.get(), presetPath);
+
+	// 初期状態を非アクティブに設定
+	particleSystem->SetActive(false);
+
+	return particleSystem;
+}
+
+void GameScene::EmitParticle(ParticleSystem* particleSystem, const Vector3& position) {
+	if (!particleSystem) {
+		return;
+	}
+
+	particleSystem->SetActive(true);
+	particleSystem->SetEmitterPosition(position);
+	particleSystem->Clear();
+	particleSystem->GetMainModule().Restart();
+	particleSystem->Play();
+}
+
+void GameScene::CheckParticleAutoDeactivate(ParticleSystem* particleSystem) {
+	if (!particleSystem || !particleSystem->IsActive()) {
+		return;
+	}
+
+	if (particleSystem->IsFinished()) {
+		particleSystem->SetActive(false);
+	}
 }

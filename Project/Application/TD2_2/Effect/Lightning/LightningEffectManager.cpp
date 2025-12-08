@@ -27,30 +27,19 @@ std::vector<Vector3> LightningEffectManager::GenerateSpherePoints(int count, flo
 	std::vector<Vector3> points;
 	auto& random = RandomGenerator::GetInstance();
 	
-	// Fibonacci球面分布で均等な基準点を生成し、そこにランダムなオフセットを追加
-	const float goldenRatio = (1.0f + std::sqrt(5.0f)) / 2.0f;
-	const float angleIncrement = std::numbers::pi_v<float> * 2.0f * goldenRatio;
-	
+	// 完全にランダムな球面配置
 	for (int i = 0; i < count; ++i) {
-		// 均等分布の基準点を計算
-		float t = static_cast<float>(i) / static_cast<float>(count);
-		float inclination = std::acos(1.0f - 2.0f * t);
-		float azimuth = angleIncrement * static_cast<float>(i);
-		
-		// ランダムなオフセットを追加（球面上でバランスを保つ）
-		float offsetAngle = random.GetFloat(-0.3f, 0.3f); // 角度のオフセット
-		float offsetInclination = random.GetFloat(-0.3f, 0.3f);
-		
-		inclination += offsetInclination;
-		azimuth += offsetAngle;
+		// ランダムな球面座標を生成（一様分布）
+		float theta = random.GetFloat(0.0f, 2.0f * std::numbers::pi_v<float>); // 方位角（0～2π）
+		float phi = std::acos(random.GetFloat(-1.0f, 1.0f)); // 天頂角（0～π）の一様分布
 		
 		// 球面座標から直交座標に変換
-		float x = std::sin(inclination) * std::cos(azimuth);
-		float y = std::sin(inclination) * std::sin(azimuth);
-		float z = std::cos(inclination);
+		float x = std::sin(phi) * std::cos(theta);
+		float y = std::sin(phi) * std::sin(theta);
+		float z = std::cos(phi);
 		
-		// 半径にも少しランダム性を追加
-		float radiusVariation = random.GetFloat(0.95f, 1.05f);
+		// 半径にもランダム性を追加
+		float radiusVariation = random.GetFloat(0.9f, 1.1f);
 		
 		points.push_back({ 
 			x * radius * radiusVariation, 
