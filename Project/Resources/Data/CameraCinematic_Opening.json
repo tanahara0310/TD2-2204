@@ -1,0 +1,13 @@
+{
+  "type": "Dolly",
+  "duration": 5.0,
+  "startPosition": [0.0, 15.0, -70.0],
+  "endPosition": [0.0, 5.0, -50.0],
+  "targetPosition": [0.0, 0.0, 0.0],
+  "startRotation": [0.15, 0.0, 0.0],
+  "endRotation": [0.0, 0.0, 0.0],
+  "orbitRadius": 10.0,
+  "orbitSpeed": 1.0,
+  "useEasing": true,
+  "easingType": "EaseInOutQuad"
+}

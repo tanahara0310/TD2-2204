@@ -135,7 +135,7 @@ int LightningEffectManager::CreateEffect(const Vector3& position, const EffectCo
    std::vector<std::unique_ptr<IDrawable>>& gameObjects)
 {
    if (!voxelModelResource_) {
-	  return -1;
+      return -1;
    }
 
    EffectData effectData;
@@ -411,6 +411,31 @@ void LightningEffectManager::SetEffectVisible(int effectId, bool visible)
 	  effect.state = AnimationState::FadingOut;
 	  effect.animationTimer.Start(effect.config.fadeOutDuration, false);
    }
+}
+
+void LightningEffectManager::SetEffectVisibleImmediate(int effectId, bool visible)
+{
+   if (effectId < 0 || effectId >= static_cast<int>(effects_.size())) {
+	  return;
+   }
+
+   auto& effect = effects_[effectId];
+
+   // アニメーションを経由せず、即座に色アルファを切り替え
+   for (auto& lightningData : effect.lightnings) {
+	  if (lightningData.lightning) {
+		 auto& config = lightningData.lightning->GetConfig();
+		 if (visible) {
+			config.color = effect.config.color; // 設定色を適用
+		 } else {
+			config.color = effect.config.hiddenColor; // 完全透明
+		 }
+		 lightningData.lightning->ApplyConfigChanges();
+	  }
+   }
+
+   // 状態も即座に切替（アニメーションタイマーは無視）
+   effect.state = visible ? AnimationState::Visible : AnimationState::Hidden;
 }
 
 bool LightningEffectManager::IsEffectVisible(int effectId) const

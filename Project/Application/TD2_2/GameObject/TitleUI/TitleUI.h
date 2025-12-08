@@ -3,6 +3,7 @@
 #include "YameruModel.h"
 #include "StartModel.h"
 #include "TitleModel.h"
+#include "GekitotsuModel.h"
 #include "PlayerPresetModel.h"
 #include "../../Utility/StateMachine.h"
 #include <memory>
@@ -59,6 +60,9 @@ public:
 	
 	/// @brief TitleModelを取得
 	TitleModel* GetTitleModel() const { return titleModel_; }
+	
+	/// @brief GekitotsuModelを取得
+	GekitotsuModel* GetGekitotsuModel() const { return gekitotsuModel_; }
 
 private:
 	
@@ -70,6 +74,9 @@ private:
 	
 	//titleモデルを作成
 	std::unique_ptr<TitleModel> CreateTitleModel(EngineSystem* engine);
+	
+	//gekitotsuモデルを作成
+	std::unique_ptr<GekitotsuModel> CreateGekitotsuModel(EngineSystem* engine);
 	
 	/// @brief プレイヤープリセットモデルを作成
 	std::unique_ptr<PlayerPresetModel> CreatePlayerPresetModel(EngineSystem* engine, PresetType presetType, float yPosition);
@@ -89,6 +96,7 @@ private:
 	YameruModel* yameruModel_ = nullptr;
 	StartModel* startModel_ = nullptr;
 	TitleModel* titleModel_ = nullptr;
+	GekitotsuModel* gekitotsuModel_ = nullptr;
 	
 	// プリセットモデル（3つ）
 	std::vector<PlayerPresetModel*> presetModels_;

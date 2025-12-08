@@ -28,6 +28,11 @@ std::vector<std::unique_ptr<IDrawable>> TitleUI::Initialize(EngineSystem* engine
 	titleModel_ = titleModel.get();
 	sprites.push_back(std::move(titleModel));
 	
+	// gekitotsuモデルを作成
+	auto gekitotsuModel = CreateGekitotsuModel(engine);
+	gekitotsuModel_ = gekitotsuModel.get();
+	sprites.push_back(std::move(gekitotsuModel));
+	
 	//// プレイヤープリセットモデルを作成（3つ縦に並べる）
 	//// Y座標の間隔を狭める
 	//const float kPresetSpacing = 2.0f; // 4.0から2.5に変更
@@ -206,6 +211,20 @@ std::unique_ptr<TitleModel> TitleUI::CreateTitleModel(EngineSystem* engine)
 	titleModel->Initialize(std::move(titleModelResource), titleTexture);
 	
 	return titleModel;
+}
+
+std::unique_ptr<GekitotsuModel> TitleUI::CreateGekitotsuModel(EngineSystem* engine)
+{
+	auto modelManager = engine->GetComponent<ModelManager>();
+	auto& textureManager = TextureManager::GetInstance();
+	
+	auto gekitotsuModelResource = modelManager->CreateStaticModel("Resources/GameResources/Title/Title/Gekitotsu.obj");
+	auto gekitotsuTexture = textureManager.Load("Resources/SampleResources/white1x1.png");
+	
+	auto gekitotsuModel = std::make_unique<GekitotsuModel>();
+	gekitotsuModel->Initialize(std::move(gekitotsuModelResource), gekitotsuTexture);
+	
+	return gekitotsuModel;
 }
 
 std::unique_ptr<PlayerPresetModel> TitleUI::CreatePlayerPresetModel(EngineSystem* engine, PresetType presetType, float yPosition)

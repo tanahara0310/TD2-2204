@@ -4,6 +4,13 @@
 #include "Application/TD2_2/GameObject/GameObject.h"
 #include "Engine/Utility/Timer/GameTimer.h"
 #include <memory>
+#include <string>
+
+// 前方宣言
+class CinematicSequence;
+#ifdef _DEBUG
+class CameraControllerEditor;
+#endif
 
 /// @brief 大乱闘スマッシュブラザーズスタイルのカメラコントローラー
 /// @details 2つのゲームオブジェクトの中点を注視し、距離に応じてカメラを自動調整
@@ -16,11 +23,36 @@ public:
 		Large    ///< 大（激しい揺れ）
 	};
 
+	/// @brief カメラ演出の種類
+	enum class CinematicType {
+		None,           ///< 演出なし（通常追従モード）
+		FixedPosition,  ///< 固定位置カメラ
+		LookAt,         ///< 特定位置を注視
+		Dolly,          ///< 移動演出（開始位置→終了位置）
+		Arc,            ///< 円弧移動
+		Orbit           ///< 対象の周りを回転
+	};
+
+	/// @brief カメラ演出の設定
+	struct CinematicConfig {
+		CinematicType type = CinematicType::None;
+		float duration = 3.0f;              ///< 演出の継続時間
+		Vector3 startPosition = {0, 0, 0};  ///< 開始位置
+		Vector3 endPosition = {0, 0, 0};    ///< 終了位置
+		Vector3 targetPosition = {0, 0, 0}; ///< 注視点
+		Vector3 startRotation = {0, 0, 0};  ///< 開始回転
+		Vector3 endRotation = {0, 0, 0};    ///< 終了回転
+		float orbitRadius = 10.0f;          ///< 回転半径
+		float orbitSpeed = 1.0f;            ///< 回転速度
+		bool useEasing = true;              ///< イージング使用
+		std::string easingType = "EaseInOutQuad"; ///< イージングタイプ
+	};
+
 	/// @brief コンストラクタ
 	CameraController() = default;
 
 	/// @brief デストラクタ
-	~CameraController() = default;
+	~CameraController();
 
 	/// @brief 初期化
 	/// @param camera 制御するカメラ
@@ -49,7 +81,55 @@ public:
 	/// @return 実行中の場合true
 	bool IsShaking() const;
 
-	/// @brief カメラ設定のアクセッサ
+	// カメラ演出関連
+
+	/// @brief カメラ演出を開始
+	/// @param config 演出設定
+	void StartCinematic(const CinematicConfig& config);
+
+	/// @brief カメラ演出を停止（通常追従モードに戻る）
+	void StopCinematic();
+
+	/// @brief カメラ演出が実行中かどうか
+	/// @return 実行中の場合true
+	bool IsCinematicActive() const;
+
+	/// @brief カメラ演出の進行度を取得
+	/// @return 進行度（0.0～1.0）
+	float GetCinematicProgress() const;
+
+	/// @brief JSONファイルからカメラ演出設定を読み込んで開始
+	/// @param jsonPath JSONファイルのパス
+	/// @return 読み込みに成功した場合true
+	bool StartCinematicFromJson(const std::string& jsonPath);
+
+	/// @brief 現在のカメラ演出設定をJSONに保存
+	/// @param jsonPath JSONファイルのパス
+	/// @return 保存に成功した場合true
+	bool SaveCinematicToJson(const std::string& jsonPath) const;
+
+	/// @brief 演出を名前で開始（プリセット使用）
+	/// @param presetName プリセット名
+	/// @return 成功した場合true
+	bool StartCinematicByName(const std::string& presetName);
+
+	/// @brief カット割りシーケンスを開始
+	/// @param sequence シーケンス
+	void StartSequence(std::shared_ptr<CinematicSequence> sequence);
+
+	/// @brief カット割りシーケンスを名前で開始
+	/// @param sequenceName シーケンス名
+	/// @return 成功した場合true
+	bool StartSequenceByName(const std::string& sequenceName);
+
+	/// @brief シーケンスが実行中かどうか
+	/// @return 実行中の場合true
+	bool IsSequenceActive() const;
+
+	/// @brief シーケンスを停止
+	void StopSequence();
+
+	// カメラ設定のアクセッサー
 
 	/// @brief 最小距離を設定
 	/// @param distance カメラとターゲット間の最小距離
@@ -102,6 +182,53 @@ public:
 	/// @brief 現在のカメラ距離を取得
 	/// @return カメラの距離
 	float GetCurrentDistance() const { return currentDistance_; }
+
+	/// @brief 現在のカメラ位置を取得
+	/// @return カメラ位置
+	Vector3 GetCurrentCameraPos() const { return currentCameraPos_; }
+
+	/// @brief 現在のカメラ回転を取得
+	/// @return カメラ回転
+	Vector3 GetCurrentCameraRotation() const { return CalculateCameraRotation(); }
+
+	/// @brief シェイクオフセットを取得
+	/// @return シェイクオフセット
+	Vector3 GetShakeOffset() const { return shakeOffset_; }
+
+	/// @brief 最小距離を取得
+	float GetMinDistance() const { return minDistance_; }
+
+	/// @brief 最大距離を取得
+	float GetMaxDistance() const { return maxDistance_; }
+
+	/// @brief 距離スケールを取得
+	float GetDistanceScale() const { return distanceScale_; }
+
+	/// @brief マージン距離を取得
+	float GetMarginDistance() const { return marginDistance_; }
+
+	/// @brief 高さオフセットを取得
+	float GetHeightOffset() const { return heightOffset_; }
+
+	/// @brief 俯角を取得
+	float GetPitchAngle() const { return pitchAngle_; }
+
+	/// @brief スムーズ速度を取得
+	float GetSmoothSpeed() const { return smoothSpeed_; }
+
+	/// @brief 画面パディングを取得
+	float GetScreenPadding() const { return screenPadding_; }
+
+	/// @brief ステージ境界使用フラグを取得
+	bool UseStageBounds() const { return useStageBounds_; }
+
+	/// @brief ステージ境界を取得
+	struct StageBounds {
+		float minX, maxX, minY, maxY;
+	};
+	StageBounds GetStageBounds() const {
+		return {stageBoundsMinX_, stageBoundsMaxX_, stageBoundsMinY_, stageBoundsMaxY_};
+	}
 
 #ifdef _DEBUG
 	/// @brief ImGuiデバッグUI
@@ -173,6 +300,28 @@ private:
 	/// @return ステージ境界内に制限されたカメラ位置
 	Vector3 ClampCameraToStageBounds(const Vector3& cameraPos, float cameraDistance) const;
 
+	/// @brief カメラ演出の更新
+	/// @param deltaTime デルタタイム
+	void UpdateCinematic(float deltaTime);
+
+	/// @brief 通常追従モードの更新
+	void UpdateNormalMode();
+
+	/// @brief 注視点を計算（回転を考慮）
+	/// @param position カメラ位置
+	/// @param rotation カメラ回転
+	/// @return 注視点
+	Vector3 CalculateLookAtTarget(const Vector3& position, const Vector3& rotation) const;
+
+	/// @brief イージングタイプ文字列からイージング列挙型に変換
+	/// @param typeStr イージングタイプ文字列
+	/// @return イージング列挙型
+	EasingUtil::Type GetEasingTypeFromString(const std::string& typeStr) const;
+
+	/// @brief シーケンスの更新
+	/// @param deltaTime デルタタイム
+	void UpdateSequence(float deltaTime);
+
 	// 制御対象
 	Camera* camera_ = nullptr;              ///< 制御するカメラ
 	GameObject* object1_ = nullptr;         ///< 追跡対象1
@@ -211,4 +360,18 @@ private:
 	float shakeDamping_ = 0.8f;             ///< 減衰率
 	float shakeTime_ = 0.0f;                ///< シェイクの経過時間
 	Vector3 shakeOffset_ = { 0.0f, 0.0f, 0.0f }; ///< シェイクによるオフセット
+
+	// カメラ演出関連
+	bool cinematicActive_ = false;          ///< 演出が実行中か
+	CinematicConfig cinematicConfig_;       ///< 現在の演出設定
+	GameTimer cinematicTimer_;              ///< 演出用タイマー
+	float orbitAngle_ = 0.0f;               ///< 回転角度（Orbitモード用）
+
+	// シーケンス関連
+	std::shared_ptr<CinematicSequence> activeSequence_; ///< 実行中のシーケンス
+
+#ifdef _DEBUG
+	friend class CameraControllerEditor;
+	CameraControllerEditor* editor_ = nullptr;  ///< ImGuiエディター
+#endif
 };
