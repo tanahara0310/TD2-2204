@@ -77,10 +77,8 @@ void ParticleSystemDebugUI::ShowControlButtons(ParticleSystem* particleSystem) {
 }
 
 void ParticleSystemDebugUI::ShowPresetManager(ParticleSystem* particleSystem) {
-	// プリセット管理はParticleSystemから取得
-	// 注: ParticleSystemにGetPresetManager()を追加する必要があります
-	// 現時点では省略（ParticleSystem側の変更が必要）
-	(void)particleSystem; // 未使用パラメータ抑制
+	// プリセットマネージャーのUIを表示
+	particleSystem->GetPresetManager().ShowImGui(particleSystem);
 }
 
 void ParticleSystemDebugUI::ShowModules(ParticleSystem* particleSystem) {

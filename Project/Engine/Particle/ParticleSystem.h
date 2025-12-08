@@ -237,6 +237,10 @@ public:
 	/// @return ノイズモジュールの参照
 	NoiseModule& GetNoiseModule() { return *noiseModule_; }
 
+	/// @brief プリセットマネージャーを取得
+	/// @return プリセットマネージャーの参照
+	ParticlePresetManager& GetPresetManager() { return *presetManager_; }
+
 	// ──────────────────────────────────────────────────────────
 	// 統計情報
 	// ──────────────────────────────────────────────────────────
