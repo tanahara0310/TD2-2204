@@ -312,6 +312,7 @@
     <ClCompile Include="Application\TD2_2\GameObject\Recommended\RecommendedModel.cpp" />
     <ClCompile Include="Application\TD2_2\GameObject\TitleUI\YameruModel.cpp" />
     <ClCompile Include="Application\TD2_2\GameObject\TitleUI\StartModel.cpp" />
+    <ClCompile Include="Application\TD2_2\GameObject\TitleUI\GekitotsuModel.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Engine\WinApp\WinApp.h">
@@ -786,6 +787,7 @@
     <ClInclude Include="Application\TD2_2\Scene\Game\RecommendedScene.h" />
     <ClInclude Include="Application\TD2_2\GameObject\Recommended\ControllerModel.h" />
     <ClInclude Include="Application\TD2_2\GameObject\Recommended\RecommendedModel.h" />
+    <ClInclude Include="Application\TD2_2\GameObject\TitleUI\GekitotsuModel.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Engine\Particle\README.md">
