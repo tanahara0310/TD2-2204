@@ -302,6 +302,8 @@
     <ClCompile Include="Application\TD2_2\GameObject\Result\ColonModel.cpp" />
     <ClCompile Include="Application\TD2_2\ClearTimeManager\ClearTimeManager.cpp" />
     <ClCompile Include="Application\TD2_2\GameObject\TitleUI\PlayerPresetModel.cpp" />
+    <ClCompile Include="Application\TD2_2\GameObject\Boss\ActionNode\SparkNode.cpp" />
+    <ClCompile Include="Application\TD2_2\GameObject\SparkColliderObject\SparkColliderObject.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Engine\WinApp\WinApp.h">
@@ -766,6 +768,8 @@
     <ClInclude Include="Application\TD2_2\GameObject\Result\ColonModel.h" />
     <ClInclude Include="Application\TD2_2\ClearTimeManager\ClearTimeManager.h" />
     <ClInclude Include="Application\TD2_2\GameObject\TitleUI\PlayerPresetModel.h" />
+    <ClInclude Include="Application\TD2_2\GameObject\Boss\ActionNode\SparkNode.h" />
+    <ClInclude Include="Application\TD2_2\GameObject\SparkColliderObject\SparkColliderObject.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Engine\Particle\README.md">

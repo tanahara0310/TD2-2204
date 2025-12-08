@@ -4,6 +4,7 @@
 #include "../../GameObject/Boss/ActionNode/MoveAction.h"
 #include "../../GameObject/Boss/ActionNode/MoveToCenterAction.h"
 #include "../../GameObject/Boss/ActionNode/ShootEightWayAction.h"
+#include "../../GameObject/Boss/ActionNode/SparkNode.h"
 #include "../../GameObject/Bullet/Bullet.h"
 #include "../Config/GameSceneConfig.h"
 #include "Application/TD2_2/Utility/GameUtils.h"
@@ -22,356 +23,402 @@
 #include <numbers>
 
 void GameScene::Initialize(EngineSystem* engine) {
-	// 基底クラスの初期化
-	BaseScene::Initialize(engine);
+   // 基底クラスの初期化
+   BaseScene::Initialize(engine);
 
-	// ゲームユーティリティの初期化
-	GameUtils::Initialize(engine_);
+   // ゲームユーティリティの初期化
+   GameUtils::Initialize(engine_);
 
-	// ゲームオブジェクトの初期化
-	auto modelManager = engine_->GetComponent<ModelManager>();
-	auto& textureManager = TextureManager::GetInstance();
+   // ゲームオブジェクトの初期化
+   auto modelManager = engine_->GetComponent<ModelManager>();
+   auto& textureManager = TextureManager::GetInstance();
 
-	// 雷エフェクトマネージャーの初期化
-	{
-		lightningManager_ = std::make_unique<LightningEffectManager>();
-		lightningManager_->Initialize(modelManager, &textureManager);
-	}
+   // 雷エフェクトマネージャーの初期化
+   {
+	  lightningManager_ = std::make_unique<LightningEffectManager>();
+	  lightningManager_->Initialize(modelManager, &textureManager);
+   }
 
-	// プレイヤーの生成と初期化
-	{
-		modelManager->LoadModelResource("Resources/Models/Player/Damage", "PlayerDamage.obj");
-		modelManager->LoadModelResource("Resources/Models/PlayerPropeller", "PlayerPropeller.obj");
-		auto playerModel = modelManager->CreateStaticModel("Resources/Models/Player/Player.obj");
-		auto playerTexture = textureManager.Load("Resources/Textures/Player.png");
-		auto player = std::make_unique<Player>();
-		player->Initialize(std::move(playerModel), playerTexture);
-		player->SetStartDamageFunction([this]() {
-			if (cameraController_) {
-				// プリセット版は継続時間も事前設定されている
-				cameraController_->StartShake(CameraController::ShakeIntensity::Large);
-			}
+   // プレイヤーの生成と初期化
+   {
+	  modelManager->LoadModelResource("Resources/Models/Player/Damage", "PlayerDamage.obj");
+	  modelManager->LoadModelResource("Resources/Models/PlayerPropeller", "PlayerPropeller.obj");
+	  auto playerModel = modelManager->CreateStaticModel("Resources/Models/Player/Player.obj");
+	  auto playerTexture = textureManager.Load("Resources/Textures/Player.png");
+	  auto player = std::make_unique<Player>();
+	  player->Initialize(std::move(playerModel), playerTexture);
+	  player->SetStartDamageFunction([this]() {
+		 if (cameraController_) {
+			// プリセット版は継続時間も事前設定されている
+			cameraController_->StartShake(CameraController::ShakeIntensity::Large);
+		 }
 
-			if (damageSound_ && damageSound_->IsValid()) {
-				damageSound_->Play(false);
-			}
-			});
-		player->SetHitEnemyFunction([this]() {
-			if (cameraController_) {
-				cameraController_->StartShake(CameraController::ShakeIntensity::Medium);
-			}
+		 if (damageSound_ && damageSound_->IsValid()) {
+			damageSound_->Play(false);
+		 }
+		 });
+	  player->SetHitEnemyFunction([this]() {
+		 if (cameraController_) {
+			cameraController_->StartShake(CameraController::ShakeIntensity::Medium);
+		 }
 
-			if (hitSound_ && hitSound_->IsValid()) {
-				hitSound_->Play(false);
-			}
+		 if (hitSound_ && hitSound_->IsValid()) {
+			hitSound_->Play(false);
+		 }
+		 });
+	  player->SetStartChargeFunction([this]() {
+		 if (chargeSound_ && chargeSound_->IsValid()) {
+			chargeSound_->Play(false);
+		 }
+		 });
 
-			});
-		player->SetStartChargeFunction([this]() {
-			if (chargeSound_ && chargeSound_->IsValid()) {
-				chargeSound_->Play(false);
-			}
-			});
+	  player->RegisterModelResource("Damage", "Resources/Models/Player/Damage/PlayerDamage.obj");
+	  player->RegisterModelResource("Player1", "Resources/Models/Player/Player.obj");
+	  player->RegisterModelResource("Player2", "Resources/Models/PlayerPropeller/PlayerPropeller.obj");
 
-		player->RegisterModelResource("Damage", "Resources/Models/Player/Damage/PlayerDamage.obj");
-		player->RegisterModelResource("Player1", "Resources/Models/Player/Player.obj");
-		player->RegisterModelResource("Player2", "Resources/Models/PlayerPropeller/PlayerPropeller.obj");
+	  // プレイヤー用のダメージエフェクトを作成（球面配置）
+	  LightningEffectManager::EffectConfig damageEffectConfig;
+	  damageEffectConfig.useSphereDistribution = true;
+	  damageEffectConfig.sphereRadius = 2.0f;
+	  damageEffectConfig.sphereStartRadiusRatio = 0.6f; // 内側60%の位置から開始
+	  damageEffectConfig.randomOffsetRange = 0.5f; // ランダムオフセット範囲
+	  damageEffectConfig.lightningCount = 4;
+	  damageEffectConfig.color = { 0.2f, 0.8f, 1.0f, 1.0f }; // 赤色
+	  damageEffectConfig.noiseScale = 1.2f;
+	  damageEffectConfig.noiseSpeed = 20.0f;
+	  damageEffectConfig.segmentCount = 4; // セグメント数を減らして短くする
+	  damageEffectConfig.voxelScale = { 2.0f, 2.0f, 2.0f }; // ボクセルスケールを小さく
+	  damageEffectConfig.fadeInDuration = 0.25f;  // フェードイン時間
+	  damageEffectConfig.fadeOutDuration = 0.35f; // フェードアウト時間
 
-		// プレイヤー用のダメージエフェクトを作成（球面配置）
-		LightningEffectManager::EffectConfig damageEffectConfig;
-		damageEffectConfig.useSphereDistribution = true;
-		damageEffectConfig.sphereRadius = 2.0f;
-		damageEffectConfig.sphereStartRadiusRatio = 0.6f; // 内側60%の位置から開始
-		damageEffectConfig.randomOffsetRange = 0.5f; // ランダムオフセット範囲
-		damageEffectConfig.lightningCount = 4;
-		damageEffectConfig.color = { 0.2f, 0.8f, 1.0f, 1.0f }; // 赤色
-		damageEffectConfig.noiseScale = 1.2f;
-		damageEffectConfig.noiseSpeed = 20.0f;
-		damageEffectConfig.segmentCount = 4; // セグメント数を減らして短くする
-		damageEffectConfig.voxelScale = { 2.0f, 2.0f, 2.0f }; // ボクセルスケールを小さく
-		damageEffectConfig.fadeInDuration = 0.25f;  // フェードイン時間
-		damageEffectConfig.fadeOutDuration = 0.35f; // フェードアウト時間
+	  int damageEffectId = lightningManager_->CreateEffect(
+		 player->GetWorldPosition(),
+		 damageEffectConfig,
+		 gameObjects_
+	  );
 
-		int damageEffectId = lightningManager_->CreateEffect(
-			player->GetWorldPosition(),
-			damageEffectConfig,
-			gameObjects_
-		);
+	  player->SetStartEffectFunction([this, damageEffectId]() {
+		 lightningManager_->SetEffectVisible(damageEffectId, true);
+		 if (biribiriSound_ && biribiriSound_->IsValid()) {
+			biribiriSound_->Play(false);
+		 }
+		 });
 
-		player->SetStartEffectFunction([this, damageEffectId]() {
-			lightningManager_->SetEffectVisible(damageEffectId, true);
-			if (biribiriSound_ && biribiriSound_->IsValid()) {
-				biribiriSound_->Play(false);
-			}
-			});
+	  player->SetStopEffectFunction([this, damageEffectId]() {
+		 lightningManager_->SetEffectVisible(damageEffectId, false);
+		 });
 
-		player->SetStopEffectFunction([this, damageEffectId]() {
-			lightningManager_->SetEffectVisible(damageEffectId, false);
-			});
+	  player->SetUpdateEffectFunction([this, damageEffectId](const Vector3& position) {
+		 lightningManager_->SetEffectPosition(damageEffectId, position);
+		 });
 
-		player->SetUpdateEffectFunction([this, damageEffectId](const Vector3& position) {
-			lightningManager_->SetEffectPosition(damageEffectId, position);
-			});
+	  player->SetEffectColorFunction([this, damageEffectId](const Vector4& color) {
+		 lightningManager_->SetEffectColor(damageEffectId, color);
+		 });
 
-		player->SetEffectColorFunction([this, damageEffectId](const Vector4& color) {
-			lightningManager_->SetEffectColor(damageEffectId, color);
-			});
+	  player_ = player.get();
+	  gameObjects_.push_back(std::move(player));
+   }
 
-		player_ = player.get();
-		gameObjects_.push_back(std::move(player));
-	}
+   // ボスの生成と初期化
+   {
+	  modelManager->LoadModelResource("Resources/Models/Boss/Damage", "BossDamage.obj");
+	  modelManager->LoadModelResource("Resources/Models/BossPropeller", "BossPropeller.obj");
+	  auto bossModel = modelManager->CreateStaticModel("Resources/Models/Boss/Boss.obj");
+	  auto bossTexture = textureManager.Load("Resources/Textures/Boss.png");
+	  auto boss = std::make_unique<Boss>();
+	  boss_ = boss.get();
 
-	// ボスの生成と初期化
-	{
-		modelManager->LoadModelResource("Resources/Models/Boss/Damage", "BossDamage.obj");
-		modelManager->LoadModelResource("Resources/Models/BossPropeller", "BossPropeller.obj");
-		auto bossModel = modelManager->CreateStaticModel("Resources/Models/Boss/Boss.obj");
-		auto bossTexture = textureManager.Load("Resources/Textures/Boss.png");
-		auto boss = std::make_unique<Boss>();
-		boss_ = boss.get();
-		bossBehaviorTree_ = CreateBossBehaviorTree();
-		boss->Initialize(std::move(bossModel), bossTexture);
-		boss->SetBehaviorTree(std::move(bossBehaviorTree_));
-		boss->RegisterModelResource("Damage", "Resources/Models/Boss/Damage/BossDamage.obj");
-		boss->RegisterModelResource("Boss1", "Resources/Models/Boss/Boss.obj");
-		boss->RegisterModelResource("Boss2", "Resources/Models/BossPropeller/BossPropeller.obj");
-		boss->SetStartDamageFunction([this]() {
-			if (damageSound_ && damageSound_->IsValid()) {
-				damageSound_->Play(false);
-			}
-			});
-		boss->SetStartChargeFunction([this]() {
-			if (chargeSound_ && chargeSound_->IsValid()) {
-				chargeSound_->Play(false);
-			}
-			});
+	  // スパーク当たり判定用オブジェクトの生成
+	  constexpr float kSparkRadius = 5.0f;
+	  auto sparkColliderObj = std::make_unique<SparkColliderObject>();
+	  sparkColliderObj->Initialize(kSparkRadius);
+	  sparkCollider_ = sparkColliderObj.get();
+	  gameObjects_.push_back(std::move(sparkColliderObj));
 
-		LightningEffectManager::EffectConfig damageEffectConfig;
-		damageEffectConfig.useSphereDistribution = true;
-		damageEffectConfig.sphereRadius = 2.0f;
-		damageEffectConfig.sphereStartRadiusRatio = 0.6f; // 内側60%の位置から開始
-		damageEffectConfig.randomOffsetRange = 0.5f; // ランダムオフセット範囲
-		damageEffectConfig.lightningCount = 4;
-		damageEffectConfig.color = { 0.2f, 0.8f, 1.0f, 1.0f }; // 赤色
-		damageEffectConfig.noiseScale = 1.2f;
-		damageEffectConfig.noiseSpeed = 20.0f;
-		damageEffectConfig.segmentCount = 4; // セグメント数を減らして短くする
-		damageEffectConfig.voxelScale = { 2.0f, 2.0f, 2.0f }; // ボクセルスケールを小さく
-		damageEffectConfig.fadeInDuration = 0.25f;  // フェードイン時間
-		damageEffectConfig.fadeOutDuration = 0.35f; // フェードアウト時間
+	  // ビヘイビアツリーの生成（sparkCollider_を使用するため、先にsparkCollider_を初期化）
+	  bossBehaviorTree_ = CreateBossBehaviorTree();
+	  boss->Initialize(std::move(bossModel), bossTexture);
+	  boss->SetBehaviorTree(std::move(bossBehaviorTree_));
+	  boss->RegisterModelResource("Damage", "Resources/Models/Boss/Damage/BossDamage.obj");
+	  boss->RegisterModelResource("Boss1", "Resources/Models/Boss/Boss.obj");
+	  boss->RegisterModelResource("Boss2", "Resources/Models/BossPropeller/BossPropeller.obj");
+	  boss->SetStartDamageFunction([this]() {
+		 if (damageSound_ && damageSound_->IsValid()) {
+			damageSound_->Play(false);
+		 }
+		 });
+	  boss->SetStartChargeFunction([this]() {
+		 if (chargeSound_ && chargeSound_->IsValid()) {
+			chargeSound_->Play(false);
+		 }
+		 });
 
-		int damageEffectId = lightningManager_->CreateEffect(
-			boss->GetWorldPosition(),
-			damageEffectConfig,
-			gameObjects_
-		);
+	  // ボス用ダメージエフェクトの設定
+	  LightningEffectManager::EffectConfig damageEffectConfig;
+	  damageEffectConfig.useSphereDistribution = true;
+	  damageEffectConfig.sphereRadius = 2.0f;
+	  damageEffectConfig.sphereStartRadiusRatio = 0.6f; // 内側60%の位置から開始
+	  damageEffectConfig.randomOffsetRange = 0.5f; // ランダムオフセット範囲
+	  damageEffectConfig.lightningCount = 4;
+	  damageEffectConfig.color = { 0.2f, 0.8f, 1.0f, 1.0f }; // 青色
+	  damageEffectConfig.noiseScale = 1.2f;
+	  damageEffectConfig.noiseSpeed = 20.0f;
+	  damageEffectConfig.segmentCount = 4; // セグメント数を減らして短くする
+	  damageEffectConfig.voxelScale = { 2.0f, 2.0f, 2.0f }; // ボクセルスケールを小さく
+	  damageEffectConfig.fadeInDuration = 0.25f;  // フェードイン時間
+	  damageEffectConfig.fadeOutDuration = 0.35f; // フェードアウト時間
 
-		boss->SetStartEffectFunction([this, damageEffectId]() {
-			lightningManager_->SetEffectVisible(damageEffectId, true);
-			if (biribiriSound_ && biribiriSound_->IsValid()) {
-				biribiriSound_->Play(false);
-			}
-			});
+	  int damageEffectId = lightningManager_->CreateEffect(
+		 boss->GetWorldPosition(),
+		 damageEffectConfig,
+		 gameObjects_
+	  );
 
-		boss->SetStopEffectFunction([this, damageEffectId]() {
-			lightningManager_->SetEffectVisible(damageEffectId, false);
-			});
+	  boss->SetStartEffectFunction([this, damageEffectId]() {
+		 lightningManager_->SetEffectVisible(damageEffectId, true);
+		 if (biribiriSound_ && biribiriSound_->IsValid()) {
+			biribiriSound_->Play(false);
+		 }
+		 });
 
-		boss->SetUpdateEffectFunction([this, damageEffectId](const Vector3& position) {
-			lightningManager_->SetEffectPosition(damageEffectId, position);
-			});
+	  boss->SetStopEffectFunction([this, damageEffectId]() {
+		 lightningManager_->SetEffectVisible(damageEffectId, false);
+		 });
 
-		boss->SetEffectColorFunction([this, damageEffectId](const Vector4& color) {
-			lightningManager_->SetEffectColor(damageEffectId, color);
-			});
+	  boss->SetUpdateEffectFunction([this, damageEffectId](const Vector3& position) {
+		 lightningManager_->SetEffectPosition(damageEffectId, position);
+		 });
 
-		gameObjects_.push_back(std::move(boss));
-	}
+	  boss->SetEffectColorFunction([this, damageEffectId](const Vector4& color) {
+		 lightningManager_->SetEffectColor(damageEffectId, color);
+		 });
 
-	// 背景の生成と初期化
-	{
-		auto backgroundModel = modelManager->CreateStaticModel("Resources/Models/Background/Background2.obj");
-		auto backgroundTexture = textureManager.Load("Resources/Textures/Background2.png");
-		auto background = std::make_unique<Background>();
-		background_ = background.get();
-		background->Initialize(std::move(backgroundModel), backgroundTexture);
-		gameObjects_.push_back(std::move(background));
-	}
+	  // スパークエフェクトの設定
+	  LightningEffectManager::EffectConfig sparkEffectConfig;
+	  sparkEffectConfig.useSphereDistribution = true;
+	  sparkEffectConfig.sphereRadius = kSparkRadius; // 当たり判定と同じ半径
+	  sparkEffectConfig.sphereStartRadiusRatio = 0.6f;
+	  sparkEffectConfig.randomOffsetRange = 0.5f;
+	  sparkEffectConfig.lightningCount = 16;
+	  sparkEffectConfig.color = { 0.5f, 0.0f, 0.5f, 1.0f };
+	  sparkEffectConfig.noiseScale = 2.0f;
+	  sparkEffectConfig.noiseSpeed = 20.0f;
+	  sparkEffectConfig.segmentCount = 5;
+	  sparkEffectConfig.voxelScale = { 2.0f, 2.0f, 2.0f };
+	  sparkEffectConfig.fadeInDuration = 0.25f;
+	  sparkEffectConfig.fadeOutDuration = 0.35f;
 
-	// 雲
-	{
-		for (int i = 0; i < clouds_.size(); i++) {
-			auto cloudModel = modelManager->CreateStaticModel("Resources/Models/Cloud/Cloud.obj");
-			auto cloudTexture = textureManager.Load("Resources/Textures/Cloud.png");
-			auto cloud = std::make_unique<Cloud>();
-			clouds_[i] = cloud.get();
-			cloud->Initialize(std::move(cloudModel), cloudTexture);
-			gameObjects_.push_back(std::move(cloud));
-		}
-	}
+	  sparkEffectId_ = lightningManager_->CreateEffect(
+		 boss->GetWorldPosition(),
+		 sparkEffectConfig,
+		 gameObjects_
+	  );
 
-	// HPUIの初期化
-	{
-		playerHitPointUI_ = std::make_unique<HitPoint>();
-		auto sprites = playerHitPointUI_->Initialize({ -590.0f, 300.0f }, SettingObject::PLAYER, player_->GetMaxHP());
+	  boss->SetStartSparkEffectFunction([this]() {
+		 lightningManager_->SetEffectVisible(sparkEffectId_, true);
+		 if (biribiriSound_ && biribiriSound_->IsValid()) {
+			biribiriSound_->Play(false);
+		 }
+		 });
 
-		// スプライトをgameObjects_に追加
-		for (auto& sprite : sprites) {
-			gameObjects_.push_back(std::move(sprite));
-		}
+	  boss->SetStopSparkEffectFunction([this]() {
+		 lightningManager_->SetEffectVisible(sparkEffectId_, false);
+		 });
 
-		bossHitPointUI_ = std::make_unique<HitPoint>();
-		auto bossSprites = bossHitPointUI_->Initialize({ 580.0f, 300.0f }, SettingObject::BOSS, boss_->GetMaxHP());
-		// スプライトをgameObjects_に追加
-		for (auto& sprite : bossSprites) {
-			gameObjects_.push_back(std::move(sprite));
-		}
-	}
+	  boss->SetUpdateSparkEffectFunction([this](const Vector3& position) {
+		 lightningManager_->SetEffectPosition(sparkEffectId_, position);
+		 });
 
-	{
-		// UIの生成と初期化
-		auto ui = std::make_unique<SpriteObject>();
-		ui->Initialize("Resources/Textures/ACharge.png");
-		ui->GetTransform().scale = { 1.0f, 1.0f, 1.0f };
-		ui->SetAnchor({ 1.0f, 1.0f });
-		ui->GetTransform().translate = { 624.0f, -344.0f, 0.0f };
-		ui_ = ui.get();
-		gameObjects_.push_back(std::move(ui));
+	  gameObjects_.push_back(std::move(boss));
+   }
 
-		// スタートUIの生成と初期化
-		auto startUI = std::make_unique<SpriteObject>();
-		startUI->Initialize("Resources/Textures/GameSceneStartUI.png");
-		startUI->GetTransform().scale = { 1.0f, 1.0f, 1.0f };
-		startUI->GetTransform().translate = { 1280.0f, 0.0f, 0.0f };
-		startUI_ = startUI.get();
-		gameObjects_.push_back(std::move(startUI));
-	}
+   // 背景の生成と初期化
+   {
+	  auto backgroundModel = modelManager->CreateStaticModel("Resources/Models/Background/Background2.obj");
+	  auto backgroundTexture = textureManager.Load("Resources/Textures/Background2.png");
+	  auto background = std::make_unique<Background>();
+	  background_ = background.get();
+	  background->Initialize(std::move(backgroundModel), backgroundTexture);
+	  gameObjects_.push_back(std::move(background));
+   }
 
-	uiAnimationTimer_.Start(3.0f);
+   // 雲
+   {
+	  for (int i = 0; i < clouds_.size(); i++) {
+		 auto cloudModel = modelManager->CreateStaticModel("Resources/Models/Cloud/Cloud.obj");
+		 auto cloudTexture = textureManager.Load("Resources/Textures/Cloud.png");
+		 auto cloud = std::make_unique<Cloud>();
+		 clouds_[i] = cloud.get();
+		 cloud->Initialize(std::move(cloudModel), cloudTexture);
+		 gameObjects_.push_back(std::move(cloud));
+	  }
+   }
 
-	{
-		auto soundManager = engine_->GetComponent<SoundManager>();
-		if (soundManager) {
-			bgmSound_ = soundManager->CreateSoundResource("Resources/Audio/BGM/GameSceneBGM.mp3");
-			hitSound_ = soundManager->CreateSoundResource("Resources/Audio/SE/hit.mp3");
-			damageSound_ = soundManager->CreateSoundResource("Resources/Audio/SE/damage.mp3");
-			chargeSound_ = soundManager->CreateSoundResource("Resources/Audio/SE/charge.mp3");
-			biribiriSound_ = soundManager->CreateSoundResource("Resources/Audio/SE/biribiri.mp3");
-			chargeSound_->SetVolume(0.5f);
-			damageSound_->SetVolume(1.0f);
-			biribiriSound_->SetVolume(0.5f);
-		}
+   // HPUIの初期化
+   {
+	  playerHitPointUI_ = std::make_unique<HitPoint>();
+	  auto sprites = playerHitPointUI_->Initialize({ -590.0f, 300.0f }, SettingObject::PLAYER, player_->GetMaxHP());
 
-		if (bgmSound_ && bgmSound_->IsValid()) {
-			bgmSound_->Play(true);
-		}
-	}
+	  // スプライトをgameObjects_に追加
+	  for (auto& sprite : sprites) {
+		 gameObjects_.push_back(std::move(sprite));
+	  }
 
-	// フレームの初期化
-	InitializeFrames();
+	  bossHitPointUI_ = std::make_unique<HitPoint>();
+	  auto bossSprites = bossHitPointUI_->Initialize({ 580.0f, 300.0f }, SettingObject::BOSS, boss_->GetMaxHP());
+	  // スプライトをgameObjects_に追加
+	  for (auto& sprite : bossSprites) {
+		 gameObjects_.push_back(std::move(sprite));
+	  }
+   }
 
-	// 衝突設定の初期化
-	{
-		collisionConfig_ = std::make_unique<CollisionConfig>();
-		collisionConfig_->SetCollisionEnabled(CollisionLayer::Player, CollisionLayer::Boss, true);
-		collisionConfig_->SetCollisionEnabled(CollisionLayer::Player, CollisionLayer::LightningBullet, true);
-		collisionConfig_->SetCollisionEnabled(CollisionLayer::Player, CollisionLayer::ElasticSphere, true);
-		collisionConfig_->SetCollisionEnabled(CollisionLayer::Boss, CollisionLayer::LightningBullet, false);
-		collisionConfig_->SetCollisionEnabled(CollisionLayer::Boss, CollisionLayer::ElasticSphere, false);
-		collisionManager_ = std::make_unique<CollisionManager>(collisionConfig_.get());
-	}
+   {
+	  // UIの生成と初期化
+	  auto ui = std::make_unique<SpriteObject>();
+	  ui->Initialize("Resources/Textures/ACharge.png");
+	  ui->GetTransform().scale = { 1.0f, 1.0f, 1.0f };
+	  ui->SetAnchor({ 1.0f, 1.0f });
+	  ui->GetTransform().translate = { 624.0f, -344.0f, 0.0f };
+	  ui_ = ui.get();
+	  gameObjects_.push_back(std::move(ui));
 
-	// ステージ境界を設定（フレームの外側まで）
-	// kStageSize はフレームを含めた全体サイズなので、フレーム1個分外側に広げる
-	float stageHalfWidth = GameSceneConfig::kStageSize.x / 2.0f;
-	float stageHalfHeight = GameSceneConfig::kStageSize.y / 2.0f;
-	float frameWidth = GameSceneConfig::kFrameSize.x * 0.65f;
-	float frameHeight = GameSceneConfig::kFrameSize.y * 0.6f;
+	  // スタートUIの生成と初期化
+	  auto startUI = std::make_unique<SpriteObject>();
+	  startUI->Initialize("Resources/Textures/GameSceneStartUI.png");
+	  startUI->GetTransform().scale = { 1.0f, 1.0f, 1.0f };
+	  startUI->GetTransform().translate = { 1280.0f, 0.0f, 0.0f };
+	  startUI_ = startUI.get();
+	  gameObjects_.push_back(std::move(startUI));
+   }
 
-	// カメラコントローラーの初期化（プレイヤーとボスを追跡）
-	{
-		cameraController_ = std::make_unique<CameraController>();
-		auto* releaseCamera = static_cast<Camera*>(cameraManager_->GetCamera("Release"));
-		cameraController_->Initialize(releaseCamera, player_, boss_);
+   uiAnimationTimer_.Start(3.0f);
 
-		// カメラパラメータの調整（オプション）
-		cameraController_->SetMinDistance(35.0f);
-		cameraController_->SetMaxDistance(70.0f);
-		cameraController_->SetDistanceScale(1.8f);
-		cameraController_->SetHeightOffset(0.0f);
-		cameraController_->SetPitchAngle(0.0f);
-		cameraController_->SetSmoothSpeed(20.0f);
-		cameraController_->SetMarginDistance(8.0f);
-		cameraController_->SetScreenPadding(0.35f);
+   {
+	  auto soundManager = engine_->GetComponent<SoundManager>();
+	  if (soundManager) {
+		 bgmSound_ = soundManager->CreateSoundResource("Resources/Audio/BGM/GameSceneBGM.mp3");
+		 hitSound_ = soundManager->CreateSoundResource("Resources/Audio/SE/hit.mp3");
+		 damageSound_ = soundManager->CreateSoundResource("Resources/Audio/SE/damage.mp3");
+		 chargeSound_ = soundManager->CreateSoundResource("Resources/Audio/SE/charge.mp3");
+		 biribiriSound_ = soundManager->CreateSoundResource("Resources/Audio/SE/biribiri.mp3");
+		 chargeSound_->SetVolume(0.5f);
+		 damageSound_->SetVolume(1.0f);
+		 biribiriSound_->SetVolume(0.5f);
+	  }
 
-		cameraController_->SetStageBounds(
-			GameSceneConfig::kStageCenter.x - stageHalfWidth - frameWidth, GameSceneConfig::kStageCenter.x + stageHalfWidth + frameWidth,
-			GameSceneConfig::kStageCenter.y - stageHalfHeight - frameHeight, GameSceneConfig::kStageCenter.y + stageHalfHeight + frameHeight);
-	}
+	  if (bgmSound_ && bgmSound_->IsValid()) {
+		 bgmSound_->Play(true);
+	  }
+   }
 
-	// テスト用：直線雷を1本配置
-	{
-		frameWidth = GameSceneConfig::kFrameSize.x;
-		frameHeight = GameSceneConfig::kFrameSize.y;
+   // フレームの初期化
+   InitializeFrames();
 
-		LightningEffectManager::EffectConfig config;
-		config.startOffset = { GameSceneConfig::kStageCenter.x - stageHalfWidth - frameWidth, 0.0f, 0.0f };
-		config.endOffset = { GameSceneConfig::kStageCenter.x + stageHalfWidth + frameWidth, 0.0f, 0.0f };
-		config.segmentCount = 12;
-		config.noiseScale = 3.0f;
-		config.noiseSpeed = 30.0f;
-		config.color = { 0.3f, 0.6f, 1.0f, 1.0f }; // 青白色
+   // 衝突設定の初期化
+   {
+	  collisionConfig_ = std::make_unique<CollisionConfig>();
+	  collisionConfig_->SetCollisionEnabled(CollisionLayer::Player, CollisionLayer::Boss, true);
+	  collisionConfig_->SetCollisionEnabled(CollisionLayer::Player, CollisionLayer::LightningBullet, true);
+	  collisionConfig_->SetCollisionEnabled(CollisionLayer::Player, CollisionLayer::ElasticSphere, true);
+	  collisionConfig_->SetCollisionEnabled(CollisionLayer::Player, CollisionLayer::Spark, true);
+	  collisionConfig_->SetCollisionEnabled(CollisionLayer::Boss, CollisionLayer::LightningBullet, false);
+	  collisionConfig_->SetCollisionEnabled(CollisionLayer::Boss, CollisionLayer::ElasticSphere, false);
+	  collisionConfig_->SetCollisionEnabled(CollisionLayer::Boss, CollisionLayer::Spark, false);
+	  collisionManager_ = std::make_unique<CollisionManager>(collisionConfig_.get());
+   }
 
-		// ステージ中央に固定配置
-		lightningManager_->CreateEffect({ 0.0f, -stageHalfHeight + frameHeight, 0.0f }, config, gameObjects_);
-		lightningManager_->CreateEffect({ 0.0f, stageHalfHeight - frameHeight, 0.0f }, config, gameObjects_);
+   // ステージ境界を設定（フレームの外側まで）
+   // kStageSize はフレームを含めた全体サイズなので、フレーム1個分外側に広げる
+   float stageHalfWidth = GameSceneConfig::kStageSize.x / 2.0f;
+   float stageHalfHeight = GameSceneConfig::kStageSize.y / 2.0f;
+   float frameWidth = GameSceneConfig::kFrameSize.x * 0.65f;
+   float frameHeight = GameSceneConfig::kFrameSize.y * 0.6f;
 
-		config.segmentCount = 8;
-		config.noiseSpeed = 20.0f;
-		config.color = { 0.8f, 1.0f, 1.0f, 1.0f }; // 青白色
+   // カメラコントローラーの初期化（プレイヤーとボスを追跡）
+   {
+	  cameraController_ = std::make_unique<CameraController>();
+	  auto* releaseCamera = static_cast<Camera*>(cameraManager_->GetCamera("Release"));
+	  cameraController_->Initialize(releaseCamera, player_, boss_);
 
-		lightningManager_->CreateEffect({ 0.0f, -stageHalfHeight + frameHeight, 0.0f }, config, gameObjects_);
-		lightningManager_->CreateEffect({ 0.0f, stageHalfHeight - frameHeight, 0.0f }, config, gameObjects_);
+	  // カメラパラメータの調整（オプション）
+	  cameraController_->SetMinDistance(35.0f);
+	  cameraController_->SetMaxDistance(70.0f);
+	  cameraController_->SetDistanceScale(1.8f);
+	  cameraController_->SetHeightOffset(0.0f);
+	  cameraController_->SetPitchAngle(0.0f);
+	  cameraController_->SetSmoothSpeed(20.0f);
+	  cameraController_->SetMarginDistance(8.0f);
+	  cameraController_->SetScreenPadding(0.35f);
 
-		config.startOffset = { 0.0f, -stageHalfHeight - frameHeight, 0.0f };
-		config.endOffset = { 0.0f, stageHalfHeight + frameHeight, 0.0f };
-		config.segmentCount = 6;
-		config.color = { 0.3f, 0.6f, 1.0f, 1.0f }; // 青白色
-		config.noiseSpeed = 30.0f;
+	  cameraController_->SetStageBounds(
+		 GameSceneConfig::kStageCenter.x - stageHalfWidth - frameWidth, GameSceneConfig::kStageCenter.x + stageHalfWidth + frameWidth,
+		 GameSceneConfig::kStageCenter.y - stageHalfHeight - frameHeight, GameSceneConfig::kStageCenter.y + stageHalfHeight + frameHeight);
+   }
 
-		lightningManager_->CreateEffect({ -stageHalfWidth + frameWidth, 0.0f, 0.0f }, config, gameObjects_);
-		lightningManager_->CreateEffect({ stageHalfWidth - frameWidth, 0.0f, 0.0f }, config, gameObjects_);
+   // テスト用：直線雷を1本配置
+   {
+	  frameWidth = GameSceneConfig::kFrameSize.x;
+	  frameHeight = GameSceneConfig::kFrameSize.y;
 
-		config.segmentCount = 5;
-		config.noiseSpeed = 20.0f;
-		config.color = { 0.8f, 1.0f, 1.0f, 1.0f }; // 青白色
+	  LightningEffectManager::EffectConfig config;
+	  config.startOffset = { GameSceneConfig::kStageCenter.x - stageHalfWidth - frameWidth, 0.0f, 0.0f };
+	  config.endOffset = { GameSceneConfig::kStageCenter.x + stageHalfWidth + frameWidth, 0.0f, 0.0f };
+	  config.segmentCount = 12;
+	  config.noiseScale = 3.0f;
+	  config.noiseSpeed = 30.0f;
+	  config.color = { 0.3f, 0.6f, 1.0f, 1.0f }; // 青白色
 
-		lightningManager_->CreateEffect({ -stageHalfWidth + frameWidth, 0.0f, 0.0f }, config, gameObjects_);
-		lightningManager_->CreateEffect({ stageHalfWidth - frameWidth, 0.0f, 0.0f }, config, gameObjects_);
-	}
+	  // ステージ中央に固定配置
+	  lightningManager_->CreateEffect({ 0.0f, -stageHalfHeight + frameHeight, 0.0f }, config, gameObjects_);
+	  lightningManager_->CreateEffect({ 0.0f, stageHalfHeight - frameHeight, 0.0f }, config, gameObjects_);
 
-	// プレイヤーの帯電ゲージ
-	{
-		playerGauge_ = std::make_unique<GaugeUI>();
-		auto sprites = playerGauge_->Initialize(cameraManager_.get(), 5.0f);
-		playerGauge_->SetTarget(player_);
+	  config.segmentCount = 8;
+	  config.noiseSpeed = 20.0f;
+	  config.color = { 0.8f, 1.0f, 1.0f, 1.0f }; // 青白色
 
-		for (auto& sprite : sprites) {
-			gameObjects_.push_back(std::move(sprite));
-		}
-	}
+	  lightningManager_->CreateEffect({ 0.0f, -stageHalfHeight + frameHeight, 0.0f }, config, gameObjects_);
+	  lightningManager_->CreateEffect({ 0.0f, stageHalfHeight - frameHeight, 0.0f }, config, gameObjects_);
 
-	// ボスの帯電ゲージ
-	{
-		bossGauge_ = std::make_unique<GaugeUI>();
-		auto sprites = bossGauge_->Initialize(cameraManager_.get(), 5.0f);
-		bossGauge_->SetTarget(boss_);
-		bossGauge_->SetFillColor({ 0.5f, 0.0f, 0.5f, 1.0f });
+	  config.startOffset = { 0.0f, -stageHalfHeight - frameHeight, 0.0f };
+	  config.endOffset = { 0.0f, stageHalfHeight + frameHeight, 0.0f };
+	  config.segmentCount = 6;
+	  config.color = { 0.3f, 0.6f, 1.0f, 1.0f }; // 青白色
+	  config.noiseSpeed = 30.0f;
 
-		for (auto& sprite : sprites) {
-			gameObjects_.push_back(std::move(sprite));
-		}
-	}
+	  lightningManager_->CreateEffect({ -stageHalfWidth + frameWidth, 0.0f, 0.0f }, config, gameObjects_);
+	  lightningManager_->CreateEffect({ stageHalfWidth - frameWidth, 0.0f, 0.0f }, config, gameObjects_);
 
+	  config.segmentCount = 5;
+	  config.noiseSpeed = 20.0f;
+	  config.color = { 0.8f, 1.0f, 1.0f, 1.0f }; // 青白色
+
+	  lightningManager_->CreateEffect({ -stageHalfWidth + frameWidth, 0.0f, 0.0f }, config, gameObjects_);
+	  lightningManager_->CreateEffect({ stageHalfWidth - frameWidth, 0.0f, 0.0f }, config, gameObjects_);
+   }
+
+   // プレイヤーの帯電ゲージ
+   {
+	  playerGauge_ = std::make_unique<GaugeUI>();
+	  auto sprites = playerGauge_->Initialize(cameraManager_.get(), 5.0f);
+	  playerGauge_->SetTarget(player_);
+
+	  for (auto& sprite : sprites) {
+		 gameObjects_.push_back(std::move(sprite));
+	  }
+   }
+
+   // ボスの帯電ゲージ
+   {
+	  bossGauge_ = std::make_unique<GaugeUI>();
+	  auto sprites = bossGauge_->Initialize(cameraManager_.get(), 5.0f);
+	  bossGauge_->SetTarget(boss_);
+	  bossGauge_->SetFillColor({ 0.5f, 0.0f, 0.5f, 1.0f });
+
+	  for (auto& sprite : sprites) {
+		 gameObjects_.push_back(std::move(sprite));
+	  }
+   }
 }
 
 void GameScene::Update() {
@@ -379,10 +426,22 @@ void GameScene::Update() {
 
 	time_ += GameUtils::GetDeltaTime();
 
-	// カメラコントローラーの更新
-	if (cameraController_) {
-		cameraController_->Update();
-	}
+
+#ifdef _DEBUG
+
+   auto input = engine_->GetComponent<KeyboardInput>();
+
+   // デバッグ用：カメラ切り替え
+   if (input->IsKeyTriggered(DIK_0)) {
+	  player_->DecreaseHP(1);
+   }
+
+#endif
+
+   // カメラコントローラーの更新
+   if (cameraController_) {
+	  cameraController_->Update();
+   }
 
 	// 雷エフェクトの更新
 	if (lightningManager_) {
@@ -413,8 +472,8 @@ void GameScene::Update() {
 	if (boss_->GetHP() <= 0 || player_->GetHP() <= 0) {
 		sceneManager_->ChangeScene("ResultScene");
 
-		json clearTimeData = JsonManager::GetInstance().LoadJson("Resources/Data/CurrentClearTime.json");
-		clearTimeData["CurrentClearTime"] = 50.0f; // 仮のクリアタイム
+	  json clearTimeData = JsonManager::GetInstance().LoadJson("Resources/Data/CurrentClearTime.json");
+	  clearTimeData["CurrentClearTime"] = time_;
 
 		JsonManager::GetInstance().SaveJson("Resources/Data/CurrentClearTime.json", clearTimeData);
 
@@ -463,37 +522,43 @@ void GameScene::Draw() {
 void GameScene::Finalize() {}
 
 void GameScene::RegisterAllColliders() {
-	collisionManager_->Clear();
-	collisionManager_->RegisterCollider(player_->GetCollider());
-	collisionManager_->RegisterCollider(boss_->GetCollider());
+   collisionManager_->Clear();
+   collisionManager_->RegisterCollider(player_->GetCollider());
+   collisionManager_->RegisterCollider(boss_->GetCollider());
 
-	// 弾のコライダーを登録
-	for (auto* bullet : bullets_) {
-		if (bullet && bullet->IsActive() && bullet->GetCollider()) {
-			collisionManager_->RegisterCollider(bullet->GetCollider());
-		}
-	}
+   // スパークコライダーを登録
+   if (sparkCollider_ && sparkCollider_->GetCollider()) {
+	  collisionManager_->RegisterCollider(sparkCollider_->GetCollider());
+   }
+
+   // 弾のコライダーを登録
+   for (auto* bullet : bullets_) {
+	  if (bullet && bullet->IsActive() && bullet->GetCollider()) {
+		 collisionManager_->RegisterCollider(bullet->GetCollider());
+	  }
+   }
 }
 
 void GameScene::CheckCollisions() { collisionManager_->CheckAllCollisions(); }
 
 std::unique_ptr<BehaviorTree> GameScene::CreateBossBehaviorTree() {
-	return BehaviorTreeFactory::Create(
-		[this](BehaviorTreeBuilder& builder) {
-			builder.Selector()
-				.Sequence()
-				.Action<FleeFromPlayerAction>(boss_, player_)
-				.Action<ChargeToPlayerAction>(boss_, player_)
-				.WeightedSelector()
-				.WeightedAction<MoveToCenterAction>(0.2f, boss_)
-				.WeightedAction<ShootEightWayAction>(0.3f, boss_, [this](const Vector3& pos, const Vector3& direction, float speed) { CreateBullet(pos, direction, BulletType::ElasticSphere, speed); })
-				.WeightedAction<ChargeToPlayerAction>(0.5f, boss_, player_)
-				.End()
-				.End()
-				.Action<FleeFromPlayerAction>(boss_, player_)
-				.End();
-		},
-		"BossMainAI");
+   return BehaviorTreeFactory::Create(
+	  [this](BehaviorTreeBuilder& builder) {
+		 builder.Selector()
+			.Sequence()
+			.Action<FleeFromPlayerAction>(boss_, player_)
+			.Action<ChargeToPlayerAction>(boss_, player_)
+			.WeightedSelector()
+			.WeightedAction<MoveToCenterAction>(0.0f, boss_)
+			.WeightedAction<ShootEightWayAction>(0.0f, boss_, [this](const Vector3& pos, const Vector3& direction, float speed) { CreateBullet(pos, direction, BulletType::ElasticSphere, speed); })
+			.WeightedAction<ChargeToPlayerAction>(0.0f, boss_, player_)
+			.WeightedAction<SparkNode>(1.0f, boss_, sparkCollider_)
+			.End()
+			.End()
+			.Action<FleeFromPlayerAction>(boss_, player_)
+			.End();
+	  },
+	  "BossMainAI");
 }
 
 void GameScene::InitializeFrames() {

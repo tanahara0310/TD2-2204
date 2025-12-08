@@ -1,5 +1,6 @@
 #include "Player.h"
 #include "Application/TD2_2/GameObject/Boss/Boss.h"
+#include "Application/TD2_2/GameObject/SparkColliderObject/SparkColliderObject.h"
 #include "../../Effect/Lightning/LightningEffectManager.h"
 #include <algorithm>
 
@@ -84,6 +85,24 @@ void Player::OnCollisionEnter(GameObject* other) {
 	  return;
    }
 
+   // スパーク（Spark）との衝突でPunk状態に遷移（アクティブ時のみ）
+   if (strcmp(other->GetObjectName(), "Spark") == 0) {
+      if (auto* spark = dynamic_cast<SparkColliderObject*>(other)) {
+         if (spark->IsSparkActive()) {
+            // Punk状態に遷移（優先度1で遷移）
+			if (stopEffectFunction_) {
+			   stopEffectFunction_();
+			}
+
+			if (setEffectColorFunction_) {
+			   setEffectColorFunction_({ 0.5f, 0.0f, 0.5f, 1.0f });
+			}
+            stateMachine_->RequestState("Punk", 1);
+         }
+      }
+      return;
+   }
+
    if (hitEnemyFunction_) {
 	  hitEnemyFunction_();
    }
@@ -135,6 +154,20 @@ void Player::OnCollisionEnter(GameObject* other) {
 
 void Player::OnCollisionStay(GameObject* other) {
    if (IsInvincible() || stateMachine_->GetCurrentState() == "Respawn" || stateMachine_->GetCurrentState() == "Despawn") {
+	  return;
+   }
+
+   // スパーク（Spark）との衝突でPunk状態に遷移（アクティブ時のみ）
+   if (strcmp(other->GetObjectName(), "Spark") == 0) {
+	  if (auto* spark = dynamic_cast<SparkColliderObject*>(other)) {
+		 if (spark->IsSparkActive()) {
+
+			if (setEffectColorFunction_) {
+			   setEffectColorFunction_({ 0.5f, 0.0f, 0.5f, 1.0f });
+			}
+			stateMachine_->RequestState("Punk", 1);
+		 }
+	  }
 	  return;
    }
 
@@ -495,6 +528,14 @@ void Player::UpdateEnergy() {
 
    if (storedEnergy_ >= maxStoredEnergy_) {
 	  // エネルギーが最大に達したらパンク状態に遷移
+	  if (stopEffectFunction_) {
+		 stopEffectFunction_();
+	  }
+
+	  if (setEffectColorFunction_) {
+		 setEffectColorFunction_({ 1.0f, 1.0f, 0.0f, 1.0f });
+	  }
+
 	  stateMachine_->RequestState("Punk", 1);
    }
 
@@ -518,10 +559,6 @@ void Player::InitializePunk() {
 
    if (startDamageFunction_) {
 	  startDamageFunction_();
-   }
-
-   if (setEffectColorFunction_) {
-	  setEffectColorFunction_({ 1.0f, 1.0f, 0.0f, 1.0f });
    }
 
    if (startEffectFunction_) {
