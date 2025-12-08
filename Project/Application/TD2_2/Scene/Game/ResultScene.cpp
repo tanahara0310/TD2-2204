@@ -140,14 +140,20 @@ void ResultScene::Update() {
 
 			switch (resultUI_->GetSelectionState()) {
 			case ResultUI::SelectionState::ToTitle:
-				// 遷移開始
+				// タイトル遷移開始
 				isTitleTransitioning_ = true;
 				transitionTimer_ = 0.0f;
+
+				// アニメーションフラグを立てる
+				resultUI_->SetIsAnimationToTitle(true);
 				break;
 			case ResultUI::SelectionState::ReStart:
-				// アプリケーション終了
+				// リスタート遷移開始
 				isGameTransitioning_ = true;
 				transitionTimer_ = 0.0f;
+
+				// アニメーションフラグを立てる
+				resultUI_->SetIsAnimationReStart(true);
 				break;
 			}
 		}
@@ -155,7 +161,7 @@ void ResultScene::Update() {
 
 	// 遷移処理
 	if (isTitleTransitioning_ || isGameTransitioning_) {
-		UpdateSceneTransition(1.0f / 60.0f); // 仮のデルタタイム
+		UpdateSceneTransition(GameUtils::GetDeltaTime());
 	}
 
 	// リザルト画像の更新

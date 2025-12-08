@@ -55,6 +55,12 @@ public:
 	/// @param state 新しい選択状態
 	void SetSelectionState(SelectionState state);
 
+	/// @brief 「タイトルへ」アニメーションフラグを設定
+	void SetIsAnimationToTitle(bool isAnim) { isAnimationToTitle_ = isAnim; }
+
+	/// @brief 「リスタート」アニメーションフラグを設定
+	void SetIsAnimationReStart(bool isAnim) { isAnimationReStart_ = isAnim; }
+
 	/// @brief ステートマシーンを取得
 	StateMachine& GetStateMachine() { return stateMachine_; }
 
@@ -117,4 +123,13 @@ private:
 
 	// 勝敗フラグ
 	bool isWin_ = false;
+
+	// 経過時間
+	float elapsedTime_;
+
+	// 「タイトルへ」アニメーションフラグ
+	bool isAnimationToTitle_ = false;
+
+	// 「リスタート」アニメーションフラグ
+	bool isAnimationReStart_ = false;
 };
