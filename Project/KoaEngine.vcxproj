@@ -161,6 +161,10 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Application\TD2_2\Camera\CameraController.cpp" />
+    <ClCompile Include="Application\TD2_2\Camera\CameraControllerEditor.cpp" />
+    <ClCompile Include="Application\TD2_2\Camera\CinematicPresetManager.cpp" />
+    <ClCompile Include="Application\TD2_2\Camera\CinematicSequence.cpp" />
+    <ClCompile Include="Application\TD2_2\Camera\DynamicCameraHelper.cpp" />
     <ClCompile Include="Application\TD2_2\Camera\TitleCameraController.cpp" />
     <ClCompile Include="Application\TD2_2\Collider\AABBCollider.cpp" />
     <ClCompile Include="Application\TD2_2\Collider\Collider.cpp" />
@@ -370,6 +374,10 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="Application\GameObject\GameObject.h" />
     <ClInclude Include="Application\TD2_2\AI\Node\BossAIExamples.h" />
     <ClInclude Include="Application\TD2_2\Camera\CameraController.h" />
+    <ClInclude Include="Application\TD2_2\Camera\CameraControllerEditor.h" />
+    <ClInclude Include="Application\TD2_2\Camera\CinematicPresetManager.h" />
+    <ClInclude Include="Application\TD2_2\Camera\CinematicSequence.h" />
+    <ClInclude Include="Application\TD2_2\Camera\DynamicCameraHelper.h" />
     <ClInclude Include="Application\TD2_2\Camera\TitleCameraController.h" />
     <ClInclude Include="Application\TD2_2\Collider\AABBCollider.h" />
     <ClInclude Include="Application\TD2_2\Collider\Collider.h" />
@@ -686,12 +694,18 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <None Include="Application\TD2_2\AI\Node\BehaviorTreeUsageExamples.md" />
     <None Include="Application\TD2_2\AI\Node\README.md" />
     <None Include="Application\TD2_2\AI\BehaviorTree\README.md" />
+    <None Include="Application\TD2_2\Camera\CameraControllerExamples.md" />
+    <None Include="Application\TD2_2\Camera\CameraControllerREADME.md" />
     <None Include="docs\LightningImplementation.md" />
     <None Include="docs\Logger_Usage.md" />
     <None Include="Docs\ModelParticle_Implementation_Guide.md" />
     <None Include="docs\RenderingFlow.md" />
     <None Include="Engine\Particle\README.md" />
     <None Include="Engine\Utility\Debug\ImGui\README.md" />
+    <None Include="Resources\Data\CameraCinematic_BossDeath.json" />
+    <None Include="Resources\Data\CameraCinematic_Opening.json" />
+    <None Include="Resources\Data\CameraSequence_BossDeath.json" />
+    <None Include="Resources\Data\CameraSequence_Opening.json" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

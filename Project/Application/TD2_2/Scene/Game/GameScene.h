@@ -20,6 +20,7 @@
 #include "../../Effect/Lightning/LightningEffectManager.h"
 #include "../../UI/HitPoint/HitPoint.h"
 #include "Engine/Particle/ParticleSystem.h"
+#include "../../Utility/StateMachine.h"
 
 class EngineSystem;
 class CameraManager;
@@ -90,6 +91,8 @@ private:
    int sparkEffectId_ = -1;
 
    float time_ = 0.0f;
+
+   std::unique_ptr<StateMachine> stateMachine_;
 private:
    void RegisterAllColliders();
 

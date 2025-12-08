@@ -253,7 +253,6 @@
     <ClCompile Include="Application\TD2_2\Utility\StateMachine.cpp" />
     <ClCompile Include="Engine\ObjectCommon\SpriteObject.cpp" />
     <ClCompile Include="Engine\Camera\Camera2D.cpp" />
-    <ClCompile Include="Application\TD2_2\Camera\CameraController.cpp" />
     <ClCompile Include="Engine\Graphics\Render\Particle\ModelParticleRenderer.cpp" />
     <ClCompile Include="Engine\Graphics\Render\Particle\BaseParticleRenderer.cpp" />
     <ClCompile Include="Engine\Scene\SceneTransition.cpp" />
@@ -305,6 +304,11 @@
     <ClCompile Include="Application\TD2_2\GameObject\Boss\ActionNode\SparkNode.cpp" />
     <ClCompile Include="Application\TD2_2\GameObject\SparkColliderObject\SparkColliderObject.cpp" />
     <ClCompile Include="Application\TD2_2\GameObject\Result\HyphenModel.cpp" />
+    <ClCompile Include="Application\TD2_2\Camera\CameraController.cpp" />
+    <ClCompile Include="Application\TD2_2\Camera\CinematicSequence.cpp" />
+    <ClCompile Include="Application\TD2_2\Camera\CinematicPresetManager.cpp" />
+    <ClCompile Include="Application\TD2_2\Camera\CameraControllerEditor.cpp" />
+    <ClCompile Include="Application\TD2_2\Camera\DynamicCameraHelper.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Engine\WinApp\WinApp.h">
@@ -772,6 +776,10 @@
     <ClInclude Include="Application\TD2_2\GameObject\Boss\ActionNode\SparkNode.h" />
     <ClInclude Include="Application\TD2_2\GameObject\SparkColliderObject\SparkColliderObject.h" />
     <ClInclude Include="Application\TD2_2\GameObject\Result\HyphenModel.h" />
+    <ClInclude Include="Application\TD2_2\Camera\CinematicSequence.h" />
+    <ClInclude Include="Application\TD2_2\Camera\CinematicPresetManager.h" />
+    <ClInclude Include="Application\TD2_2\Camera\CameraControllerEditor.h" />
+    <ClInclude Include="Application\TD2_2\Camera\DynamicCameraHelper.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Engine\Particle\README.md">
@@ -787,6 +795,12 @@
     <None Include="Application\TD2_2\AI\Node\README.md" />
     <None Include="Application\TD2_2\AI\BehaviorTree\README.md" />
     <None Include="docs\LightningImplementation.md" />
+    <None Include="Resources\Data\CameraCinematic_Opening.json" />
+    <None Include="Resources\Data\CameraCinematic_BossDeath.json" />
+    <None Include="Application\TD2_2\Camera\CameraControllerREADME.md" />
+    <None Include="Resources\Data\CameraSequence_Opening.json" />
+    <None Include="Resources\Data\CameraSequence_BossDeath.json" />
+    <None Include="Application\TD2_2\Camera\CameraControllerExamples.md" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Source Files">
