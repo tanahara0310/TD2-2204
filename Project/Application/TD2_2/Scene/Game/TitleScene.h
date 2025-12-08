@@ -72,11 +72,14 @@ private:
 	// パルス演出（1セット）
 	float pulseTimer_ = 0.0f;           // 次のパルスまでの待ち時間
 	float visibleTimer_ = 0.0f;         // 現在のパルスの表示残時間
-	int currentEdgeIndex_ = -1;         // 現在点滅中の辺
+	int currentEdgeIndexA_ = -1;        // 現在点滅中の辺A
+	int currentEdgeIndexB_ = -1;        // 現在点滅中の辺B
 	float flickerTimer_ = 0.0f;         // 雷のような高速点滅用
-	static constexpr float kPulseInterval_ = 1.2f; // 表示されるまでの間隔を長めに
 	static constexpr float kPulseDuration_ = 0.25f; // パルス表示時間（少し長め）
-	static constexpr float kFlickerInterval_ = 0.06f; // 点滅周波数（短いほど高速）
+	static constexpr float kFlickerInterval_ = 0.03f; // 高頻度点滅（短いほど高速）
+	static constexpr float kPulseIntervalMin_ = 0.2f; // パルス間隔の最小（さらに短く）
+	static constexpr float kPulseIntervalMax_ = 1.0f; // パルス間隔の最大（さらに短く）
+	float nextPulseInterval_ = 0.5f;    // 次のパルスまでの間隔（乱数で更新）
 
 	// 選択状態のキャッシュ（選択変更検知用）
 	bool lastIsStartSelected_ = true;
