@@ -371,6 +371,7 @@ void GameScene::Initialize(EngineSystem* engine) {
 		frameHeight = GameSceneConfig::kFrameSize.y;
 
 		LightningEffectManager::EffectConfig config;
+
 		config.startOffset = { GameSceneConfig::kStageCenter.x - stageHalfWidth - frameWidth, 0.0f, 0.0f };
 		config.endOffset = { GameSceneConfig::kStageCenter.x + stageHalfWidth + frameWidth, 0.0f, 0.0f };
 		config.segmentCount = 12;
