@@ -59,7 +59,7 @@ void RecommendedScene::Initialize(EngineSystem* engine) {
 		
 		auto recommendedModel = std::make_unique<RecommendedModel>();
 		auto* modelPtr = recommendedModel.get();
-		recommendedModel->Initialize(std::move(model), texture, { 0.0f, 3.0f, 12.8f });
+		recommendedModel->Initialize(std::move(model), texture, { 0.0f, 1.5f, 0.7f });
 		
 		// 出現アニメーションを開始（遅延なし）
 		recommendedModel->StartAppearAnimation(0.0f);

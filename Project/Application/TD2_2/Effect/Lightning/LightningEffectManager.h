@@ -58,6 +58,9 @@ public:
    /// @brief エフェクトの表示状態を設定（アニメーション付き）
    void SetEffectVisible(int effectId, bool visible);
 
+   /// @brief エフェクトの即時表示制御（アニメーションなし、アルファ直接切替）
+   void SetEffectVisibleImmediate(int effectId, bool visible);
+
    /// @brief エフェクトが表示中かどうか
    bool IsEffectVisible(int effectId) const;
 
