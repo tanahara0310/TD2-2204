@@ -1,5 +1,6 @@
 #pragma once
 #include "../../GameObject/Result/ColonModel.h"
+#include "../../GameObject/Result/HyphenModel.h"
 #include "../../GameObject/Result/NumbersModel.h"
 #include "../../GameObject/Result/PeriodModel.h"
 #include "../../GameObject/Result/ReStartModel.h"
@@ -82,6 +83,9 @@ private:
 	// コロンモデル作成
 	std::unique_ptr<ColonModel> CreateColonModel(EngineSystem* engine);
 
+	// ハイフンモデルを作成
+	std::unique_ptr<HyphenModel> CreateHyphenModel(EngineSystem* engine);
+
 	/// @brief 選択演出の更新
 	void UpdateSelectionEffect();
 
@@ -92,11 +96,12 @@ private:
 	ReStartModel* reStartModel_ = nullptr;
 	PeriodModel* periodModel_ = nullptr;
 	ColonModel* colonModel_ = nullptr;
-	std::vector<NumbersModel*> rankModels_{};      // 順位モデル
+	std::vector<NumbersModel*> rankModels_{};        // 順位モデル
 	std::vector<NumbersModel*> currentTimeModels_{}; // 今回のクリアタイムモデル
 	std::vector<NumbersModel*> rankTimeModels_{};    // 1位から3位までのクリアタイムモデル
 	std::vector<PeriodModel*> periodModels_{};       // 1位から3位までのピリオドモデル
 	std::vector<ColonModel*> colonModels_{};         // 1位から3位までのピリオドモデル
+	std::vector<HyphenModel*> hyphenModels_ = {};     // ハイフンモデル
 
 	// 選択状態
 	SelectionState selectionState_ = SelectionState::ToTitle;
