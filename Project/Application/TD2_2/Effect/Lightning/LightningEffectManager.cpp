@@ -206,7 +206,7 @@ int LightningEffectManager::CreateEffect(const Vector3& position, const EffectCo
 		 gameObjects.push_back(std::move(lightning));
 	  }
    } else {
-	  // 従来モード：単一の雷（初期は非表示）
+	  // 従来モード：単一の雷（常に表示）
 	  Lightning::Config lightningConfig;
 	  lightningConfig.startPoint = config.startOffset;
 	  lightningConfig.endPoint = config.endOffset;
@@ -214,7 +214,7 @@ int LightningEffectManager::CreateEffect(const Vector3& position, const EffectCo
 	  lightningConfig.noiseScale = config.noiseScale;
 	  lightningConfig.noiseSpeed = config.noiseSpeed;
 	  lightningConfig.enableAnimation = true;
-	  lightningConfig.color = config.hiddenColor; // 初期状態は非表示（完全透明）
+	  lightningConfig.color = config.color;
 	  lightningConfig.pathType = Lightning::PathType::Linear;
 	  lightningConfig.voxelScale = config.voxelScale;
 
@@ -234,8 +234,7 @@ int LightningEffectManager::CreateEffect(const Vector3& position, const EffectCo
 	  effectData.lightnings.push_back(lightningData);
 	  gameObjects.push_back(std::move(lightning));
 
-	  // 初期状態はHiddenのまま
-	  effectData.state = AnimationState::Hidden;
+	  effectData.state = AnimationState::Visible;
    }
 
    int effectId = nextEffectId_++;
