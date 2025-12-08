@@ -12,7 +12,7 @@ void ToTitleModel::Initialize(std::unique_ptr<Model> model, TextureManager::Load
 	transform_.TransferMatrix();
 }
 
-void ToTitleModel::Update() { 
+void ToTitleModel::Update() {
 	float deltaTime = GameUtils::GetDeltaTime();
 	if (deltaTime <= 0.0f) {
 		deltaTime = 1.0f / 60.0f;
@@ -21,21 +21,10 @@ void ToTitleModel::Update() {
 	// 呼吸アニメーションの更新
 	UpdateBreathingAnimation(deltaTime);
 
-	// Y軸回転（クォータニオンによる増分回転を適用）
-	//{
-	//	// 回転速度（ラジアン / 秒） -- 必要に応じて調整
-	//	const float kYawSpeed = 1.0f; // 1 rad/s
-	//	float angleDelta = kYawSpeed * deltaTime;
+	// 回転アニメーションの更新
+	UpdateRotateAnimation(deltaTime);
 
-	//	// 増分クォータニオンを作成して既存の回転に合成する
-	//	Quaternion dq = MathCore::QuaternionMath::MakeRotateAxisAngle({0.0f, 1.0f, 0.0f}, angleDelta);
-	//	transform_.quaternionRotate = MathCore::QuaternionMath::Multiply(dq, transform_.quaternionRotate);
-
-	//	// 数値安定化のため正規化
-	//	transform_.quaternionRotate = MathCore::QuaternionMath::Normalize(transform_.quaternionRotate);
-	//}
-
-	transform_.TransferMatrix(); 
+	transform_.TransferMatrix();
 }
 
 void ToTitleModel::Draw(const ICamera* camera) {
@@ -60,5 +49,44 @@ void ToTitleModel::UpdateBreathingAnimation(float deltaTime) {
 		// 非選択時は通常スケール
 		breathTimer_ = 0.0f;
 		transform_.scale = baseScale_;
+	}
+}
+
+void ToTitleModel::UpdateRotateAnimation(float deltaTime) {
+	if (isRotateAnimation_) {
+		// まだ打ち上げ開始していなければ初期化
+		if (!hasLaunched_) {
+			hasLaunched_ = true;
+			launchTimer_ = 0.0f;
+			startY_ = transform_.translate.y;
+			startQuaternion_ = transform_.quaternionRotate;
+		}
+
+		// タイマー更新
+		launchTimer_ += deltaTime;
+		// 正規化された進行
+		float t = launchTimer_ / kLaunchDuration;
+		if (t > 1.0f)
+			t = 1.0f;
+
+		// 上下移動
+		const float kPi = 3.14159265358979323846f;
+		float verticalEase = std::sin(kPi * t); 
+		transform_.translate.y = startY_ + kLaunchHeight * verticalEase;
+
+		// 回転
+		float angle = kTotalRotation * t;
+		Quaternion axisRot = MathCore::QuaternionMath::MakeRotateAxisAngle({0.0f, 1.0f, 0.0f}, angle);
+		transform_.quaternionRotate = MathCore::QuaternionMath::Normalize(MathCore::QuaternionMath::Multiply(startQuaternion_, axisRot));
+
+		// 終了処理
+		if (launchTimer_ >= kLaunchDuration) {
+			transform_.translate.y = startY_;
+			transform_.quaternionRotate = startQuaternion_;
+		}
+	} else {
+		// 選択フラグが false の間は次回の発動を許可する
+		hasLaunched_ = false;
+		launchTimer_ = 0.0f;
 	}
 }

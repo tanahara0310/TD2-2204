@@ -118,7 +118,7 @@ void ResultScene::Update() {
 	}
 
 	// 遷移中でなければ入力を受け付ける
-	if (!isTitleTransitioning_ || !isGameTransitioning_) {
+	if (!isTitleTransitioning_ && !isGameTransitioning_) {
 		// 右キーでスタートを選択
 		if (keyConfig_.GetDown("Right")) {
 			resultUI_->SetSelectionState(ResultUI::SelectionState::ToTitle);
