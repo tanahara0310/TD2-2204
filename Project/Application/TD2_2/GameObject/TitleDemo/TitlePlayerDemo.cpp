@@ -15,6 +15,7 @@ void TitlePlayerDemo::Initialize(std::unique_ptr<Model> model, TextureManager::L
 	transform_.scale = { 2.0f, 2.0f, 2.0f };
 	// 初期回転（-X方向 = 90度、前かがみ = Z軸に若干の回転）
 	transform_.rotate = { 0.0f, std::numbers::pi_v<float> / 2.0f, 0.15f };
+	baseRotationY_ = std::numbers::pi_v<float> / 2.0f;
 	transform_.TransferMatrix();
 }
 
@@ -38,42 +39,80 @@ void TitlePlayerDemo::Update() {
 			direction = MathCore::Vector::Normalize(direction);
 		}
 
-		// 距離が十分離れている場合のみ追跡移動
+		// 距離が十分離れている場合のみ追跡移動（X座標のみ）
+		// 常に初期速度を使用
 		if (distance > 0.1f) {
-			transform_.translate.x += direction.x * moveSpeed_ * deltaTime;
-			transform_.translate.y += direction.y * moveSpeed_ * deltaTime;
-			transform_.translate.z += direction.z * moveSpeed_ * deltaTime;
+			transform_.translate.x += direction.x * kInitialSpeed_ * deltaTime;
+			// Y・Z座標は初期位置を維持
+			transform_.translate.y = initialPosition_.y;
+			transform_.translate.z = initialPosition_.z;
 		}
 
-		// 追跡開始時に累積回転をリセット
+		// 追跡開始時に状態をリセット
 		if (!wasChasing_) {
-			accumulatedRotation_ = 0.0f;
+			rotationState_ = RotationState::Rotating;
+			rotationTimer_ = 0.0f;
+			waitTimer_ = 0.0f;
 		}
 
-		// 累積回転を更新
-		accumulatedRotation_ += rotationSpeed_ * deltaTime;
-
-		// 移動方向（X成分）に応じて基本回転を決定し、累積回転を加算
-		float baseRotationY;
+		// 移動方向（X成分）に応じて基本回転を決定
 		float baseRotationZ;
 		if (direction.x > 0.0f) {
 			// +X方向（右）に移動
-			baseRotationY = -std::numbers::pi_v<float> / 2.0f;
+			baseRotationY_ = -std::numbers::pi_v<float> / 2.0f;
 			baseRotationZ = -0.15f;
 		} else {
 			// -X方向（左）に移動
-			baseRotationY = std::numbers::pi_v<float> / 2.0f;
+			baseRotationY_ = std::numbers::pi_v<float> / 2.0f;
 			baseRotationZ = 0.15f;
 		}
 
-		// 基本回転に累積回転を加算
-		transform_.rotate.y = baseRotationY + accumulatedRotation_;
-		transform_.rotate.z = baseRotationZ;
+		// 回転状態管理
+		if (rotationState_ == RotationState::Rotating) {
+			// 回転中
+			rotationTimer_ += deltaTime;
+			
+			if (rotationTimer_ >= rotationDuration_) {
+				// 回転完了、待機状態へ
+				rotationState_ = RotationState::Waiting;
+				rotationTimer_ = 0.0f;
+				waitTimer_ = 0.0f;
+			} else {
+				// イージングを適用した回転計算
+				float t = rotationTimer_ / rotationDuration_;
+				float easedT = EasingUtil::Apply(t, rotationEasing_);
+				
+				// 回転角度を計算（rotationCount_回転分）
+				float totalRotation = 2.0f * std::numbers::pi_v<float> * rotationCount_;
+				float currentRotation = totalRotation * easedT;
+				
+				transform_.rotate.y = baseRotationY_ + currentRotation;
+			}
+		} else if (rotationState_ == RotationState::Waiting) {
+			// 待機中
+			waitTimer_ += deltaTime;
+			
+			if (waitTimer_ >= rotationWaitTime_) {
+				// 待機完了、回転状態へ
+				rotationState_ = RotationState::Rotating;
+				rotationTimer_ = 0.0f;
+				waitTimer_ = 0.0f;
+			}
+			
+			// 待機中は基本回転のみ
+			transform_.rotate.y = baseRotationY_;
+		}
 		
+		transform_.rotate.z = baseRotationZ;
 		wasChasing_ = true;
 	} else {
 		// 通常移動モード（X軸方向）
-		transform_.translate.x += moveSpeed_ * moveDirection_ * deltaTime;
+		// 常に初期速度を使用
+		transform_.translate.x += kInitialSpeed_ * moveDirection_ * deltaTime;
+		
+		// Y・Z座標は初期位置を維持
+		transform_.translate.y = initialPosition_.y;
+		transform_.translate.z = initialPosition_.z;
 
 		// 移動方向に応じて回転を設定
 		if (moveDirection_ > 0.0f) {
@@ -85,7 +124,6 @@ void TitlePlayerDemo::Update() {
 		}
 		
 		wasChasing_ = false;
-		accumulatedRotation_ = 0.0f;
 	}
 
 	// トランスフォームを更新
