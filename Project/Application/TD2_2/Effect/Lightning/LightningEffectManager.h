@@ -22,6 +22,7 @@ public:
 	  float noiseSpeed = 10.0f;
 	  int segmentCount = 20;
 	  Vector3 voxelScale = { 3.0f, 3.0f, 3.0f };
+	  float voxelSpacing = 0.5f; // ゲームシーンの既定値（Titleで上書き）
 
 	  // 球面配置設定
 	  bool useSphereDistribution = false; // 球面配置を使用するか
@@ -33,6 +34,9 @@ public:
 	  // アニメーション設定
 	  float fadeInDuration = 0.2f;  // フェードイン時間
 	  float fadeOutDuration = 0.3f; // フェードアウト時間
+
+	  // 初期表示設定（従来モードのみ適用）
+	  bool initialVisible = true;   // ゲームシーンの既定値（Titleでfalseに上書き）
    };
 
    LightningEffectManager() = default;
@@ -58,7 +62,7 @@ public:
    /// @brief エフェクトの表示状態を設定（アニメーション付き）
    void SetEffectVisible(int effectId, bool visible);
 
-   /// @brief エフェクトの即時表示制御（アニメーションなし、アルファ直接切替）
+   /// @brief 即座に表示状態を切り替える（フェード無し）
    void SetEffectVisibleImmediate(int effectId, bool visible);
 
    /// @brief エフェクトが表示中かどうか

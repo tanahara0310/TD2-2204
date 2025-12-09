@@ -1,11 +1,10 @@
-#pragma once
 #include "../GameObject.h"
 
-/// @brief タイトル画面用のtitleモデルクラス
-class TitleModel : public GameObject {
+/// @brief タイトル画面用のGekitotsuモデルクラス
+class GekitotsuModel : public GameObject {
 public:
-	TitleModel() = default;
-	~TitleModel() = default;
+	GekitotsuModel() = default;
+	~GekitotsuModel() = default;
 
 	/// @brief 初期化
 	/// @param model モデル
@@ -20,7 +19,7 @@ public:
 	void Draw(const ICamera* camera) override;
 	
 	/// @brief オブジェクト名を取得
-	const char* GetObjectName() const override { return "TitleModel"; }
+	const char* GetObjectName() const override { return "GekitotsuModel"; }
 	
 	/// @brief 色を設定
 	/// @param color 色（RGBA）

@@ -188,3 +188,9 @@ std::unique_ptr<SpriteObject> GaugeUI::CreateSegment() {
 
 	return sprite;
 }
+
+void GaugeUI::Clear() { 
+	spriteFill_->SetActive(false); 
+	spriteBG_->SetActive(false); 
+	spriteSegment_->SetActive(false); 
+}

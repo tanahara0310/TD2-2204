@@ -12,7 +12,7 @@ public:
 
 	const char* GetObjectName() const override { return "ToTitleModel"; }
 
-    /// @brief 選択状態を設定
+	/// @brief 選択状態を設定
 	/// @param isSelected 選択されているか
 	void SetSelected(bool isSelected) { isSelected_ = isSelected; }
 
@@ -20,11 +20,14 @@ public:
 	bool IsSelected() const { return isSelected_; }
 
 	/// @brief 回転アニメーションフラグを設定
-	void SetIsAnimation(bool isAnimation) { isRotateAnimation_ = isAnimation; }
+	void SetIsRotateAnimation(bool isRotateAnimation) { isRotateAnimation_ = isRotateAnimation; }
 
 private:
 	/// @brief 呼吸アニメーションの更新
 	void UpdateBreathingAnimation(float deltaTime);
+
+	/// @brief 回転アニメーションの更新
+	void UpdateRotateAnimation(float deltaTime);
 
 private:
 	Vector3 baseScale_ = {1.0f, 1.0f, 1.0f}; // 基準スケール
@@ -40,5 +43,15 @@ private:
 
 	float angleY_ = 0.0f;
 
+	// 回転アニメーションフラグ
 	bool isRotateAnimation_ = false;
+
+	// 打ち上げアニメーション用変数
+	bool hasLaunched_ = false;                                                // 既に打ち上げ済みか
+	float launchTimer_ = 0.0f;                                                // 経過タイマー
+	static constexpr float kLaunchDuration = 0.5f;                            // 打ち上げと戻りにかかる時間
+	static constexpr float kLaunchHeight = 2.0f;                              // ピーク時の高さオフセット
+	static constexpr float kTotalRotation = 2.0f * std::numbers::pi_v<float>; // 一回転
+	float startY_ = 0.0f;                                                     // 打ち上げ開始時のY位置
+	Quaternion startQuaternion_ = {0.0f, 0.0f, 0.0f, 1.0f};                   // 開始時の回転
 };

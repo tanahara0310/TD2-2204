@@ -28,6 +28,7 @@ public:
 		Vector4 color = { 1.0f, 1.0f, 1.0f, 1.0f }; // 雷の色（RGBA）
 		PathType pathType = PathType::Linear;  // パスの補間方法
 		Vector3 voxelScale = { 1.0f, 1.0f, 1.0f }; // ボクセルのスケール
+		float voxelSpacing = 0.5f;      // ボクセル配置間隔（シーンごとに調整可能）
 	};
 
 	Lightning() = default;

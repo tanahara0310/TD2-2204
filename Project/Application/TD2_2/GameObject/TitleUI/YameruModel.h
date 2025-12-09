@@ -26,6 +26,10 @@ public:
 	/// @brief 選択状態を取得
 	bool IsSelected() const { return isSelected_; }
 	
+	/// @brief 決定演出モードを設定
+	/// @param isConfirming 決定演出中かどうか
+	void SetConfirmingMode(bool isConfirming) { isConfirming_ = isConfirming; }
+	
 	/// @brief オブジェクト名を取得
 	const char* GetObjectName() const override { return "YameruModel"; }
 
@@ -38,6 +42,9 @@ private:
 	
 	// 選択状態
 	bool isSelected_ = false;
+	
+	// 決定演出中フラグ
+	bool isConfirming_ = false;
 	
 	// 呼吸アニメーション用
 	float breathTimer_ = 0.0f;                    // 呼吸タイマー

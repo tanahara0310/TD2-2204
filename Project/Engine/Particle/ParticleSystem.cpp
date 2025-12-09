@@ -216,6 +216,11 @@ bool ParticleSystem::CanBeDeleted() const
 		return false;
 	}
 	
+	// 自動削除が無効の場合は削除しない（エディタなど手動管理用）
+	if (!autoDeleteEnabled_) {
+		return false;
+	}
+	
 	// ワンショット（ループなし）の場合、終了したら削除可能
 	const auto& mainData = mainModule_->GetMainData();
 	if (!mainData.looping) {
