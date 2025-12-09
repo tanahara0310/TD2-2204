@@ -217,6 +217,7 @@ int LightningEffectManager::CreateEffect(const Vector3& position, const EffectCo
 	  lightningConfig.color = config.initialVisible ? config.color : config.hiddenColor;
 	  lightningConfig.pathType = Lightning::PathType::Linear;
 	  lightningConfig.voxelScale = config.voxelScale;
+	  lightningConfig.voxelSpacing = config.voxelSpacing; // 追加: ボクセル間隔を伝播
 
 	  auto lightning = std::make_unique<Lightning>();
 	  lightning->Initialize(voxelModelResource_, voxelTexture_, lightningConfig,

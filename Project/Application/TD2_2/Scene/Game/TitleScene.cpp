@@ -112,9 +112,11 @@ void TitleScene::Initialize(EngineSystem* engine) {
 		config.segmentCount = 4;               // 直線に近い少ないセグメント
 		config.noiseScale = 0.8f;             // ノイズ極小
 		config.noiseSpeed = 60.0f;              // ノイズ速度も低め
-		config.randomOffsetRange = 0.02f;      // 始点終点の揺らぎ範囲も極小
-		config.voxelScale = { 0.8f, 0.8f, 0.8f }; // ボクセルサイズ小さめ
+		config.randomOffsetRange = 0.3f;      // 始点/終点の揺らぎ範囲を拡大（動きを見せる）
+		config.voxelScale = { 1.0f, 1.0f, 1.0f }; // ボクセルサイズ小さめ
 		config.initialVisible = false; // タイトルでは初期非表示
+		// タイトルはボクセル間隔を狭く
+		config.voxelSpacing = 0.2f;
 
 		// 色設定
 		Vector4 startColor = { 0.6f, 0.9f, 1.0f, 1.0f };
@@ -122,7 +124,7 @@ void TitleScene::Initialize(EngineSystem* engine) {
 
 		// 矩形サイズ（共通）
 		float halfWidth = 1.9f;
-		float halfHeight = 0.8f;
+		float halfHeight = 0.5f;
 		float frameYOffset = 0.8f; // 中心から少し上にずらす
 
 		// 初期中心はStartの位置（上にオフセット）
@@ -236,37 +238,43 @@ void TitleScene::Update() {
 		}
 	}
 
-	// 選択中に一定間隔で一瞬だけ表示するパルス制御（ランダムな辺を雷っぽく点滅）
+	// 選択中に一定間隔で一瞬だけ表示するパルス制御（ランダムな2辺を雷っぽく点滅）
 	{
 		pulseTimer_ += deltaTime;
 
-		// パルス未表示状態で、間隔到達したら開始
-		if (visibleTimer_ <= 0.0f && pulseTimer_ >= kPulseInterval_) {
+		// パルス未表示状態で、間隔到達したら開始（乱数で間隔を決定）
+		if (visibleTimer_ <= 0.0f && pulseTimer_ >= nextPulseInterval_) {
 			pulseTimer_ = 0.0f;
 			visibleTimer_ = kPulseDuration_;
 			flickerTimer_ = 0.0f;
-			// 辺をランダム選択
-			currentEdgeIndex_ = RandomGenerator::GetInstance().GetInt(0, 3);
-			// 選ばれた辺のみ即座に表示、その他は即座に非表示
+			// 次回間隔を0.5〜2.0秒の乱数で設定
+			nextPulseInterval_ = RandomGenerator::GetInstance().GetFloat(kPulseIntervalMin_, kPulseIntervalMax_);
+			// 辺をランダム選択（2本、重複なし）
+			currentEdgeIndexA_ = RandomGenerator::GetInstance().GetInt(0, 3);
+			do {
+				currentEdgeIndexB_ = RandomGenerator::GetInstance().GetInt(0, 3);
+			} while (currentEdgeIndexB_ == currentEdgeIndexA_);
+			// 選ばれた2辺のみ即座に表示、その他は即座に非表示
 			for (int i = 0; i < 4; ++i) {
 				if (frameEffectIds_[i] < 0) continue;
-				lightningManager_->SetEffectVisibleImmediate(frameEffectIds_[i], i == currentEdgeIndex_);
+				bool isSelected = (i == currentEdgeIndexA_ || i == currentEdgeIndexB_);
+				lightningManager_->SetEffectVisibleImmediate(frameEffectIds_[i], isSelected);
 			}
 		}
 
-		// 表示中なら雷っぽく点滅（選ばれた辺のみ）
-		if (visibleTimer_ > 0.0f && currentEdgeIndex_ >= 0) {
+		// 表示中なら雷っぽく点滅（選ばれた2辺のみ）
+		if (visibleTimer_ > 0.0f && currentEdgeIndexA_ >= 0 && currentEdgeIndexB_ >= 0) {
 			visibleTimer_ -= deltaTime;
 			flickerTimer_ += deltaTime;
 			if (flickerTimer_ >= kFlickerInterval_) {
 				flickerTimer_ = 0.0f;
-				// ON/OFF切替（選ばれた辺のみ即座に切替）
 				static bool flickerOn = false;
 				flickerOn = !flickerOn;
-				lightningManager_->SetEffectVisibleImmediate(frameEffectIds_[currentEdgeIndex_], flickerOn);
+				lightningManager_->SetEffectVisibleImmediate(frameEffectIds_[currentEdgeIndexA_], flickerOn);
+				lightningManager_->SetEffectVisibleImmediate(frameEffectIds_[currentEdgeIndexB_], flickerOn);
 				// 選ばれていない辺は常に即座に非表示維持
 				for (int i = 0; i < 4; ++i) {
-					if (i == currentEdgeIndex_ || frameEffectIds_[i] < 0) continue;
+					if ((i == currentEdgeIndexA_ || i == currentEdgeIndexB_) || frameEffectIds_[i] < 0) continue;
 					lightningManager_->SetEffectVisibleImmediate(frameEffectIds_[i], false);
 				}
 			}
@@ -274,7 +282,8 @@ void TitleScene::Update() {
 			// 表示時間終了で後処理（全て即座に非表示へ）
 			if (visibleTimer_ <= 0.0f) {
 				for (int i = 0; i < 4; ++i) if (frameEffectIds_[i] >= 0) lightningManager_->SetEffectVisibleImmediate(frameEffectIds_[i], false);
-				currentEdgeIndex_ = -1;
+				currentEdgeIndexA_ = -1;
+				currentEdgeIndexB_ = -1;
 			}
 		}
 	}
