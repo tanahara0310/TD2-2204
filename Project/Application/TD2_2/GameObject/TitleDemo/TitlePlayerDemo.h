@@ -55,4 +55,7 @@ private:
 	float moveDirection_ = -1.0f; // 移動方向（1.0 = 右, -1.0 = 左）最初は左に移動
 	bool isChasing_ = false; // 追跡モードかどうか
 	GameObject* target_ = nullptr; // 追跡対象
+	float rotationSpeed_ = 3.0f; // Y軸回転速度（ラジアン/秒）
+	bool wasChasing_ = false; // 前フレームの追跡状態
+	float accumulatedRotation_ = 0.0f; // 累積回転角
 };
