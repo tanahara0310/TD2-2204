@@ -125,6 +125,12 @@ void ResultScene::Initialize(EngineSystem* engine) {
 			gameObjects_.push_back(std::move(cloud));
 		}
 	}
+
+	// パーティクル
+	auto fireworkParticle = CreateParticleSystem("Resources/Presets/Particle/Firework.json");
+	fireworkParticle_ = fireworkParticle.get();
+	gameObjects_.push_back(std::move(fireworkParticle));
+	EmitParticle(fireworkParticle_, {0.0f,0.0f,0.0f});
 }
 
 void ResultScene::Update() {
@@ -138,22 +144,22 @@ void ResultScene::Update() {
 	if (!isTitleTransitioning_ && !isGameTransitioning_) {
 		// 右キーでスタートを選択
 		if (keyConfig_.GetDown("Right")) {
-			resultUI_->SetSelectionState(ResultUI::SelectionState::ToTitle);
-
 			// SE再生
-			if (cursorSound_ && cursorSound_->IsValid()) {
+			if (cursorSound_ && cursorSound_->IsValid() && resultUI_->GetSelectionState() == ResultUI::SelectionState::ReStart) {
 				cursorSound_->Play(false);
 			}
+
+			resultUI_->SetSelectionState(ResultUI::SelectionState::ToTitle);
 		}
 
 		// 左キーでQuitを選択
 		if (keyConfig_.GetDown("Left")) {
-			resultUI_->SetSelectionState(ResultUI::SelectionState::ReStart);
-		
-		    // SE再生
-			if (cursorSound_ && cursorSound_->IsValid()) {
+			// SE再生
+			if (cursorSound_ && cursorSound_->IsValid() && resultUI_->GetSelectionState() == ResultUI::SelectionState::ToTitle) {
 				cursorSound_->Play(false);
 			}
+
+			resultUI_->SetSelectionState(ResultUI::SelectionState::ReStart);
 		}
 
 		// スペースキーで決定
@@ -199,6 +205,16 @@ void ResultScene::Update() {
 	// リザルト画像の更新
 	if (resultUI_)
 		resultUI_->Update();
+
+	// パーティクルの座標更新
+	Vector3 emitPos;
+	emitPos.x = RandomGenerator::GetInstance().GetFloat(-20.0f, 20.0f);
+	emitPos.y = RandomGenerator::GetInstance().GetFloat(-8.0f, 13.0f);
+	emitPos.z = 0.0f;
+
+	fireworkParticle_->SetEmitterPosition(emitPos);
+
+	CheckParticleAutoDeactivate(fireworkParticle_);
 }
 
 void ResultScene::UpdateSceneTransition(float deltaTime) {
@@ -240,4 +256,58 @@ void ResultScene::SetupReleaseCameraParameters(Camera* camera) {
 	// より引きの視点で全体を見渡せるように設定
 	camera->SetTranslate({0.0f, 0.0f, -70.0f});
 	camera->SetRotate({0.0f, 0.0f, 0.0f});
+}
+
+std::unique_ptr<ParticleSystem> ResultScene::CreateParticleSystem(const std::string& presetPath) {
+	auto dxCommon = engine_->GetComponent<DirectXCommon>();
+	auto resourceFactory = engine_->GetComponent<ResourceFactory>();
+	auto modelManager = engine_->GetComponent<ModelManager>();
+
+	// ModelResourceを取得（必要に応じてモデルを読み込む）
+	auto* voxelModelResource = modelManager->GetModelResource("Resources/Models/Voxel/Voxel.obj");
+	if (!voxelModelResource) {
+		modelManager->LoadModelResource("Resources/Models/Voxel", "Voxel.obj");
+		voxelModelResource = modelManager->GetModelResource("Resources/Models/Voxel/Voxel.obj");
+	}
+
+	// パーティクルシステムを作成
+	auto particleSystem = std::make_unique<ParticleSystem>();
+	particleSystem->Initialize(dxCommon, resourceFactory);
+
+	if (voxelModelResource) {
+		particleSystem->SetModelResource(voxelModelResource);
+	}
+
+	particleSystem->SetTexture("Resources/SampleResources/white1x1.png");
+
+	// プリセットファイルから設定を読み込む
+	ParticlePresetManager presetManager;
+	presetManager.LoadPreset(particleSystem.get(), presetPath);
+
+	// 初期状態を非アクティブに設定
+	particleSystem->SetActive(false);
+
+	return particleSystem;
+}
+
+void ResultScene::EmitParticle(ParticleSystem* particleSystem, const Vector3& position) {
+	if (!particleSystem) {
+		return;
+	}
+
+	particleSystem->SetActive(true);
+	particleSystem->SetEmitterPosition(position);
+	particleSystem->Clear();
+	particleSystem->GetMainModule().Restart();
+	particleSystem->Play();
+}
+
+void ResultScene::CheckParticleAutoDeactivate(ParticleSystem* particleSystem) {
+	if (!particleSystem || !particleSystem->IsActive()) {
+		return;
+	}
+
+	if (particleSystem->IsFinished()) {
+		particleSystem->SetActive(false);
+	}
 }

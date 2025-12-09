@@ -34,6 +34,20 @@ private:
 	/// @brief シーン遷移の処理
 	void UpdateSceneTransition(float deltaTime);
 
+	/// @brief パーティクルシステムを生成
+	/// @param presetPath プリセットファイルのパス
+	/// @return 生成されたパーティクルシステム
+	std::unique_ptr<ParticleSystem> CreateParticleSystem(const std::string& presetPath);
+
+	/// @brief パーティクルを発生させる
+	/// @param particleSystem パーティクルシステム
+	/// @param position 発生位置
+	void EmitParticle(ParticleSystem* particleSystem, const Vector3& position);
+
+	 /// @brief パーティクルシステムの自動非アクティブ化をチェック
+	/// @param particleSystem パーティクルシステム
+	void CheckParticleAutoDeactivate(ParticleSystem* particleSystem);
+
 protected:
 	/// @brief リリースカメラの初期設定をカスタマイズ
 	void SetupReleaseCameraParameters(Camera* camera) override;
@@ -85,4 +99,7 @@ private:
 
 	// 雲
 	std::array<Cloud*, 4> clouds_;
+
+	// パーティクル
+	ParticleSystem* fireworkParticle_;
 };
