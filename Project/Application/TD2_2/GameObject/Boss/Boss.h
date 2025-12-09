@@ -94,6 +94,11 @@ public:
 	  smokeEffectFunction_ = func;
    }
 
+   // ビヘイビアツリー再構築コールバック
+   void SetRebuildBehaviorTreeFunction(const std::function<void()>& func) {
+      rebuildBehaviorTreeFunction_ = func;
+   }
+
    void StartEffect();
 
    void StartSparkEffect();
@@ -137,8 +142,8 @@ private:
 
    // スタン
    float stunDuration_ = 0.3f;      // スタン持続時間（秒）
-   float stunDamping_ = 0.04f;      // スタン減衰率
-   float stunMaxSpeed_ = 35.0f;     // スタン最大速度
+   float stunDamping_ = 0.03f;      // スタン減衰率
+   float stunMaxSpeed_ = 30.0f;     // スタン最大速度
    GameTimer stunTimer_;            // スタンタイマー
 
    // パンク
@@ -190,6 +195,9 @@ private:
    std::function<void()> startSparkEffectFunction_;
    std::function<void()> stopSparkEffectFunction_;
    std::function<void(const Vector3&)> updateSparkEffectFunction_;
+
+   // ビヘイビアツリー再構築コールバック
+   std::function<void()> rebuildBehaviorTreeFunction_;
 
    float storedEnergy_ = 0.0f;
    float energyScale_ = 0.3f;

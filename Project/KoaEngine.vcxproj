@@ -173,6 +173,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="Application\TD2_2\Collider\SphereCollider.cpp" />
     <ClCompile Include="Application\TD2_2\Effect\Lightning\LightningEffectManager.cpp" />
     <ClCompile Include="Application\TD2_2\GameObject\Boss\ActionNode\ActionNode.cpp" />
+    <ClCompile Include="Application\TD2_2\GameObject\Boss\ActionNode\ChargeAwayFromPlayerAction.cpp" />
     <ClCompile Include="Application\TD2_2\GameObject\Boss\ActionNode\ChargeToPlayerAction.cpp" />
     <ClCompile Include="Application\TD2_2\AI\BehaviorTree\BehaviorTree.cpp" />
     <ClCompile Include="Application\TD2_2\GameObject\Boss\ActionNode\FleeFromPlayerAction.cpp" />
@@ -394,6 +395,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="Application\TD2_2\Collider\SphereCollider.h" />
     <ClInclude Include="Application\TD2_2\Effect\Lightning\LightningEffectManager.h" />
     <ClInclude Include="Application\TD2_2\GameObject\Boss\ActionNode\ActionNode.h" />
+    <ClInclude Include="Application\TD2_2\GameObject\Boss\ActionNode\ChargeAwayFromPlayerAction.h" />
     <ClInclude Include="Application\TD2_2\GameObject\Boss\ActionNode\ChargeToPlayerAction.h" />
     <ClInclude Include="Application\TD2_2\GameObject\Boss\ActionNode\FleeFromPlayerAction.h" />
     <ClInclude Include="Application\TD2_2\GameObject\Boss\ActionNode\MoveAction.h" />
@@ -705,6 +707,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Application\TD2_2\AI\BossAI_Documentation.md" />
     <None Include="Application\TD2_2\AI\Node\BehaviorTreeUsageExamples.md" />
     <None Include="Application\TD2_2\AI\Node\README.md" />
     <None Include="Application\TD2_2\AI\BehaviorTree\README.md" />
