@@ -99,6 +99,18 @@ void ResultScene::Initialize(EngineSystem* engine) {
 		auto soundManager = engine_->GetComponent<SoundManager>();
 		if (soundManager) {
 			mp3Resource_ = soundManager->CreateSoundResource("Resources/Audio/BGM/Funky_Magic.mp3");
+			cursorSound_ = soundManager->CreateSoundResource("Resources/Audio/SE/cursor.mp3");
+			decideSound_ = soundManager->CreateSoundResource("Resources/Audio/SE/decide.mp3");
+
+			cursorSound_->SetVolume(1.0f);
+			decideSound_->SetVolume(1.0f);
+		}
+
+		if (mp3Resource_ && mp3Resource_->IsValid()) {
+			bool isPlaying = mp3Resource_->IsPlaying();
+			if (!isPlaying) {
+				mp3Resource_->Play(false);
+			}
 		}
 	}
 }
@@ -110,23 +122,26 @@ void ResultScene::Update() {
 		return;
 	}
 
-	if (mp3Resource_ && mp3Resource_->IsValid()) {
-		bool isPlaying = mp3Resource_->IsPlaying();
-		if (!isPlaying) {
-			mp3Resource_->Play(false);
-		}
-	}
-
 	// 遷移中でなければ入力を受け付ける
 	if (!isTitleTransitioning_ && !isGameTransitioning_) {
 		// 右キーでスタートを選択
 		if (keyConfig_.GetDown("Right")) {
 			resultUI_->SetSelectionState(ResultUI::SelectionState::ToTitle);
+
+			// SE再生
+			if (cursorSound_ && cursorSound_->IsValid()) {
+				cursorSound_->Play(false);
+			}
 		}
 
 		// 左キーでQuitを選択
 		if (keyConfig_.GetDown("Left")) {
 			resultUI_->SetSelectionState(ResultUI::SelectionState::ReStart);
+		
+		    // SE再生
+			if (cursorSound_ && cursorSound_->IsValid()) {
+				cursorSound_->Play(false);
+			}
 		}
 
 		// スペースキーで決定
@@ -136,6 +151,11 @@ void ResultScene::Update() {
 				if (!isPlaying) {
 					mp3Resource_->Stop();
 				}
+			}
+
+			// SE再生
+			if (decideSound_ && decideSound_->IsValid()) {
+				decideSound_->Play(false);
 			}
 
 			switch (resultUI_->GetSelectionState()) {

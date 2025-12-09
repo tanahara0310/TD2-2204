@@ -77,4 +77,8 @@ private:
 
 	// 勝敗フラグ
 	bool isWin_ = false;
+
+	// サウンド
+	Sound cursorSound_;
+	Sound decideSound_;
 };
