@@ -52,6 +52,10 @@ public:
 	/// @brief 追跡モードを取得
 	bool IsChasingMode() const { return isChasing_; }
 
+	/// @brief 初期位置を設定
+	/// @param position 新しい初期位置
+	void SetInitialPosition(const Vector3& position) { initialPosition_ = position; }
+
 private:
 	/// @brief 回転状態
 	enum class RotationState {
@@ -59,9 +63,36 @@ private:
 		Waiting    // 待機中
 	};
 
+	/// @brief 追跡モードの更新
+	/// @param deltaTime デルタタイム
+	void UpdateChaseMode(float deltaTime);
+
+	/// @brief 通常移動モードの更新
+	/// @param deltaTime デルタタイム
+	void UpdateNormalMode(float deltaTime);
+
+	/// @brief 回転の更新
+	/// @param directionX X方向の移動方向
+	/// @param deltaTime デルタタイム
+	void UpdateRotation(float directionX, float deltaTime);
+
+	/// @brief 回転中の処理
+	/// @param deltaTime デルタタイム
+	void ProcessRotating(float deltaTime);
+
+	/// @brief 待機中の処理
+	/// @param deltaTime デルタタイム
+	void ProcessWaiting(float deltaTime);
+
+	/// @brief 基本回転を設定
+	/// @param direction 移動方向（1.0 = 右, -1.0 = 左）
+	void SetBasicRotation(float direction);
+
+	/// @brief 回転状態をリセット
+	void ResetRotationState();
+
 	Vector3 initialPosition_ = { 10.0f, 24.0f, 10.0f }; // 初期位置（背景より後ろ）
-	const float kInitialSpeed_ = 15.6f; // 初期速度（定数として保持）
-	float chaseSpeed_ = kInitialSpeed_; // 追跡速度
+	float chaseSpeed_ = 23.4f; // 追跡速度（初期値23.4f、外部から設定可能）
 	float moveDirection_ = 1.0f; // 移動方向（1.0 = 右, -1.0 = 左）
 	bool isChasing_ = true; // 追跡モードかどうか
 	TitlePlayerDemo* target_ = nullptr; // 追跡対象
