@@ -29,6 +29,11 @@ void YameruModel::Update() {
 }
 
 void YameruModel::UpdateBreathingAnimation(float deltaTime) {
+	// 決定演出中は呼吸アニメーションをスキップ（外部からスケールが制御される）
+	if (isConfirming_) {
+		return;
+	}
+	
 	if (isSelected_) {
 		// 選択中は呼吸アニメーション
 		breathTimer_ += deltaTime * kBreathSpeed;

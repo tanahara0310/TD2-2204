@@ -8,6 +8,8 @@
 #include "../../GameObject/Voxel/Voxel.h"
 #include "../../GameObject/TitleUI/TitleUI.h"
 #include "../../GameObject/Background/Background.h"
+#include "../../GameObject/TitleDemo/TitlePlayerDemo.h"
+#include "../../GameObject/TitleDemo/TitleEnemyDemo.h"
 #include "../../Utility/KeyConfig.h"
 #include "../../Camera/TitleCameraController.h"
 #include "../../Effect/Lightning/LightningEffectManager.h"
@@ -40,11 +42,32 @@ private:
 	/// @brief シーン遷移の処理
 	void UpdateSceneTransition(float deltaTime);
 
+	/// @brief 決定時のリアクション演出の更新
+	void UpdateConfirmAnimation(float deltaTime);
+	
+	/// @brief フェードアウト処理の更新
+	void UpdateFadeOut(float deltaTime);
+
+	/// @brief デモパターンを切り替える
+	void SwitchDemoPattern();
+
 private:
 	std::unique_ptr<TitleUI> titleUI_;
 
 	// 背景
 	Background* background_ = nullptr;
+
+	// デモ演出用の自機と敵
+	TitlePlayerDemo* demoPlayer_ = nullptr;
+	TitleEnemyDemo* demoEnemy_ = nullptr;
+
+	// デモパターン管理
+	enum class DemoPattern {
+		EnemyChasePlayer,  // 敵が自機を追跡
+		PlayerChaseEnemy   // 自機が敵を追跡
+	};
+	DemoPattern currentDemoPattern_ = DemoPattern::EnemyChasePlayer;
+	bool isMovingRight_ = true; // true = +X方向, false = -X方向
 
 	// キーコンフィグ
 	std::unique_ptr<KeyConfig> keyConfig_;
@@ -61,6 +84,24 @@ private:
 	bool isTransitioning_ = false;
 	float transitionTimer_ = 0.0f;
 	static constexpr float kTransitionDuration = 0.3f; // 0.3秒で遷移（決定アニメーションと同時）
+
+	// 決定時のリアクション演出用
+	bool isConfirmAnimating_ = false;
+	GameTimer confirmAnimationTimer_;
+	static constexpr float kConfirmAnimationDuration = 0.5f; // 決定演出の時間
+	static constexpr float kSelectedScaleMax = 1.5f; // 選択されたモデルの最大スケール
+	float selectedModelInitialScale_ = 1.0f; // 選択されたモデルの初期スケール
+	Vector4 unselectedModelOriginalColor_ = { 1.0f, 1.0f, 1.0f, 1.0f }; // 非選択モデルの元の色
+
+	// 終了待機用
+	bool isWaitingForQuit_ = false;
+	float quitWaitTimer_ = 0.0f;
+	static constexpr float kQuitWaitDuration = 0.5f; // 終了前の待機時間
+
+	// フェードアウト用
+	bool isFadingOut_ = false;
+	GameTimer fadeOutTimer_;
+	static constexpr float kFadeOutDuration = 0.5f; // フェードアウトの時間
 
 	Sound titleBGM_;
 

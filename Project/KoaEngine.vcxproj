@@ -195,6 +195,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="Application\TD2_2\GameObject\Recommended\ControllerModel.cpp" />
     <ClCompile Include="Application\TD2_2\GameObject\Recommended\RecommendedModel.cpp" />
     <ClCompile Include="Application\TD2_2\GameObject\SparkColliderObject\SparkColliderObject.cpp" />
+    <ClCompile Include="Application\TD2_2\GameObject\TitleDemo\TitleEnemyDemo.cpp" />
+    <ClCompile Include="Application\TD2_2\GameObject\TitleDemo\TitlePlayerDemo.cpp" />
     <ClCompile Include="Application\TD2_2\GameObject\TitleUI\GekitotsuModel.cpp" />
     <ClCompile Include="Application\TD2_2\GameObject\TitleUI\PlayerPresetModel.cpp" />
     <ClCompile Include="Application\TD2_2\GameObject\TitleUI\StartModel.cpp" />
@@ -415,6 +417,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="Application\TD2_2\GameObject\Recommended\ControllerModel.h" />
     <ClInclude Include="Application\TD2_2\GameObject\Recommended\RecommendedModel.h" />
     <ClInclude Include="Application\TD2_2\GameObject\SparkColliderObject\SparkColliderObject.h" />
+    <ClInclude Include="Application\TD2_2\GameObject\TitleDemo\TitleEnemyDemo.h" />
+    <ClInclude Include="Application\TD2_2\GameObject\TitleDemo\TitlePlayerDemo.h" />
     <ClInclude Include="Application\TD2_2\GameObject\TitleUI\GekitotsuModel.h" />
     <ClInclude Include="Application\TD2_2\GameObject\TitleUI\PlayerPresetModel.h" />
     <ClInclude Include="Application\TD2_2\GameObject\TitleUI\StartModel.h" />
