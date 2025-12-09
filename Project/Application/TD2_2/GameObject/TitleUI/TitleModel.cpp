@@ -5,8 +5,8 @@ void TitleModel::Initialize(std::unique_ptr<Model> model, TextureManager::Loaded
 	GameObject::Initialize(std::move(model), texture);
 
 	// 初期位置とスケールの設定
-	transform_.translate = { -0.6f, -4.0f, -60.9f };
-	baseScale_ = { 1.0f, 1.0f, 1.0f };
+	transform_.translate = { 0.0f, -4.0f, -60.9f };
+	baseScale_ = { 1.4f, 1.4f, 2.0f };
 	transform_.scale = baseScale_;
 	transform_.TransferMatrix();
 }

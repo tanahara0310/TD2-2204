@@ -47,7 +47,7 @@ public:
 
 private:
     // カメラパラメータ
-    Vector3 cameraPos_ = { -9.0f, -6.6f, -68.10f };  // カメラ位置
-    Vector3 target_ = { 45.47f, 12.14f, -12.91f };     // 注視点
+    Vector3 cameraPos_ = { 0.0f, -11.0f, -71.8f };  // カメラ位置
+    Vector3 target_ = { 0.0f, 20.54f, -17.61f };     // 注視点
     Vector3 up_ = { 0.0f, 1.0f, 0.0f };               // 上方向ベクトル
 };
