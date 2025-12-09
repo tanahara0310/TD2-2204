@@ -42,6 +42,9 @@ public:
 	// 点滅の基本速度を指定
 	void SetBlinkBaseSpeed(float blinkBaseSpeed) { blinkBaseSpeed_ = blinkBaseSpeed; }
 
+	// @brief オブジェクトを非Activeにする処理
+	void Clear();
+
 private:
 	// Fillを作成
 	std::unique_ptr<SpriteObject> CreateFill();

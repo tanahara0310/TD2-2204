@@ -52,7 +52,7 @@
     "main": {
         "duration": 1.0,
         "gravityModifier": 0.0,
-        "looping": false,
+        "looping": true,
         "maxParticles": 1000,
         "playOnAwake": false,
         "simulationSpace": 1,

@@ -47,7 +47,7 @@ private:
 	// 打ち上げアニメーション用変数
 	bool hasLaunched_ = false;                                                // 既に打ち上げ済みか
 	float launchTimer_ = 0.0f;                                                // 経過タイマー
-	static constexpr float kLaunchDuration = 0.7f;                            // 打ち上げと戻りにかかる時間
+	static constexpr float kLaunchDuration = 0.5f;                            // 打ち上げと戻りにかかる時間
 	static constexpr float kLaunchHeight = 2.0f;                              // ピーク時の高さオフセット
 	static constexpr float kTotalRotation = 2.0f * std::numbers::pi_v<float>; // 一回転
 	float startY_ = 0.0f;                                                     // 打ち上げ開始時のY位置
