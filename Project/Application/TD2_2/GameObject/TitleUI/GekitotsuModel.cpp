@@ -12,6 +12,12 @@ void GekitotsuModel::Initialize(std::unique_ptr<Model> model, TextureManager::Lo
 	transform_.translate = { 0.0f, -1.9f, -59.9f };
 	baseScale_ = { 1.0f, 1.0f, 2.0f };
 	transform_.scale = baseScale_;
+	
+	// シェーディングモードをトゥーンに設定
+	if (model_ && model_->GetMaterialManager()) {
+		model_->GetMaterialManager()->SetShadingMode(3); // 3 = Toon
+	}
+	
 	transform_.TransferMatrix();
 }
 

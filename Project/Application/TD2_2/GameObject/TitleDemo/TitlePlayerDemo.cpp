@@ -16,6 +16,11 @@ void TitlePlayerDemo::Initialize(std::unique_ptr<Model> model, TextureManager::L
 	// 初期回転（-X方向 = 90度、前かがみ = Z軸に若干の回転）
 	transform_.rotate = { 0.0f, std::numbers::pi_v<float> / 2.0f, 0.15f };
 	baseRotationY_ = std::numbers::pi_v<float> / 2.0f;
+	
+	// 速度の初期化
+	currentSpeed_ = moveSpeed_;
+	baseSpeed_ = moveSpeed_;
+	
 	transform_.TransferMatrix();
 }
 
@@ -46,9 +51,50 @@ void TitlePlayerDemo::UpdateChaseMode(float deltaTime) {
 		direction = MathCore::Vector::Normalize(direction);
 	}
 
+	// 目標速度を距離に応じて計算
+	float targetSpeed = baseSpeed_;
+	
+	// 追いつく瞬間の演出（最優先）
+	if (distance <= catchUpDistance_) {
+		targetSpeed = baseSpeed_ * catchUpSpeedBoost_;
+		isCatchingUp_ = true;
+	}
+	// 近距離：減速（追いつきそうな緊張感）
+	else if (distance <= closeDistance_) {
+		float ratio = distance / closeDistance_; // 0.0～1.0
+		targetSpeed = baseSpeed_ * (closeSpeedMultiplier_ + (1.0f - closeSpeedMultiplier_) * ratio);
+		isCatchingUp_ = false;
+	}
+	// 遠距離：加速
+	else if (distance >= farDistance_) {
+		targetSpeed = baseSpeed_ * farSpeedMultiplier_;
+		isCatchingUp_ = false;
+	}
+	// 中距離：通常速度
+	else {
+		float ratio = (distance - closeDistance_) / (farDistance_ - closeDistance_); // 0.0～1.0
+		targetSpeed = baseSpeed_ * (1.0f + (farSpeedMultiplier_ - 1.0f) * ratio);
+		isCatchingUp_ = false;
+	}
+
+	// 現在の速度を目標速度に向けて加速/減速
+	if (currentSpeed_ < targetSpeed) {
+		// 加速
+		currentSpeed_ += acceleration_ * deltaTime;
+		if (currentSpeed_ > targetSpeed) {
+			currentSpeed_ = targetSpeed;
+		}
+	} else if (currentSpeed_ > targetSpeed) {
+		// 減速
+		currentSpeed_ -= deceleration_ * deltaTime;
+		if (currentSpeed_ < targetSpeed) {
+			currentSpeed_ = targetSpeed;
+		}
+	}
+
 	// 追跡移動
 	if (distance > 0.1f) {
-		transform_.translate.x += direction.x * moveSpeed_ * deltaTime; // kInitialSpeed_ → moveSpeed_
+		transform_.translate.x += direction.x * currentSpeed_ * deltaTime;
 		// Y・Z座標は初期位置を維持
 		transform_.translate.y = initialPosition_.y;
 		transform_.translate.z = initialPosition_.z;
@@ -65,8 +111,12 @@ void TitlePlayerDemo::UpdateChaseMode(float deltaTime) {
 }
 
 void TitlePlayerDemo::UpdateNormalMode(float deltaTime) {
+	// 通常移動モードでは基本速度に戻す
+	currentSpeed_ = baseSpeed_;
+	isCatchingUp_ = false;
+	
 	// 通常移動（X軸方向）
-	transform_.translate.x += moveSpeed_ * moveDirection_ * deltaTime; // kInitialSpeed_ → moveSpeed_
+	transform_.translate.x += currentSpeed_ * moveDirection_ * deltaTime;
 	
 	// Y・Z座標は初期位置を維持
 	transform_.translate.y = initialPosition_.y;

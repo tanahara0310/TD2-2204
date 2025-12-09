@@ -319,6 +319,9 @@
     <ClCompile Include="Application\TD2_2\GameObject\Boss\ActionNode\ChargeAwayFromPlayerAction.cpp" />
     <ClCompile Include="Application\TD2_2\GameObject\Boss\ActionNode\ChargeTowardsSafetyAction.cpp" />
     <ClCompile Include="Application\TD2_2\Scene\Game\BossBehaviorTreeFactory.cpp" />
+    <ClCompile Include="Application\TD2_2\Scene\Game\TitleDemoManager.cpp" />
+    <ClCompile Include="Application\TD2_2\Scene\Game\TitleLightningFrameManager.cpp" />
+    <ClCompile Include="Application\TD2_2\Scene\Game\TitleConfirmAnimationManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Engine\WinApp\WinApp.h">
@@ -800,6 +803,9 @@
     <ClInclude Include="Application\TD2_2\GameObject\Boss\ActionNode\ChargeAwayFromPlayerAction.h" />
     <ClInclude Include="Application\TD2_2\GameObject\Boss\ActionNode\ChargeTowardsSafetyAction.h" />
     <ClInclude Include="Application\TD2_2\Scene\Game\BossBehaviorTreeFactory.h" />
+    <ClInclude Include="Application\TD2_2\Scene\Game\TitleDemoManager.h" />
+    <ClInclude Include="Application\TD2_2\Scene\Game\TitleLightningFrameManager.h" />
+    <ClInclude Include="Application\TD2_2\Scene\Game\TitleConfirmAnimationManager.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Engine\Particle\README.md">
