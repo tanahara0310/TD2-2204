@@ -57,7 +57,7 @@ private:
 		Waiting    // 待機中
 	};
 
-	Vector3 initialPosition_ = { 20.0f, 3.5f, -19.7f }; // 初期位置（右側）
+	Vector3 initialPosition_ = { 20.0f, 24.0f, 10.0f }; // 初期位置（敵と同じ値に統一）
 	const float kInitialSpeed_ = 15.6f; // 初期速度（定数として保持）
 	float moveSpeed_ = kInitialSpeed_; // 移動速度
 	float moveDirection_ = -1.0f; // 移動方向（1.0 = 右, -1.0 = 左）最初は左に移動

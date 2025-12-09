@@ -7,7 +7,7 @@ void YameruModel::Initialize(std::unique_ptr<Model> model, TextureManager::Loade
 	GameObject::Initialize(std::move(model), texture);
 
 	// 初期位置とスケールの設定
-	transform_.translate = { -2.4f, -5.9f, -57.6f };
+	transform_.translate = { 0.0f, -7.0f, -60.9f };
 	baseScale_ = { 1.0f, 1.0f, 1.0f };
 	transform_.scale = baseScale_;
 	breathTimer_ = 0.0f;

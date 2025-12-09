@@ -59,7 +59,7 @@ private:
 		Waiting    // 待機中
 	};
 
-	Vector3 initialPosition_ = { 10.0f, 3.5f, -19.7f }; // 初期位置（プレイヤーの後ろ）
+	Vector3 initialPosition_ = { 10.0f, 24.0f, 10.0f }; // 初期位置（背景より後ろ）
 	const float kInitialSpeed_ = 15.6f; // 初期速度（定数として保持）
 	float chaseSpeed_ = kInitialSpeed_; // 追跡速度
 	float moveDirection_ = 1.0f; // 移動方向（1.0 = 右, -1.0 = 左）

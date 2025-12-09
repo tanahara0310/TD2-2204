@@ -88,7 +88,7 @@ private:
 	// 決定時のリアクション演出用
 	bool isConfirmAnimating_ = false;
 	GameTimer confirmAnimationTimer_;
-	static constexpr float kConfirmAnimationDuration = 0.5f; // 決定演出の時間
+	static constexpr float kConfirmAnimationDuration = 0.3f; // 決定演出の時間
 	static constexpr float kSelectedScaleMax = 1.5f; // 選択されたモデルの最大スケール
 	float selectedModelInitialScale_ = 1.0f; // 選択されたモデルの初期スケール
 	Vector4 unselectedModelOriginalColor_ = { 1.0f, 1.0f, 1.0f, 1.0f }; // 非選択モデルの元の色

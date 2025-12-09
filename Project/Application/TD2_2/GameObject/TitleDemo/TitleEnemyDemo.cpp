@@ -13,6 +13,7 @@ void TitleEnemyDemo::Initialize(std::unique_ptr<Model> model, TextureManager::Lo
 
 	// 初期位置の設定
 	transform_.translate = initialPosition_;
+	
 	transform_.scale = { 2.0f, 2.0f, 2.0f };
 	// 初期回転（+X方向 = 90度、前かがみ = Z軸に若干の回転）
 	transform_.rotate = { 0.0f, std::numbers::pi_v<float> / 2.0f, -0.15f };

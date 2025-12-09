@@ -28,13 +28,22 @@
 #include "Engine/Graphics/PostEffect/PostEffectNames.h"
 
 void TitleScene::Initialize(EngineSystem* engine) {
+
 	BaseScene::Initialize(engine);
 
 	// InputSourceの初期化（必須）
 	InputSource::Initialize(engine);
 
-	// カメラコントローラーの初期化
+
 	cameraController_ = std::make_unique<TitleCameraController>();
+	// TitleUIの初期化
+	{
+		titleUI_ = std::make_unique<TitleUI>();
+		auto uiObjects = titleUI_->Initialize(engine_);
+		for (auto& obj : uiObjects) {
+			gameObjects_.push_back(std::move(obj));
+		}
+	}
 
 	// KeyConfigの設定
 	{
@@ -87,7 +96,7 @@ void TitleScene::Initialize(EngineSystem* engine) {
 		background->Initialize(std::move(backgroundModel), backgroundTexture);
 
 		// タイトルシーン専用の背景モデルパラメータ
-		background_->GetTransform().translate = { 47.8f, 12.7f, -27.7f };
+		background_->GetTransform().translate = { 0.0f, 28.7f, -5.4f };
 		background_->GetTransform().rotate = { 0.0f, 0.0f, 0.0f };
 
 
@@ -97,16 +106,6 @@ void TitleScene::Initialize(EngineSystem* engine) {
 		gameObjects_.push_back(std::move(background));
 	}
 
-	{
-		// UI初期化
-		titleUI_ = std::make_unique<TitleUI>();
-		auto sprites = titleUI_->Initialize(engine);
-
-		// スプライトをgameObjects_に追加
-		for (auto& sprite : sprites) {
-			gameObjects_.push_back(std::move(sprite));
-		}
-	}
 
 	// デモ演出用の自機と敵の初期化
 	{
@@ -119,6 +118,12 @@ void TitleScene::Initialize(EngineSystem* engine) {
 		auto demoPlayer = std::make_unique<TitlePlayerDemo>();
 		demoPlayer_ = demoPlayer.get();
 		demoPlayer->Initialize(std::move(playerModel), playerTexture);
+		
+		// 初期位置を画面左端に設定
+		demoPlayer->GetTransform().translate = { -35.0f, 24.0f, 10.0f };
+		demoPlayer->GetTransform().rotate.y = std::numbers::pi_v<float> / 2.0f; // +X方向を向く
+		demoPlayer->GetTransform().TransferMatrix();
+		
 		gameObjects_.push_back(std::move(demoPlayer));
 
 		// デモエネミーの生成
@@ -128,6 +133,12 @@ void TitleScene::Initialize(EngineSystem* engine) {
 		demoEnemy_ = demoEnemy.get();
 		demoEnemy->Initialize(std::move(enemyModel), enemyTexture);
 		demoEnemy->SetTarget(demoPlayer_);
+		
+		// 初期位置を画面左端（プレイヤーの後ろ）に設定
+		demoEnemy->GetTransform().translate = { -45.0f, 24.0f, 10.0f };
+		demoEnemy->GetTransform().rotate.y = std::numbers::pi_v<float> / 2.0f; // +X方向を向く
+		demoEnemy->GetTransform().TransferMatrix();
+		
 		gameObjects_.push_back(std::move(demoEnemy));
 
 		// デモの初期設定（パターン1: 敵が自機を追跡、+X方向）
@@ -159,10 +170,10 @@ void TitleScene::Initialize(EngineSystem* engine) {
 		// 矩形サイズ（共通）
 		float halfWidth = 1.9f;
 		float halfHeight = 0.5f;
-		float frameYOffset = 0.8f; // 中心から少し上にずらす
+		float frameYOffset = 0.0f; // オフセットなし（モデルの中心に合わせる）
 
-		// 初期中心はStartの位置（上にオフセット）
-		Vector3 startCenter = { -2.1f, -4.5f + frameYOffset, -57.6f };
+		// 初期中心はStartの位置（新しい座標: {0.0f, -5.5f, -60.9f}）
+		Vector3 startCenter = { 0.0f, -5.5f + frameYOffset, -60.9f };
 
 		config.color = startColor;
 		// 上辺（index 0）
@@ -315,9 +326,9 @@ void TitleScene::Update() {
 	// 現在選択中のモデル位置へ枠を移動＆色変更（選択変更時）
 	{
 		bool isStartSelected = (titleUI_->GetSelectionState() == TitleUI::SelectionState::Start);
-		float frameYOffset = 0.5f; // 中心から少し上にずらす
-		Vector3 startCenter = { -2.1f, -4.5f + frameYOffset, -57.6f };
-		Vector3 quitCenter = { -2.4f, -5.9f + frameYOffset, -57.6f };
+		float frameYOffset = 0.0f; // オフセットなし（モデルの中心に合わせる）
+		Vector3 startCenter = { 0.0f, -5.5f + frameYOffset, -60.9f };
+		Vector3 quitCenter = { 0.0f, -7.0f + frameYOffset, -60.9f };
 		Vector3 target = isStartSelected ? startCenter : quitCenter;
 
 		for (int i = 0; i < 4; i++) {
@@ -435,7 +446,7 @@ void TitleScene::Update() {
 			}
 			// 左方向（X軸負）
 			else if (moveInput.x < -kStickThreshold) {
-				titleUI_->SelectPreviousPreset();
+			 titleUI_->SelectPreviousPreset();
 				stickInputCooldown_ = kStickInputDelay;
 			}
 			// 右方向（X軸正）
@@ -543,11 +554,11 @@ void TitleScene::Update() {
 	// デモ演出の自動リセット（画面外に出た場合）
 	if (demoPlayer_) {
 		Vector3 playerPos = demoPlayer_->GetWorldPosition();
-		// X座標が範囲外に出たらパターンを切り替え
+		// X座標が範囲外に出たらパターンを切り替え（背景の見える範囲に調整）
 		bool shouldSwitch = false;
-		if (isMovingRight_ && playerPos.x > 100.0f) {
+		if (isMovingRight_ && playerPos.x > 50.0f) {  // 右端を50.0fに修正
 			shouldSwitch = true;
-		} else if (!isMovingRight_ && playerPos.x < 0.0f) {
+		} else if (!isMovingRight_ && playerPos.x < -50.0f) {  // 左端をさらに左にずらす
 			shouldSwitch = true;
 		}
 
@@ -643,15 +654,15 @@ void TitleScene::SwitchDemoPattern() {
 		float rotation = std::numbers::pi_v<float> / 2.0f; // 90度
 		if (currentDemoPattern_ == DemoPattern::EnemyChasePlayer) {
 			// 自機が前、敵が後ろ
-			demoPlayer_->GetTransform().translate = { 20.0f, 6.0f, -22.7f };
+			demoPlayer_->GetTransform().translate = { -35.0f, 24.0f };  // さらに左から開始
 			demoPlayer_->GetTransform().rotate.y = rotation;
-			demoEnemy_->GetTransform().translate = { 10.0f, 6.0f, -22.7f };
+			demoEnemy_->GetTransform().translate = { -45.0f, 24.0f };  // さらに左から開始
 			demoEnemy_->GetTransform().rotate.y = rotation;
 		} else {
 			// 敵が前、自機が後ろ
-			demoEnemy_->GetTransform().translate = { 20.0f, 6.0f, -22.7f };
+			demoEnemy_->GetTransform().translate = { -35.0f, 24.0f };  // さらに左から開始
 			demoEnemy_->GetTransform().rotate.y = rotation;
-			demoPlayer_->GetTransform().translate = { 10.0f, 6.0f, -22.7f };
+			demoPlayer_->GetTransform().translate = { -45.0f, 24.0f };  // さらに左から開始
 			demoPlayer_->GetTransform().rotate.y = rotation;
 		}
 	} else {
@@ -659,15 +670,15 @@ void TitleScene::SwitchDemoPattern() {
 		float rotation = -std::numbers::pi_v<float> / 2.0f; // -90度
 		if (currentDemoPattern_ == DemoPattern::EnemyChasePlayer) {
 			// 自機が前、敵が後ろ
-			demoPlayer_->GetTransform().translate = { 80.0f, 6.0f, -22.7f };
+			demoPlayer_->GetTransform().translate = { 45.0f, 24.0f };
 			demoPlayer_->GetTransform().rotate.y = rotation;
-			demoEnemy_->GetTransform().translate = { 90.0f, 6.0f, -22.7f };
+			demoEnemy_->GetTransform().translate = { 55.0f, 24.0f };
 			demoEnemy_->GetTransform().rotate.y = rotation;
 		} else {
 			// 敵が前、自機が後ろ
-			demoEnemy_->GetTransform().translate = { 80.0f, 6.0f, -22.7f };
+			demoEnemy_->GetTransform().translate = { 45.0f, 24.0f };
 			demoEnemy_->GetTransform().rotate.y = rotation;
-			demoPlayer_->GetTransform().translate = { 90.0f, 6.0f, -22.7f };
+			demoPlayer_->GetTransform().translate = { 55.0f, 24.0f };
 			demoPlayer_->GetTransform().rotate.y = rotation;
 		}
 	}
@@ -689,8 +700,17 @@ void TitleScene::UpdateConfirmAnimation(float deltaTime) {
 	// 進行度を取得（0.0～1.0）
 	float progress = confirmAnimationTimer_.GetProgress();
 
-	// イージングを適用（前半で拡大、後半でさらに拡大）
-	float easedProgress = EasingUtil::Apply(progress, EasingUtil::Type::EaseInOutBack);
+	// 緩急のある山型イージング（0→1→0）
+	float easedProgress;
+	if (progress < 0.5f) {
+		float t = progress * 3.0f;
+		float eased = EasingUtil::Apply(t, EasingUtil::Type::EaseOutQuad);
+		easedProgress = eased; // 0→1
+	} else {
+		float t = (progress - 0.5f) * 3.0f;
+		float eased = EasingUtil::Apply(t, EasingUtil::Type::EaseInQuad);
+		easedProgress = 1.0f - eased; // 1→0
+	}
 
 	// 選択状態に応じた処理
 	if (titleUI_->GetSelectionState() == TitleUI::SelectionState::Start) {
@@ -722,7 +742,7 @@ void TitleScene::UpdateConfirmAnimation(float deltaTime) {
 		// やめる選択時の処理
 		auto* yameruModel = titleUI_->GetYameruModel();
 		if (yameruModel) {
-			float scaleMultiplier = 1.0f + (kSelectedScaleMax - 1.0f) * easedProgress;
+		 float scaleMultiplier = 1.0f + (kSelectedScaleMax - 1.0f) * easedProgress;
 			float newScale = selectedModelInitialScale_ * scaleMultiplier;
 			yameruModel->GetTransform().scale = { newScale, newScale, newScale };
 		}
@@ -775,7 +795,7 @@ void TitleScene::UpdateConfirmAnimation(float deltaTime) {
 		// 選択状態に応じた処理
 		if (titleUI_->GetSelectionState() == TitleUI::SelectionState::Start) {
 			// スタート選択時はシーン遷移を開始
-			isTransitioning_ = true;
+		 isTransitioning_ = true;
 			transitionTimer_ = 0.0f;
 		} else if (titleUI_->GetSelectionState() == TitleUI::SelectionState::Quit) {
 			// やめる選択時は待機時間を開始
