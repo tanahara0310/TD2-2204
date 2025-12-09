@@ -2,6 +2,7 @@
 #include "Engine/ObjectCommon/SpriteObject.h"
 #include <memory>
 #include <vector>
+#include <unordered_map>
 
 class EngineSystem;
 class IDrawable;
@@ -76,4 +77,10 @@ private:
 
 	// 指定するオブジェクト
 	SettingObject setObj_ = SettingObject::PLAYER;
+
+	// 各アイコンの基準位置（インスタンス毎に保持）
+	std::unordered_map<SpriteObject*, Vector3> basePositions_;
+
+	// シェイク用時間（インスタンス毎）
+	float shakeTime_ = 0.0f;
 };

@@ -110,7 +110,7 @@ private:
 	std::vector<HyphenModel*> hyphenModels_ = {};     // ハイフンモデル
 
 	// 選択状態
-	SelectionState selectionState_ = SelectionState::ToTitle;
+	SelectionState selectionState_ = SelectionState::ReStart;
 
 	// ステートマシーン
 	StateMachine stateMachine_;
