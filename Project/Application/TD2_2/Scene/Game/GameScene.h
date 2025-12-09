@@ -16,6 +16,7 @@
 #include "../../Collider/CollisionManager.h"
 #include "../../Collider/CollisionConfig.h"
 #include "../../Camera/CameraController.h"
+#include "../../Camera/CinematicSequence.h"
 #include "../../AI/BehaviorTree/BehaviorTree.h"
 #include "../../Effect/Lightning/LightningEffectManager.h"
 #include "../../UI/HitPoint/HitPoint.h"
@@ -93,6 +94,10 @@ private:
    float time_ = 0.0f;
 
    std::unique_ptr<StateMachine> stateMachine_;
+
+   // カメラシーケンスのカット追跡用
+   int lastCutIndex_ = -1;
+
 private:
    void RegisterAllColliders();
 
@@ -125,4 +130,20 @@ private:
    /// @brief パーティクルシステムの自動非アクティブ化をチェック
    /// @param particleSystem パーティクルシステム
    void CheckParticleAutoDeactivate(ParticleSystem* particleSystem);
+
+   void InitializeOpening();
+
+   void Opening();
+
+   void InitializeMain();
+
+   void Main();
+
+   void InitializeGameOver();
+
+   void GameOver();
+
+   void InitializeGameClear();
+
+   void GameClear();
 };

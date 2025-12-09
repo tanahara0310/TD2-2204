@@ -129,6 +129,10 @@ public:
 	/// @brief シーケンスを停止
 	void StopSequence();
 
+	/// @brief シーケンスの現在のカットインデックスを取得
+	/// @return 現在のカットインデックス（シーケンス実行中でない場合は-1）
+	int GetSequenceCurrentCutIndex() const;
+
 	// カメラ設定のアクセッサー
 
 	/// @brief 最小距離を設定
