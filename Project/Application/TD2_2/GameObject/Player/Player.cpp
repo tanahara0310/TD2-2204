@@ -39,21 +39,21 @@ void Player::Initialize(std::unique_ptr<Model> model, TextureManager::LoadedText
 
 void Player::Update() {
    if (hp_ <= 0) {
-	  stateMachine_->RequestState("Death", 10);
+      stateMachine_->RequestState("Death", 10);
    }
 
    if (keyConfig_->Get<bool>("Charge")) {
-	  if (GetMoveDirection().Length() > 0.0f) {
-		 stateMachine_->RequestState("Charge", 0);
-	  }
+      if (GetMoveDirection().Length() > 0.0f) {
+         stateMachine_->RequestState("Charge", 0);
+      }
    }
 
    // ダメージ壁との接触判定（ダメージ状態以外、かつ無敵時間でない場合のみ）
    if (stateMachine_->GetCurrentState() != "Damage" &&
-	  stateMachine_->GetCurrentState() != "Despawn" &&
-	  stateMachine_->GetCurrentState() != "Respawn" &&
-	  !IsInvincible()) {
-	  CheckDamageWallCollision();
+      stateMachine_->GetCurrentState() != "Despawn" &&
+      stateMachine_->GetCurrentState() != "Respawn" &&
+      !IsInvincible()) {
+      CheckDamageWallCollision();
    }
 
    stateMachine_->Update();
@@ -76,7 +76,7 @@ void Player::Update() {
 
 void Player::Draw(const ICamera* camera) {
    if (!model_ || !camera) {
-	  return;
+      return;
    }
 
    // モデルの描画
@@ -86,33 +86,41 @@ void Player::Draw(const ICamera* camera) {
 void Player::OnCollisionEnter(GameObject* other) {
 
    if (IsInvincible() || stateMachine_->GetCurrentState() == "Respawn" || stateMachine_->GetCurrentState() == "Despawn") {
-	  return;
+      return;
    }
 
    // スパーク（Spark）との衝突でPunk状態に遷移（アクティブ時のみ）
    if (strcmp(other->GetObjectName(), "Spark") == 0) {
-	  if (auto* spark = dynamic_cast<SparkColliderObject*>(other)) {
-		 if (spark->IsSparkActive()) {
-			// Punk状態に遷移（優先度1で遷移）
-			if (stopEffectFunction_) {
-			   stopEffectFunction_();
-			}
+      if (auto* spark = dynamic_cast<SparkColliderObject*>(other)) {
+         if (spark->IsSparkActive()) {
+            // Punk状態に遷移（優先度1で遷移）
+            if (stopEffectFunction_) {
+               stopEffectFunction_();
+            }
 
-			if (setEffectColorFunction_) {
-			   setEffectColorFunction_({ 0.5f, 0.0f, 0.5f, 1.0f });
-			}
-			stateMachine_->RequestState("Punk", 1);
-		 }
-	  }
-	  return;
+            if (setEffectColorFunction_) {
+               setEffectColorFunction_({ 0.5f, 0.0f, 0.5f, 1.0f });
+            }
+            stateMachine_->RequestState("Punk", 1);
+         }
+      }
+      return;
    }
 
    if (hitEnemyFunction_) {
-	  hitEnemyFunction_();
+      hitEnemyFunction_();
    }
 
    // 反発
    Vector3 toOther3 = other->GetWorldPosition() - GetWorldPosition();
+
+   // 衝突エフェクトの呼び出し: プレイヤーと相手の中間位置を渡す
+   if (collisionEffectFunction_) {
+      Vector3 otherPos = other->GetWorldPosition();
+      Vector3 myPos = GetWorldPosition();
+      Vector3 midpoint = { (otherPos.x + myPos.x) * 0.5f, (otherPos.y + myPos.y) * 0.5f, (otherPos.z + myPos.z) * 0.5f };
+      collisionEffectFunction_(midpoint);
+   }
 
    Vector2 toOther = Vector2{ toOther3.x, toOther3.y };
    Vector2 normal = toOther.Normalize();
@@ -121,10 +129,10 @@ void Player::OnCollisionEnter(GameObject* other) {
    Vector2 otherVel = { 0.0f, 0.0f };
    // other が Boss か Player かを判別して速度を取得
    if (auto p = dynamic_cast<Player*>(other)) {
-	  otherVel = p->GetVelocity();
+      otherVel = p->GetVelocity();
    } else if (auto b = dynamic_cast<Boss*>(other)) {
-	  otherVel = b->GetVelocity();
-	  enemyStoredEnergy_ = b->GetStoredEnergy();
+      otherVel = b->GetVelocity();
+      enemyStoredEnergy_ = b->GetStoredEnergy();
    }
 
    Vector2 relativeVel = velocity_ - otherVel;
@@ -134,15 +142,15 @@ void Player::OnCollisionEnter(GameObject* other) {
 
    // 突進中かつ相手に向かって突進している場合は反発を弱める
    if (isCharging_) {
-	  enemyStoredEnergy_ = 0.0f; // 突進中は相手のエネルギーを吸収しない
-	  Vector2 chargeDir = direction_.Normalize();
-	  if (chargeDir.Length() > 0.0f) {
-		 float dot = chargeDir.x * normal.x + chargeDir.y * normal.y; // cos(theta)
-		 // dot が大きいほど相手方向に突進している
-		 if (dot > 0.0f) {
-			response *= 0.1f;
-		 }
-	  }
+      enemyStoredEnergy_ = 0.0f; // 突進中は相手のエネルギーを吸収しない
+      Vector2 chargeDir = direction_.Normalize();
+      if (chargeDir.Length() > 0.0f) {
+         float dot = chargeDir.x * normal.x + chargeDir.y * normal.y; // cos(theta)
+         // dot が大きいほど相手方向に突進している
+         if (dot > 0.0f) {
+            response *= 0.1f;
+         }
+      }
    }
 
    // clamp to max
@@ -158,25 +166,25 @@ void Player::OnCollisionEnter(GameObject* other) {
 
 void Player::OnCollisionStay(GameObject* other) {
    if (IsInvincible() || stateMachine_->GetCurrentState() == "Respawn" || stateMachine_->GetCurrentState() == "Despawn") {
-	  return;
+      return;
    }
 
    // スパーク（Spark）との衝突でPunk状態に遷移（アクティブ時のみ）
    if (strcmp(other->GetObjectName(), "Spark") == 0) {
-	  if (auto* spark = dynamic_cast<SparkColliderObject*>(other)) {
-		 if (spark->IsSparkActive()) {
+      if (auto* spark = dynamic_cast<SparkColliderObject*>(other)) {
+         if (spark->IsSparkActive()) {
 
-			if (setEffectColorFunction_) {
-			   setEffectColorFunction_({ 0.5f, 0.0f, 0.5f, 1.0f });
-			}
-			stateMachine_->RequestState("Punk", 1);
-		 }
-	  }
-	  return;
+            if (setEffectColorFunction_) {
+               setEffectColorFunction_({ 0.5f, 0.0f, 0.5f, 1.0f });
+            }
+            stateMachine_->RequestState("Punk", 1);
+         }
+      }
+      return;
    }
 
    if (hitEnemyFunction_) {
-	  hitEnemyFunction_();
+      hitEnemyFunction_();
    }
 
    // 反発
@@ -187,10 +195,10 @@ void Player::OnCollisionStay(GameObject* other) {
 
    Vector2 otherVel = { 0.0f, 0.0f };
    if (auto p = dynamic_cast<Player*>(other)) {
-	  otherVel = p->GetVelocity();
+      otherVel = p->GetVelocity();
    } else if (auto b = dynamic_cast<Boss*>(other)) {
-	  otherVel = b->GetVelocity();
-	  enemyStoredEnergy_ = b->GetStoredEnergy();
+      otherVel = b->GetVelocity();
+      enemyStoredEnergy_ = b->GetStoredEnergy();
    }
 
    Vector2 relativeVel = velocity_ - otherVel;
@@ -199,14 +207,14 @@ void Player::OnCollisionStay(GameObject* other) {
    float response = stunPower_ + speed * collisionResponseScale_;
 
    if (isCharging_) {
-	  enemyStoredEnergy_ = 0.0f;
-	  Vector2 chargeDir = direction_.Normalize();
-	  if (chargeDir.Length() > 0.0f) {
-		 float dot = chargeDir.x * normal.x + chargeDir.y * normal.y;
-		 if (dot > 0.0f) {
-			response *= 0.1f;
-		 }
-	  }
+      enemyStoredEnergy_ = 0.0f;
+      Vector2 chargeDir = direction_.Normalize();
+      if (chargeDir.Length() > 0.0f) {
+         float dot = chargeDir.x * normal.x + chargeDir.y * normal.y;
+         if (dot > 0.0f) {
+            response *= 0.1f;
+         }
+      }
    }
 
    if (response > maxCollisionResponse_) response = maxCollisionResponse_;
@@ -219,11 +227,11 @@ void Player::OnCollisionStay(GameObject* other) {
 
 void Player::OnCollisionExit(GameObject* other) {
    if (IsInvincible() || stateMachine_->GetCurrentState() == "Respawn" || stateMachine_->GetCurrentState() == "Despawn") {
-	  return;
+      return;
    }
 
    if (dynamic_cast<Boss*>(other)) {
-	  storedEnergy_ = 0.0f;
+      storedEnergy_ = 0.0f;
    }
 
    isCharging_ = false;
@@ -236,14 +244,14 @@ void Player::InitializeKeyConfig() {
    // Moveアクションの追加とバインド設定
    keyConfig_->AddAction("Move", ActionType::Vector2);
    ActionBuilder(keyConfig_->GetAction("Move"))
-	  .BindKeyboardWASD(DIK_W, DIK_S, DIK_A, DIK_D)
-	  .BindGamepadLeftStick();
+      .BindKeyboardWASD(DIK_W, DIK_S, DIK_A, DIK_D)
+      .BindGamepadLeftStick();
 
    // Chargeアクションの追加とバインド設定
    keyConfig_->AddAction("Charge", ActionType::Bool);
    ActionBuilder(keyConfig_->GetAction("Charge"))
-	  .BindKey(DIK_SPACE)
-	  .BindGamepadButton(GamepadButton::A);
+      .BindKey(DIK_SPACE)
+      .BindGamepadButton(GamepadButton::A);
 }
 
 void Player::InitializeStateMachine() {
@@ -309,9 +317,9 @@ void Player::UpdateRotation() {
    direction_.y = std::clamp(direction_.y, -1.0f, 1.0f);
 
    if (direction_.Length() == 0.0f) {
-	  direction_ = velocity_.Normalize();
-	  direction_.x = std::clamp(direction_.x, -0.2f, 0.2f);
-	  direction_.y = std::clamp(direction_.y, -0.2f, 0.2f);
+      direction_ = velocity_.Normalize();
+      direction_.x = std::clamp(direction_.x, -0.2f, 0.2f);
+      direction_.y = std::clamp(direction_.y, -0.2f, 0.2f);
    }
 
    GameObject::TiltByVelocity(direction_);
@@ -328,7 +336,7 @@ void Player::Charge() {
 
    chargeTimer_.Update(GameUtils::GetDeltaTime());
    if (chargeTimer_.IsFinished()) {
-	  stateMachine_->RequestState("Move", 0);
+      stateMachine_->RequestState("Move", 0);
    }
 }
 
@@ -340,23 +348,23 @@ void Player::Stun() {
    UpdateShake();
 
    if (stunTimer_.IsFinished()) {
-	  stateMachine_->RequestState("Move", 0);
+      stateMachine_->RequestState("Move", 0);
 
-	  if (stopEffectFunction_) {
-		 stopEffectFunction_();
-	  }
+      if (stopEffectFunction_) {
+         stopEffectFunction_();
+      }
    }
 }
 
 void Player::Damage() {
    if (damageFunction_) {
-	  damageFunction_();
+      damageFunction_();
    }
 
    if (GameObject::UpdateShake()) return;
 
    if (stopEffectFunction_) {
-	  stopEffectFunction_();
+      stopEffectFunction_();
    }
 
    // HPを減らしてデスポーンステートに遷移
@@ -377,15 +385,15 @@ void Player::InitializeCharge() {
    direction_ = GetMoveDirection() * chargeSpeed_;
 
    if (startChargeFunction_) {
-	  startChargeFunction_();
+      startChargeFunction_();
    }
 
    if (setEffectColorFunction_) {
-	  setEffectColorFunction_({ 1.0f, 1.0f, 0.0f, 1.0f });
+      setEffectColorFunction_({ 1.0f, 1.0f, 0.0f, 1.0f });
    }
 
    if (startEffectFunction_) {
-	  startEffectFunction_();
+      startEffectFunction_();
    }
 
    isCharging_ = true;
@@ -398,7 +406,7 @@ void Player::InitializeMove() {
    isCharging_ = false;
 
    if (stopEffectFunction_) {
-	  stopEffectFunction_();
+      stopEffectFunction_();
    }
 }
 
@@ -410,17 +418,17 @@ void Player::InitializeStun() {
    stunTimer_.Start(stunTime, false);
 
    if (enemyStoredEnergy_ > 0.0f) {
-	  if (stopEffectFunction_) {
-		 stopEffectFunction_();
-	  }
+      if (stopEffectFunction_) {
+         stopEffectFunction_();
+      }
 
-	  if (setEffectColorFunction_) {
-		 setEffectColorFunction_({ 0.5f, 0.0f, 0.5f, 1.0f });
-	  }
+      if (setEffectColorFunction_) {
+         setEffectColorFunction_({ 0.5f, 0.0f, 0.5f, 1.0f });
+      }
 
-	  if (startEffectFunction_) {
-		 startEffectFunction_();
-	  }
+      if (startEffectFunction_) {
+         startEffectFunction_();
+      }
    }
 
    // スタン時間に応じたシェイクを開始
@@ -433,7 +441,7 @@ void Player::InitializeStun() {
 
 void Player::InitializeDamage() {
    if (startDamageFunction_) {
-	  startDamageFunction_();
+      startDamageFunction_();
    }
 
    StopModelSwapAnimation();
@@ -449,15 +457,15 @@ void Player::InitializeDamage() {
    storedEnergy_ = 0.0f;
 
    if (stopEffectFunction_) {
-	  stopEffectFunction_();
+      stopEffectFunction_();
    }
 
    if (setEffectColorFunction_) {
-	  setEffectColorFunction_({ 0.2f, 0.8f, 1.0f, 1.0f });
+      setEffectColorFunction_({ 0.2f, 0.8f, 1.0f, 1.0f });
    }
 
    if (startEffectFunction_) {
-	  startEffectFunction_();
+      startEffectFunction_();
    }
 }
 
@@ -481,7 +489,7 @@ void Player::Despawn() {
    transform_.scale = { scale, scale, scale };
 
    if (despawnTimer_.IsFinished()) {
-	  stateMachine_->RequestState("Respawn", 0);
+      stateMachine_->RequestState("Respawn", 0);
    }
 }
 
@@ -506,9 +514,9 @@ void Player::Respawn() {
    transform_.scale = { scale, scale, scale };
 
    if (respawnTimer_.IsFinished()) {
-	  // リスポーン完了時に無敵時間を開始（2秒間、0.1秒間隔で点滅）
-	  StartInvincibility(2.0f, 0.1f);
-	  stateMachine_->RequestState("Move", 0);
+      // リスポーン完了時に無敵時間を開始（2秒間、0.1秒間隔で点滅）
+      StartInvincibility(2.0f, 0.1f);
+      stateMachine_->RequestState("Move", 0);
    }
 }
 
@@ -519,34 +527,34 @@ void Player::CheckDamageWallCollision() {
 
    // プレイヤーがダメージ壁に接触したか判定
    if (std::abs(transform_.translate.x) >= damageWallHalfWidth ||
-	  std::abs(transform_.translate.y) >= damageWallHalfHeight) {
-	  if (hp_ > 1) {
-		 // ダメージステートに遷移
-		 stateMachine_->RequestState("Damage", 0);
-	  } else {
-		 stateMachine_->RequestState("Death", 10);
-	  }
+      std::abs(transform_.translate.y) >= damageWallHalfHeight) {
+      if (hp_ > 1) {
+         // ダメージステートに遷移
+         stateMachine_->RequestState("Damage", 0);
+      } else {
+         stateMachine_->RequestState("Death", 10);
+      }
    }
 }
 
 void Player::UpdateEnergy() {
    if (IsInvincible() || stateMachine_->GetCurrentState() == "Respawn" || stateMachine_->GetCurrentState() == "Despawn" || stateMachine_->GetCurrentState() == "Damage" || stateMachine_->GetCurrentState() == "Punk") {
-	  return;
+      return;
    }
 
    storedEnergy_ += GameUtils::GetDeltaTime() * energyDecayPerSecond_;
 
    if (storedEnergy_ >= maxStoredEnergy_) {
-	  // エネルギーが最大に達したらパンク状態に遷移
-	  if (stopEffectFunction_) {
-		 stopEffectFunction_();
-	  }
+      // エネルギーが最大に達したらパンク状態に遷移
+      if (stopEffectFunction_) {
+         stopEffectFunction_();
+      }
 
-	  if (setEffectColorFunction_) {
-		 setEffectColorFunction_({ 1.0f, 1.0f, 0.0f, 1.0f });
-	  }
+      if (setEffectColorFunction_) {
+         setEffectColorFunction_({ 1.0f, 1.0f, 0.0f, 1.0f });
+      }
 
-	  stateMachine_->RequestState("Punk", 1);
+      stateMachine_->RequestState("Punk", 1);
    }
 
    storedEnergy_ = std::clamp(storedEnergy_, 0.0f, maxStoredEnergy_);
@@ -568,11 +576,22 @@ void Player::InitializePunk() {
    GameObject::StartShake(0.225f, punkDuration_);
 
    if (startDamageFunction_) {
-	  startDamageFunction_();
+      startDamageFunction_();
    }
 
    if (startEffectFunction_) {
-	  startEffectFunction_();
+      startEffectFunction_();
+   }
+
+   Vector3 smokePos = transform_.translate;
+   smokePos.y += 0.8f; // 少し上にずらす
+
+   if (smokeEffectFunction_) {
+      smokeEffectFunction_(smokePos);
+   }
+
+   if (explosionEffectFunction_) {
+      explosionEffectFunction_(transform_.translate);
    }
 }
 
@@ -583,12 +602,12 @@ void Player::Punk() {
 
    if (punkTimer_.IsFinished()) {
 
-	  if (stopEffectFunction_) {
-		 stopEffectFunction_();
-	  }
+      if (stopEffectFunction_) {
+         stopEffectFunction_();
+      }
 
-	  // スタン終了、通常状態に戻る
-	  stateMachine_->RequestState("Move", 0);
+      // スタン終了、通常状態に戻る
+      stateMachine_->RequestState("Move", 0);
    }
 }
 
@@ -598,8 +617,8 @@ void Player::InitializeDeath() {
    acceleration_ = { 0.0f, 0.0f };
    ChangeToRegisteredModel("Damage");
    /* if (deathFunction_) {
-	   deathFunction_();
-	}*/
+       deathFunction_();
+     }*/
 
    idleTimer_.Start(0.8f, false);
 
@@ -611,24 +630,28 @@ void Player::Death() {
    idleTimer_.Update(GameUtils::GetDeltaTime());
 
    if (idleTimer_.IsFinished() && !isFinished) {
-	  deathTimer_.Start(1.05f, false);
-	  isFinished = true;
+      deathTimer_.Start(1.05f, false);
+      isFinished = true;
    }
 
    if (isFinished) {
-	  deathTimer_.Update(GameUtils::GetDeltaTime());
+      deathTimer_.Update(GameUtils::GetDeltaTime());
 
-	  // スケールを0にイージング
-	  float progress = deathTimer_.GetEasedProgress(EasingUtil::Type::EaseInOutCubic);
-	  float scale = GameUtils::Lerp(1.0f, 1.5f, progress);
-	  transform_.scale = { scale, scale, scale };
+      // スケールを0にイージング
+      float progress = deathTimer_.GetEasedProgress(EasingUtil::Type::EaseInOutCubic);
+      float scale = GameUtils::Lerp(1.0f, 1.5f, progress);
+      transform_.scale = { scale, scale, scale };
 
-	  transform_.TransferMatrix();
+      transform_.TransferMatrix();
 
-	  if (deathTimer_.IsFinished()) {
-		 isActive_ = false;
-		 isFinished = false;
-	  }
+      if (deathTimer_.IsFinished()) {
+         isActive_ = false;
+         isFinished = false;
+
+         if (explosionEffectFunction_) {
+            explosionEffectFunction_(transform_.translate);
+         }
+      }
    }
 }
 

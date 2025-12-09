@@ -86,6 +86,14 @@ public:
       updateSparkEffectFunction_ = func;
    }
 
+   void SetExplosionEffectFunction(const std::function<void(const Vector3&)>& func) {
+	  explosionEffectFunction_ = func;
+   }
+
+   void SetSmokeEffectFunction(const std::function<void(const Vector3&)>& func) {
+	  smokeEffectFunction_ = func;
+   }
+
    void StartSparkEffect();
    void StopSparkEffect();
    void UpdateSparkEffect();
@@ -171,6 +179,10 @@ private:
    std::function<void()> startEffectFunction_;
 
    std::function<void(const Vector4&)> setEffectColorFunction_;
+
+   std::function<void(const Vector3&)> explosionEffectFunction_;
+
+   std::function<void(const Vector3&)> smokeEffectFunction_;
 
    // スパークエフェクト関連
    std::function<void()> startSparkEffectFunction_;

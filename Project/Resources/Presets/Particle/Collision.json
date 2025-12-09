@@ -1,23 +1,23 @@
 {
     "billboardType": 1,
-    "blendMode": 2,
+    "blendMode": 0,
     "color": {
         "endColor": [
-            1.0,
-            0.3921568691730499,
-            0.0,
-            0.3921568691730499
+            0.7137255072593689,
+            0.09803921729326248,
+            0.054901961237192154,
+            0.8313725590705872
         ],
         "useGradient": true
     },
     "emission": {
-        "burstCount": 50,
+        "burstCount": 10,
         "burstTime": 0.0,
         "rateOverTime": 0
     },
     "emitterPosition": [
-        0.0,
-        0.0,
+        -1.2992634773254395,
+        -0.3377428650856018,
         0.0
     ],
     "force": {
@@ -39,7 +39,7 @@
         "drag": 0.0,
         "gravity": [
             0.0,
-            -9.800000190734863,
+            -5.800000190734863,
             0.0
         ],
         "useAccelerationField": false,
@@ -52,18 +52,18 @@
     "main": {
         "duration": 1.0,
         "gravityModifier": 0.0,
-        "looping": true,
+        "looping": false,
         "maxParticles": 1000,
         "playOnAwake": false,
         "simulationSpace": 1,
         "startColor": [
-            1.0,
-            0.11764705926179886,
-            0.0,
+            0.8963730335235596,
+            0.836212158203125,
+            0.4319310486316681,
             1.0
         ],
-        "startColorRandomness": 0.0,
-        "startLifetime": 1.0,
+        "startColorRandomness": 0.07000000029802322,
+        "startLifetime": 0.5,
         "startLifetimeRandomness": 0.0,
         "startRotation": [
             0.0,
@@ -72,13 +72,13 @@
         ],
         "startRotationRandomness": 0.0,
         "startSize": [
-            0.20000000298023224,
-            0.20000000298023224,
-            0.20000000298023224
+            5.0,
+            5.0,
+            5.0
         ],
-        "startSizeRandomness": 0.0,
-        "startSpeed": 5.0,
-        "startSpeedRandomness": 0.0
+        "startSizeRandomness": 0.3199999928474426,
+        "startSpeed": 7.599999904632568,
+        "startSpeedRandomness": 0.46000000834465027
     },
     "noise": {
         "damping": true,

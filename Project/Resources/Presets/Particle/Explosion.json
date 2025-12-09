@@ -1,6 +1,6 @@
 {
     "billboardType": 1,
-    "blendMode": 2,
+    "blendMode": 0,
     "color": {
         "endColor": [
             0.19607843458652496,
@@ -63,7 +63,7 @@
             1.0
         ],
         "startColorRandomness": 0.30000001192092896,
-        "startLifetime": 1.0,
+        "startLifetime": 0.3,
         "startLifetimeRandomness": 0.0,
         "startRotation": [
             0.0,
@@ -73,12 +73,12 @@
         "startRotationRandomness": 0.0,
         "startSize": [
             2.5,
-            0.30000001192092896,
-            1.0
+            2.5,
+            2.5
         ],
-        "startSizeRandomness": 0.0,
-        "startSpeed": 9.0,
-        "startSpeedRandomness": 0.0
+        "startSizeRandomness": 0.05,
+        "startSpeed": 20.0,
+        "startSpeedRandomness": 0.1
     },
     "noise": {
         "damping": true,

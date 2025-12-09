@@ -71,6 +71,12 @@ private:
 
    std::vector<std::unique_ptr<IDrawable>> newGameObjectsQueue_;
 
+   ParticleSystem* playerCollisionParticle_;
+   ParticleSystem* bossExplosionParticle_;
+   ParticleSystem* playerExplosionParticle_;
+   ParticleSystem* playerSmokeParticle_;
+   ParticleSystem* bossSmokeParticle_;
+
    std::unique_ptr<HitPoint> playerHitPointUI_;
    std::unique_ptr<HitPoint> bossHitPointUI_;
 
@@ -97,6 +103,7 @@ private:
 
    // カメラシーケンスのカット追跡用
    int lastCutIndex_ = -1;
+
 
 private:
    void RegisterAllColliders();
