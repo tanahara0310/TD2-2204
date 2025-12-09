@@ -32,6 +32,52 @@ enum class BulletType {
    ElasticSphere
 };
 
+/// @brief ボスAIパラメータ構造体（調整用）
+struct BossAIParameters {
+   // 距離評価
+   float maxCenterDistance = 30.0f;      // 中央距離の最大評価範囲
+   float closeToPlayerDistance = 15.0f;  // プレイヤーに近いと判定する距離
+   float closeRangeDistance = 20.0f;     // 近距離攻撃の判定距離
+   float mediumRangeMin = 15.0f;         // 中距離の最小値
+   float mediumRangeMax = 25.0f;         // 中距離の最大値
+
+   // HP3フェーズのウェイト
+   struct HP3Weights {
+      float chargeOnly = 1.2f;           // 突進のみ（近距離バイアス倍率）
+      float chargeAndFlee = 0.5f;        // 突進→逃げ（増加）
+      float shootOnly = 0.4f;            // ショット（増加）
+      float moveCenterAndCharge = 0.3f;  // 中央移動→突進（増加）
+   } hp3;
+
+   // HP2フェーズのウェイト
+   struct HP2Weights {
+      float sparkCombo = 0.5f;           // スパークコンボ
+      float sparkComboClose = 1.0f;      // スパークコンボ近距離バイアス
+      float stunPursuitBias = 1.0f;      // スタン追撃バイアス
+      float chargeAndFlee = 0.25f;       // 突進→逃げ
+   } hp2;
+
+   // HP1フェーズのウェイト
+   struct HP1Weights {
+      float centerBias = 1.5f;           // 中央確保バイアス
+      float sparkComboCloseBias = 1.0f;  // スパークコンボ近距離バイアス
+      float sparkComboNonStunBias = 0.8f;// スパークコンボ非スタンバイアス
+      float shootMediumBias = 0.7f;      // ショット中距離バイアス
+      float shootCenterBias = 0.5f;      // ショット中央バイアス
+      float tripleChargeCloseBias = 1.2f;// 3連突進近距離バイアス
+      float tripleChargeCenterBias = 0.8f;// 3連突進中央バイアス
+      float quadChargeStunBias = 2.0f;   // 4連突進スタンバイアス
+      float feintShoot = 0.3f;           // フェイント→ショット
+      float sparkComboFarBias = 0.6f;    // スパークコンボ遠距離バイアス
+      float shootCharge = 0.25f;         // ショット→突進
+      float retreatDoubleShoot = 0.2f;   // 逃げ→ショット2連
+   } hp1;
+
+   // スタン判定
+   float stunBiasWhenStunned = 1.0f;     // スタン時の評価値
+   float stunBiasWhenNotStunned = 0.1f;  // 非スタン時の評価値
+};
+
 /// @brief ゲームシーンクラス
 class GameScene : public BaseScene {
 public:
@@ -104,6 +150,8 @@ private:
    // カメラシーケンスのカット追跡用
    int lastCutIndex_ = -1;
 
+   // ボスAIパラメータ
+   BossAIParameters aiParams_;
 
 private:
    void RegisterAllColliders();

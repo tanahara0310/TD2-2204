@@ -407,8 +407,15 @@ void Boss::Damage() {
 	  stopEffectFunction_();
    }
 
-   // HPを減らしてデスポーンステートに遷移
+   // HPを減らす
    hp_--;
+
+   // ビヘイビアツリーを再構築（前のシーケンスをリセット）
+   if (rebuildBehaviorTreeFunction_) {
+	  rebuildBehaviorTreeFunction_();
+   }
+
+   // デスポーンステートに遷移
    stateMachine_->RequestState("Despawn", 0);
 }
 
@@ -444,7 +451,7 @@ void Boss::InitializeRespawn() {
    respawnTimer_.Start(respawnDuration_, false);
 
    // ポジションをステージ中央に設定
-   transform_.translate = { 15.0f, 0.0f, 0.0f };
+   transform_.translate = { 10.0f, 0.0f, 0.0f };
 
    velocity_ = { 0.0f, 0.0f };
    acceleration_ = { 0.0f, 0.0f };

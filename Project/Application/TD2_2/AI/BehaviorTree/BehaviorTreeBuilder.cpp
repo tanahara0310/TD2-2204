@@ -100,3 +100,63 @@ std::unique_ptr<BaseNode> BehaviorTreeBuilder::BuildSubTree() {
    assert(stack_.size() == 1 && "Unbalanced Begin/End calls in sub-tree builder!");
    return std::move(stack_.front());
 }
+
+BehaviorTreeBuilder& BehaviorTreeBuilder::HpCondition(
+   std::function<float()> getHpRatio,
+   float threshold,
+   CompareType compareType) {
+
+   // 判定ロジックを作成し、Conditionノードとして追加
+   return Condition([getHpRatio, threshold, compareType]() {
+      float hp = getHpRatio();
+      switch (compareType) {
+         case CompareType::LessThan:    return hp < threshold;
+         case CompareType::LessEqual:   return hp <= threshold;
+         case CompareType::GreaterThan: return hp > threshold;
+         case CompareType::GreaterEqual:return hp >= threshold;
+      }
+      return false;
+      });
+}
+
+// 【追加】条件付き実行ノード (If-Then構造)
+BehaviorTreeBuilder& BehaviorTreeBuilder::IfThenNode(
+   std::function<bool()> condition,
+   std::unique_ptr<BaseNode> thenBranch) {
+
+   // Sequence(Condition, ThenBranch)のノード構造を構築し、親に追加
+   auto sequence = std::make_unique<SequenceNode>();
+   sequence->AddChild(std::make_unique<ConditionNode>(std::move(condition)));
+   sequence->AddChild(std::move(thenBranch));
+
+   AddToCurrent(std::move(sequence));
+
+   return *this;
+}
+
+// 【追加】条件分岐ノード (If-Else構造)
+BehaviorTreeBuilder& BehaviorTreeBuilder::IfElseNode(
+   std::function<bool()> condition,
+   std::unique_ptr<BaseNode> trueBranch,
+   std::unique_ptr<BaseNode> falseBranch) {
+
+   // Selectorノードをルートとする構造を構築
+   // Selector
+   //   ├─ Sequence(Condition, TrueBranch) <- 条件が真の場合に成功
+   //   └─ FalseBranch                     <- Sequenceが失敗（条件が偽）の場合に実行
+
+   auto selector = std::make_unique<SelectorNode>();
+
+   // 1. True Branch: Sequence(Condition, TrueBranch)
+   auto conditionSequence = std::make_unique<SequenceNode>();
+   conditionSequence->AddChild(std::make_unique<ConditionNode>(std::move(condition)));
+   conditionSequence->AddChild(std::move(trueBranch));
+
+   // 2. SelectorにConditionSequenceとFalseBranchを追加
+   selector->AddChild(std::move(conditionSequence));
+   selector->AddChild(std::move(falseBranch));
+
+   AddToCurrent(std::move(selector));
+
+   return *this;
+}

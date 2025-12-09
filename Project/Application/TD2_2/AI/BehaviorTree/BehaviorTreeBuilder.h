@@ -7,6 +7,13 @@
 #include "../Node/LeafNode.h"
 #include "../Node/Evaluator.h"
 
+enum class CompareType {
+   LessThan,        // 未満 (<)
+   LessEqual,       // 以下 (<=)
+   GreaterThan,     // 超過 (>)
+   GreaterEqual     // 以上 (>=)
+};
+
 class BehaviorTreeBuilder {
 public:
    BehaviorTreeBuilder& Selector();
@@ -99,6 +106,27 @@ public:
 
    // 優先度付きセレクター（評価値の高い順に実行）
    BehaviorTreeBuilder& PrioritySelector();
+
+   BehaviorTreeBuilder& HpCondition(
+      std::function<float()> getHpRatio,
+      float threshold,
+      CompareType compareType
+   );
+
+   // 【追加】条件付き実行ノード (If-Then構造)
+   // conditionが真ならthenBranchを実行するSequenceを構築
+   BehaviorTreeBuilder& IfThenNode(
+      std::function<bool()> condition,
+      std::unique_ptr<BaseNode> thenBranch
+   );
+
+   // 【追加】条件分岐ノード (If-Else構造)
+   // conditionが真ならtrueBranchを、偽ならfalseBranchを実行するSelectorを構築
+   BehaviorTreeBuilder& IfElseNode(
+      std::function<bool()> condition,
+      std::unique_ptr<BaseNode> trueBranch,
+      std::unique_ptr<BaseNode> falseBranch
+   );
 
 private:
    std::vector<std::unique_ptr<BaseNode>> stack_;

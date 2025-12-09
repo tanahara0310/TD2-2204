@@ -79,6 +79,10 @@ public:
    void SetUpdateEffectFunction(const std::function<void(const Vector3&, float)>& func) {
 	  updateEffectFunction_ = func;
    }
+
+   bool IsStunned() const {
+	  return stateMachine_->GetCurrentState() == "Stun";
+   }
 private:
 
    Vector2 acceleration_ = { 0.0f, 0.0f }; // 加速度ベクトル
@@ -157,8 +161,8 @@ private:
    // 突進中フラグ
    bool isCharging_ = false;
 
-   int hp_ = 5;
-   int maxHp_ = 5;
+   int hp_ = 3;
+   int maxHp_ = 3;
 
    float storedEnergy_ = 0.0f;
    float energyScale_ = 0.3f;

@@ -177,7 +177,7 @@ void Player::OnCollisionStay(GameObject* other) {
 		 if (spark->IsSparkActive()) {
 
 			if (setEffectColorFunction_) {
-			   setEffectColorFunction_({ 0.5f, 0.0f, 0.5f, 1.0f });
+			   setEffectColorFunction_({ 1.0f, 0.2f, 0.2f, 1.0f });
 			}
 			stateMachine_->RequestState("Punk", 1);
 		 }
@@ -513,7 +513,7 @@ void Player::InitializeRespawn() {
    }
 
    // ポジションをステージ中央に設定
-   transform_.translate = { -15.0f, 0.0f, 0.0f };
+   transform_.translate = { -10.0f, 0.0f, 0.0f };
 
    velocity_ = { 0.0f, 0.0f };
    acceleration_ = { 0.0f, 0.0f };
