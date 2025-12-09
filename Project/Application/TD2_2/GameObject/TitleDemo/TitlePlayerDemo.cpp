@@ -45,16 +45,32 @@ void TitlePlayerDemo::Update() {
 			transform_.translate.z += direction.z * moveSpeed_ * deltaTime;
 		}
 
-		// 移動方向（X成分）に応じて回転を設定
+		// 追跡開始時に累積回転をリセット
+		if (!wasChasing_) {
+			accumulatedRotation_ = 0.0f;
+		}
+
+		// 累積回転を更新
+		accumulatedRotation_ += rotationSpeed_ * deltaTime;
+
+		// 移動方向（X成分）に応じて基本回転を決定し、累積回転を加算
+		float baseRotationY;
+		float baseRotationZ;
 		if (direction.x > 0.0f) {
 			// +X方向（右）に移動
-			transform_.rotate.y = -std::numbers::pi_v<float> / 2.0f;
-			transform_.rotate.z = -0.15f;
+			baseRotationY = -std::numbers::pi_v<float> / 2.0f;
+			baseRotationZ = -0.15f;
 		} else {
 			// -X方向（左）に移動
-			transform_.rotate.y = std::numbers::pi_v<float> / 2.0f;
-			transform_.rotate.z = 0.15f;
+			baseRotationY = std::numbers::pi_v<float> / 2.0f;
+			baseRotationZ = 0.15f;
 		}
+
+		// 基本回転に累積回転を加算
+		transform_.rotate.y = baseRotationY + accumulatedRotation_;
+		transform_.rotate.z = baseRotationZ;
+		
+		wasChasing_ = true;
 	} else {
 		// 通常移動モード（X軸方向）
 		transform_.translate.x += moveSpeed_ * moveDirection_ * deltaTime;
@@ -67,6 +83,9 @@ void TitlePlayerDemo::Update() {
 			transform_.rotate.y = std::numbers::pi_v<float> / 2.0f;    // -X方向（左）= 90度
 			transform_.rotate.z = 0.15f; // 前かがみ（符号を反転）
 		}
+		
+		wasChasing_ = false;
+		accumulatedRotation_ = 0.0f;
 	}
 
 	// トランスフォームを更新
