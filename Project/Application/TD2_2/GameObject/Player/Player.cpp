@@ -38,6 +38,10 @@ void Player::Initialize(std::unique_ptr<Model> model, TextureManager::LoadedText
 }
 
 void Player::Update() {
+   if (hp_ <= 0) {
+	  stateMachine_->RequestState("Death", 10);
+   }
+
    if (keyConfig_->Get<bool>("Charge")) {
 	  if (GetMoveDirection().Length() > 0.0f) {
 		 stateMachine_->RequestState("Charge", 0);
@@ -87,9 +91,9 @@ void Player::OnCollisionEnter(GameObject* other) {
 
    // スパーク（Spark）との衝突でPunk状態に遷移（アクティブ時のみ）
    if (strcmp(other->GetObjectName(), "Spark") == 0) {
-      if (auto* spark = dynamic_cast<SparkColliderObject*>(other)) {
-         if (spark->IsSparkActive()) {
-            // Punk状態に遷移（優先度1で遷移）
+	  if (auto* spark = dynamic_cast<SparkColliderObject*>(other)) {
+		 if (spark->IsSparkActive()) {
+			// Punk状態に遷移（優先度1で遷移）
 			if (stopEffectFunction_) {
 			   stopEffectFunction_();
 			}
@@ -97,10 +101,10 @@ void Player::OnCollisionEnter(GameObject* other) {
 			if (setEffectColorFunction_) {
 			   setEffectColorFunction_({ 0.5f, 0.0f, 0.5f, 1.0f });
 			}
-            stateMachine_->RequestState("Punk", 1);
-         }
-      }
-      return;
+			stateMachine_->RequestState("Punk", 1);
+		 }
+	  }
+	  return;
    }
 
    if (hitEnemyFunction_) {
@@ -253,14 +257,16 @@ void Player::InitializeStateMachine() {
    stateMachine_->AddState("Despawn", std::bind(&Player::InitializeDespawn, this), std::bind(&Player::Despawn, this));
    stateMachine_->AddState("Respawn", std::bind(&Player::InitializeRespawn, this), std::bind(&Player::Respawn, this));
    stateMachine_->AddState("Punk", std::bind(&Player::InitializePunk, this), std::bind(&Player::Punk, this));
+   stateMachine_->AddState("Death", std::bind(&Player::InitializeDeath, this), std::bind(&Player::Death, this));
 
-   stateMachine_->AddTransitionRule("Charge", { "Move" ,"Stun" ,"Damage", "Punk" });
-   stateMachine_->AddTransitionRule("Move", { "Charge" ,"Stun" ,"Damage", "Punk" });
-   stateMachine_->AddTransitionRule("Stun", { "Move" ,"Damage" ,"Punk" });
+   stateMachine_->AddTransitionRule("Charge", { "Move" ,"Stun" ,"Damage", "Punk","Death" });
+   stateMachine_->AddTransitionRule("Move", { "Charge" ,"Stun" ,"Damage", "Punk","Death" });
+   stateMachine_->AddTransitionRule("Stun", { "Move" ,"Damage" ,"Punk" ,"Death" });
    stateMachine_->AddTransitionRule("Damage", { "Despawn" });
    stateMachine_->AddTransitionRule("Despawn", { "Respawn" });
-   stateMachine_->AddTransitionRule("Respawn", { "Move" });
-   stateMachine_->AddTransitionRule("Punk", { "Move" ,"Damage" });
+   stateMachine_->AddTransitionRule("Respawn", { "Move" ,"Death" });
+   stateMachine_->AddTransitionRule("Punk", { "Move" ,"Damage" ,"Death" });
+   stateMachine_->AddTransitionRule("Death", {});
 }
 
 void Player::InitializeCollider() {
@@ -514,8 +520,12 @@ void Player::CheckDamageWallCollision() {
    // プレイヤーがダメージ壁に接触したか判定
    if (std::abs(transform_.translate.x) >= damageWallHalfWidth ||
 	  std::abs(transform_.translate.y) >= damageWallHalfHeight) {
-	  // ダメージステートに遷移
-	  stateMachine_->RequestState("Damage", 2);
+	  if (hp_ > 1) {
+		 // ダメージステートに遷移
+		 stateMachine_->RequestState("Damage", 0);
+	  } else {
+		 stateMachine_->RequestState("Death", 10);
+	  }
    }
 }
 
@@ -579,6 +589,46 @@ void Player::Punk() {
 
 	  // スタン終了、通常状態に戻る
 	  stateMachine_->RequestState("Move", 0);
+   }
+}
+
+void Player::InitializeDeath() {
+   StopModelSwapAnimation();
+   velocity_ = { 0.0f, 0.0f };
+   acceleration_ = { 0.0f, 0.0f };
+   ChangeToRegisteredModel("Damage");
+   /* if (deathFunction_) {
+	   deathFunction_();
+	}*/
+
+   idleTimer_.Start(0.8f, false);
+
+   hp_ = 0;
+}
+
+void Player::Death() {
+   static bool isFinished = false;
+   idleTimer_.Update(GameUtils::GetDeltaTime());
+
+   if (idleTimer_.IsFinished() && !isFinished) {
+	  deathTimer_.Start(1.05f, false);
+	  isFinished = true;
+   }
+
+   if (isFinished) {
+	  deathTimer_.Update(GameUtils::GetDeltaTime());
+
+	  // スケールを0にイージング
+	  float progress = deathTimer_.GetEasedProgress(EasingUtil::Type::EaseInOutCubic);
+	  float scale = GameUtils::Lerp(1.0f, 1.5f, progress);
+	  transform_.scale = { scale, scale, scale };
+
+	  transform_.TransferMatrix();
+
+	  if (deathTimer_.IsFinished()) {
+		 isActive_ = false;
+		 isFinished = false;
+	  }
    }
 }
 

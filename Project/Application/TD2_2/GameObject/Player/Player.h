@@ -106,6 +106,10 @@ private:
    GameTimer despawnTimer_;
    GameTimer respawnTimer_;
 
+   GameTimer deathTimer_;
+   GameTimer idleTimer_;
+   float deathDuration_ = 1.0f; // 死亡持続時間（秒）
+
    // 衝突反発の速度依存スケール
    float collisionResponseScale_ = 10.0f; // 速度に応じて反発力がどれだけ増えるかの係数
 
@@ -189,6 +193,10 @@ private:
    void InitializePunk();
 
    void Punk();
+
+   void InitializeDeath();
+
+   void Death();
 
    /// @brief ダメージ壁との接触判定
    void CheckDamageWallCollision();

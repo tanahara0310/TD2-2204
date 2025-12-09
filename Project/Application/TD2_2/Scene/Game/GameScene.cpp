@@ -22,6 +22,8 @@
 #include "Scene/SceneManager.h"
 #include <numbers>
 #include "../../Camera/CinematicPresetManager.h"
+#include "../../Camera/CinematicSequence.h"
+#include <algorithm>
 
 void GameScene::Initialize(EngineSystem* engine) {
    // 基底クラスの初期化
@@ -298,8 +300,6 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  gameObjects_.push_back(std::move(startUI));
    }
 
-   uiAnimationTimer_.Start(3.0f);
-
    // サウンドの初期化
    {
 	  auto soundManager = engine_->GetComponent<SoundManager>();
@@ -361,8 +361,6 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  cameraController_->SetStageBounds(
 		 GameSceneConfig::kStageCenter.x - stageHalfWidth - frameWidth, GameSceneConfig::kStageCenter.x + stageHalfWidth + frameWidth,
 		 GameSceneConfig::kStageCenter.y - stageHalfHeight - frameHeight, GameSceneConfig::kStageCenter.y + stageHalfHeight + frameHeight);
-
-	  cameraController_->StartCinematicByName("Opening");
    }
 
    // 雷
@@ -374,20 +372,25 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  config.startOffset = { GameSceneConfig::kStageCenter.x - stageHalfWidth - frameWidth, 0.0f, 0.0f };
 	  config.endOffset = { GameSceneConfig::kStageCenter.x + stageHalfWidth + frameWidth, 0.0f, 0.0f };
 	  config.segmentCount = 12;
-	  config.noiseScale = 3.0f;
+	  config.noiseScale = 2.5f;
 	  config.noiseSpeed = 30.0f;
 	  config.color = { 0.3f, 0.6f, 1.0f, 1.0f }; // 青白色
 
-	  // ステージ中央に固定配置
-	  lightningManager_->CreateEffect({ 0.0f, -stageHalfHeight + frameHeight, 0.0f }, config, gameObjects_);
-	  lightningManager_->CreateEffect({ 0.0f, stageHalfHeight - frameHeight, 0.0f }, config, gameObjects_);
+	  int id1 = lightningManager_->CreateEffect({ 0.0f, -stageHalfHeight + frameHeight, 0.0f }, config, gameObjects_);
+	  lightningManager_->SetEffectVisible(id1, true);
+
+	  int id2 = lightningManager_->CreateEffect({ 0.0f, stageHalfHeight - frameHeight, 0.0f }, config, gameObjects_);
+	  lightningManager_->SetEffectVisible(id2, true);
 
 	  config.segmentCount = 8;
 	  config.noiseSpeed = 20.0f;
-	  config.color = { 0.8f, 1.0f, 1.0f, 1.0f }; // 青白色
+	  config.color = { 0.8f, 1.0f, 1.0f ,1.0f }; // 青白色
 
-	  lightningManager_->CreateEffect({ 0.0f, -stageHalfHeight + frameHeight, 0.0f }, config, gameObjects_);
-	  lightningManager_->CreateEffect({ 0.0f, stageHalfHeight - frameHeight, 0.0f }, config, gameObjects_);
+	  int id3 = lightningManager_->CreateEffect({ 0.0f, -stageHalfHeight + frameHeight, 0.0f }, config, gameObjects_);
+	  lightningManager_->SetEffectVisible(id3, true);
+
+	  int id4 = lightningManager_->CreateEffect({ 0.0f, stageHalfHeight - frameHeight, 0.0f }, config, gameObjects_);
+	  lightningManager_->SetEffectVisible(id4, true);
 
 	  config.startOffset = { 0.0f, -stageHalfHeight - frameHeight, 0.0f };
 	  config.endOffset = { 0.0f, stageHalfHeight + frameHeight, 0.0f };
@@ -395,15 +398,21 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  config.color = { 0.3f, 0.6f, 1.0f, 1.0f }; // 青白色
 	  config.noiseSpeed = 30.0f;
 
-	  lightningManager_->CreateEffect({ -stageHalfWidth + frameWidth, 0.0f, 0.0f }, config, gameObjects_);
-	  lightningManager_->CreateEffect({ stageHalfWidth - frameWidth, 0.0f, 0.0f }, config, gameObjects_);
+	  int id5 = lightningManager_->CreateEffect({ -stageHalfWidth + frameWidth, 0.0f, 0.0f }, config, gameObjects_);
+	  lightningManager_->SetEffectVisible(id5, true);
+
+	  int id6 = lightningManager_->CreateEffect({ stageHalfWidth - frameWidth, 0.0f, 0.0f }, config, gameObjects_);
+	  lightningManager_->SetEffectVisible(id6, true);
 
 	  config.segmentCount = 5;
 	  config.noiseSpeed = 20.0f;
 	  config.color = { 0.8f, 1.0f, 1.0f, 1.0f }; // 青白色
 
-	  lightningManager_->CreateEffect({ -stageHalfWidth + frameWidth, 0.0f, 0.0f }, config, gameObjects_);
-	  lightningManager_->CreateEffect({ stageHalfWidth - frameWidth, 0.0f, 0.0f }, config, gameObjects_);
+	  int id7 = lightningManager_->CreateEffect({ -stageHalfWidth + frameWidth, 0.0f, 0.0f }, config, gameObjects_);
+	  lightningManager_->SetEffectVisible(id7, true);
+
+	  int id8 = lightningManager_->CreateEffect({ stageHalfWidth - frameWidth, 0.0f, 0.0f }, config, gameObjects_);
+	  lightningManager_->SetEffectVisible(id8, true);
    }
 
    // プレイヤーの帯電ゲージ
@@ -430,100 +439,36 @@ void GameScene::Initialize(EngineSystem* engine) {
 		 gameObjects_.push_back(std::move(sprite));
 	  }
    }
+
+   stateMachine_ = std::make_unique<StateMachine>();
+   stateMachine_->AddState("Opening", std::bind(&GameScene::InitializeOpening, this), std::bind(&GameScene::Opening, this));
+   stateMachine_->AddState("Main", std::bind(&GameScene::InitializeMain, this), std::bind(&GameScene::Main, this));
+   stateMachine_->AddState("GameOver", std::bind(&GameScene::InitializeGameOver, this), std::bind(&GameScene::GameOver, this));
+   stateMachine_->AddState("GameClear", std::bind(&GameScene::InitializeGameClear, this), std::bind(&GameScene::GameClear, this));
+
+   stateMachine_->RequestState("Opening", 0);
 }
 
 void GameScene::Update() {
-   BaseScene::Update();
 
    time_ += GameUtils::GetDeltaTime();
-
 
 #ifdef _DEBUG
 
    auto input = engine_->GetComponent<KeyboardInput>();
 
-   // デバッグ用：カメラ切り替え
+
    if (input->IsKeyTriggered(DIK_0)) {
 	  player_->DecreaseHP(1);
    }
 
+   if (input->IsKeyTriggered(DIK_9)) {
+	  boss_->DecreaseHP(1);
+   }
+
 #endif
 
-   // カメラコントローラーの更新
-   if (cameraController_) {
-	  cameraController_->Update();
-   }
-
-   // 雷エフェクトの更新
-   if (lightningManager_) {
-	  lightningManager_->UpdateAllEffects();
-   }
-
-   StartUIAnimation();
-
-   // 削除予定の弾をリストから削除（gameObjects_からは次のフレームの最初に削除）
-   bullets_.remove_if([](Bullet* bullet) { return bullet == nullptr || !bullet->IsActive(); });
-
-   // 新しいオブジェクトを追加
-   if (!newGameObjectsQueue_.empty()) {
-	  for (auto& newObj : newGameObjectsQueue_) {
-		 gameObjects_.push_back(std::move(newObj));
-	  }
-	  newGameObjectsQueue_.clear();
-   }
-
-   if (playerHitPointUI_) {
-	  playerHitPointUI_->SetHP(player_->GetHP());
-   }
-
-   if (bossHitPointUI_) {
-	  bossHitPointUI_->SetHP(boss_->GetHP());
-   }
-
-   if (boss_->GetHP() <= 0 || player_->GetHP() <= 0) {
-	  sceneManager_->ChangeScene("ResultScene");
-
-	  json clearTimeData = JsonManager::GetInstance().LoadJson("Resources/Data/CurrentClearTime.json");
-	  clearTimeData["CurrentClearTime"] = time_;
-
-	  JsonManager::GetInstance().SaveJson("Resources/Data/CurrentClearTime.json", clearTimeData);
-
-	  json resultData = JsonManager::GetInstance().LoadJson("Resources/Data/result.json");
-
-	  if (boss_->GetHP() <= 0) {
-		 resultData["isWin"] = true;
-	  }
-
-	  if (player_->GetHP() <= 0) {
-		 resultData["isWin"] = false;
-	  }
-
-	  JsonManager::GetInstance().SaveJson("Resources/Data/result.json", resultData);
-   }
-
-   // 帯電ゲージの更新
-
-   if (playerGauge_) {
-	  playerGauge_->SetValue(player_->GetStoredEnergy());
-	  playerGauge_->Update();
-   }
-
-   if (bossGauge_) {
-	  bossGauge_->SetValue(boss_->GetStoredEnergy());
-	  bossGauge_->Update();
-   }
-#ifdef _DEBUG
-   // カメラコントローラーのデバッグUI
-   if (cameraController_) {
-	  cameraController_->DrawImGui();
-   }
-#endif
-
-   // コライダー登録
-   RegisterAllColliders();
-
-   // 衝突判定
-   CheckCollisions();
+   stateMachine_->Update();
 }
 
 void GameScene::Draw() {
@@ -690,8 +635,6 @@ Bullet* GameScene::CreateBullet(const Vector3& position, const Vector3& directio
 void GameScene::StartUIAnimation() {
    if (!startUI_)
 	  return;
-   if (uiAnimationTimer_.IsFinished())
-	  return;
 
    uiAnimationTimer_.Update(GameUtils::GetDeltaTime());
 
@@ -751,5 +694,420 @@ void GameScene::CheckParticleAutoDeactivate(ParticleSystem* particleSystem) {
 
    if (particleSystem->IsFinished()) {
 	  particleSystem->SetActive(false);
+   }
+}
+
+void GameScene::InitializeOpening() {
+   uiAnimationTimer_.Start(3.0f);
+   cameraController_->StartCinematicByName("Opening");
+}
+
+void GameScene::Opening() {
+   BaseScene::Update();
+   // カメラコントローラーの更新
+   if (cameraController_) {
+	  cameraController_->Update();
+   }
+
+   // 雷エフェクトの更新
+   if (lightningManager_) {
+	  lightningManager_->UpdateAllEffects();
+   }
+
+   StartUIAnimation();
+
+   // 削除予定の弾をリストから削除（gameObjects_からは次のフレームの最初に削除）
+   bullets_.remove_if([](Bullet* bullet) { return bullet == nullptr || !bullet->IsActive(); });
+
+   // 新しいオブジェクトを追加
+   if (!newGameObjectsQueue_.empty()) {
+	  for (auto& newObj : newGameObjectsQueue_) {
+		 gameObjects_.push_back(std::move(newObj));
+	  }
+	  newGameObjectsQueue_.clear();
+   }
+
+   if (playerHitPointUI_) {
+	  playerHitPointUI_->SetHP(player_->GetHP());
+   }
+
+   if (bossHitPointUI_) {
+	  bossHitPointUI_->SetHP(boss_->GetHP());
+   }
+
+   // 帯電ゲージの更新
+   if (playerGauge_) {
+	  playerGauge_->SetValue(player_->GetStoredEnergy());
+	  playerGauge_->Update();
+   }
+
+   if (bossGauge_) {
+	  bossGauge_->SetValue(boss_->GetStoredEnergy());
+	  bossGauge_->Update();
+   }
+#ifdef _DEBUG
+   // カメラコントローラーのデバッグUI
+   if (cameraController_) {
+	  cameraController_->DrawImGui();
+   }
+#endif
+
+   // コライダー登録
+   RegisterAllColliders();
+
+   // 衝突判定
+   CheckCollisions();
+
+   if (uiAnimationTimer_.IsFinished()) {
+	  stateMachine_->RequestState("Main", 0);
+   }
+}
+
+void GameScene::InitializeMain() {
+
+}
+
+void GameScene::Main() {
+   BaseScene::Update();
+   // カメラコントローラーの更新
+   if (cameraController_) {
+	  cameraController_->Update();
+   }
+
+   // 雷エフェクトの更新
+   if (lightningManager_) {
+	  lightningManager_->UpdateAllEffects();
+   }
+
+   // 削除予定の弾をリストから削除（gameObjects_からは次のフレームの最初に削除）
+   bullets_.remove_if([](Bullet* bullet) { return bullet == nullptr || !bullet->IsActive(); });
+
+   // 新しいオブジェクトを追加
+   if (!newGameObjectsQueue_.empty()) {
+	  for (auto& newObj : newGameObjectsQueue_) {
+		 gameObjects_.push_back(std::move(newObj));
+	  }
+	  newGameObjectsQueue_.clear();
+   }
+
+   if (playerHitPointUI_) {
+	  playerHitPointUI_->SetHP(player_->GetHP());
+   }
+
+   if (bossHitPointUI_) {
+	  bossHitPointUI_->SetHP(boss_->GetHP());
+   }
+
+   // 帯電ゲージの更新
+   if (playerGauge_) {
+	  playerGauge_->SetValue(player_->GetStoredEnergy());
+	  playerGauge_->Update();
+   }
+
+   if (bossGauge_) {
+	  bossGauge_->SetValue(boss_->GetStoredEnergy());
+	  bossGauge_->Update();
+   }
+#ifdef _DEBUG
+   // カメラコントローラーのデバッグUI
+   if (cameraController_) {
+	  cameraController_->DrawImGui();
+   }
+#endif
+
+   // コライダー登録
+   RegisterAllColliders();
+
+   // 衝突判定
+   CheckCollisions();
+
+   // ゲームクリア／ゲームオーバーの判定
+   if (boss_->GetHP() <= 0) {
+	  stateMachine_->RequestState("GameClear", 0);
+   } else if (player_->GetHP() <= 0) {
+	  stateMachine_->RequestState("GameOver", 0);
+   }
+}
+
+void GameScene::InitializeGameOver() {
+   boss_->SetActive(false);
+
+   for (auto& bullet : bullets_) {
+	  bullet->SetActive(false);
+   }
+
+   // 削除予定の弾をリストから削除（gameObjects_からは次のフレームの最初に削除）
+   bullets_.remove_if([](Bullet* bullet) { return bullet == nullptr || !bullet->IsActive(); });
+
+   collisionManager_->Clear();
+
+   // カット追跡変数をリセット
+   lastCutIndex_ = -1;
+
+   Vector3 currentPos = cameraController_->GetCurrentCameraPos();
+   Vector3 playerPos = player_->GetWorldPosition();
+
+   // ゲームオーバーシーケンスを作成（近づく→固定→離れる）
+   auto gameOverSequence = std::make_shared<CinematicSequence>();
+
+   // カット1: プレイヤーに近づく
+   {
+	  CinematicCut cut1;
+	  cut1.config.type = CameraController::CinematicType::Dolly;
+	  cut1.config.duration = 0.8f;
+	  cut1.config.startPosition = currentPos;
+	  cut1.config.endPosition = { playerPos.x, playerPos.y, playerPos.z - 8.0f };
+	  cut1.config.startRotation = { 0.0f, 0.0f, 0.0f };
+	  cut1.config.endRotation = { 0.0f, 0.0f, 0.0f };
+	  cut1.config.useEasing = true;
+	  cut1.config.easingType = "EaseInOutQuad";
+	  cut1.name = "GameOver_Approach";
+	  cut1.duration = 0.8f;
+	  gameOverSequence->AddCut(cut1);
+   }
+
+   // カット2: プレイヤーの近くで固定
+   {
+	  CinematicCut cut2;
+	  cut2.config.type = CameraController::CinematicType::FixedPosition;
+	  cut2.config.duration = 1.0f;
+	  cut2.config.startPosition = { playerPos.x, playerPos.y, playerPos.z - 8.0f };
+	  cut2.config.endPosition = { playerPos.x, playerPos.y, playerPos.z - 8.0f };
+	  cut2.config.targetPosition = playerPos;
+	  cut2.config.useEasing = false;
+	  cut2.name = "GameOver_Hold";
+	  cut2.duration = 1.0f;
+	  gameOverSequence->AddCut(cut2);
+   }
+
+   // カット3: プレイヤーから離れる
+   {
+	  CinematicCut cut3;
+	  cut3.config.type = CameraController::CinematicType::Dolly;
+	  cut3.config.duration = 0.3f;
+	  cut3.config.startPosition = { playerPos.x, playerPos.y, playerPos.z - 8.0f };
+	  cut3.config.endPosition = { playerPos.x, playerPos.y, playerPos.z - 12.0f };
+	  cut3.config.startRotation = { 0.0f, 0.0f, 0.0f };
+	  cut3.config.endRotation = { 0.0f, 0.0f, 0.0f };
+	  cut3.config.useEasing = true;
+	  cut3.config.easingType = "EaseOutQuad";
+	  cut3.name = "GameOver_Retreat";
+	  cut3.duration = 0.3f;
+	  gameOverSequence->AddCut(cut3);
+   }
+
+   cameraController_->StartSequence(gameOverSequence);
+}
+
+void GameScene::GameOver() {
+
+   BaseScene::Update();
+
+   // カメラコントローラーの更新
+   if (cameraController_) {
+	  // カットの切り替えを検知してシェイクを発動
+	  if (cameraController_->IsSequenceActive()) {
+		 int currentCutIndex = cameraController_->GetSequenceCurrentCutIndex();
+
+		 // カット2（インデックス1）からカット3（インデックス2）に切り替わった瞬間
+		 if (lastCutIndex_ == 1 && currentCutIndex == 2) {
+			cameraController_->StartShake(CameraController::ShakeIntensity::Large);
+		 }
+
+		 lastCutIndex_ = currentCutIndex;
+	  } else {
+		 // シーケンスが終了したらリセット
+		 lastCutIndex_ = -1;
+	  }
+
+	  cameraController_->Update();
+   }
+
+   // 雷エフェクトの更新
+   if (lightningManager_) {
+	  lightningManager_->UpdateAllEffects();
+   }
+
+   // 新しいオブジェクトを追加
+   if (!newGameObjectsQueue_.empty()) {
+	  for (auto& newObj : newGameObjectsQueue_) {
+		 gameObjects_.push_back(std::move(newObj));
+	  }
+	  newGameObjectsQueue_.clear();
+   }
+
+   if (playerHitPointUI_) {
+	  playerHitPointUI_->SetHP(player_->GetHP());
+   }
+
+   if (bossHitPointUI_) {
+	  bossHitPointUI_->SetHP(boss_->GetHP());
+   }
+
+   // 帯電ゲージの更新
+   if (playerGauge_) {
+	  playerGauge_->SetValue(player_->GetStoredEnergy());
+	  playerGauge_->Update();
+   }
+
+   if (bossGauge_) {
+	  bossGauge_->SetValue(boss_->GetStoredEnergy());
+	  bossGauge_->Update();
+   }
+
+   // シーケンス終了後にリザルトシーンへ遷移
+   if (!cameraController_->IsSequenceActive()) {
+	  sceneManager_->ChangeScene("ResultScene");
+
+	  json clearTimeData = JsonManager::GetInstance().LoadJson("Resources/Data/CurrentClearTime.json");
+	  clearTimeData["CurrentClearTime"] = time_;
+
+	  JsonManager::GetInstance().SaveJson("Resources/Data/CurrentClearTime.json", clearTimeData);
+
+	  json resultData = JsonManager::GetInstance().LoadJson("Resources/Data/result.json");
+	  resultData["isWin"] = false;
+
+	  JsonManager::GetInstance().SaveJson("Resources/Data/result.json", resultData);
+   }
+}
+
+void GameScene::InitializeGameClear() {
+   player_->SetActive(false);
+
+   for (auto& bullet : bullets_) {
+	  bullet->SetActive(false);
+   }
+
+   // 削除予定の弾をリストから削除（gameObjects_からは次のフレームの最初に削除）
+   bullets_.remove_if([](Bullet* bullet) { return bullet == nullptr || !bullet->IsActive(); });
+
+   // カット追跡変数をリセット
+   lastCutIndex_ = -1;
+
+   collisionManager_->Clear();
+
+   Vector3 currentPos = cameraController_->GetCurrentCameraPos();
+   Vector3 bossPos = boss_->GetWorldPosition();
+
+   // ゲームクリアシーケンスを作成（近づく→固定→離れる）
+   auto gameClearSequence = std::make_shared<CinematicSequence>();
+
+   // カット1: ボスに近づく
+   {
+	  CinematicCut cut1;
+	  cut1.config.type = CameraController::CinematicType::Dolly;
+	  cut1.config.duration = 0.8f;
+	  cut1.config.startPosition = currentPos;
+	  cut1.config.endPosition = { bossPos.x, bossPos.y, bossPos.z - 8.0f };
+	  cut1.config.startRotation = { 0.0f, 0.0f, 0.0f };
+	  cut1.config.endRotation = { 0.0f, 0.0f, 0.0f };
+	  cut1.config.useEasing = true;
+	  cut1.config.easingType = "EaseInOutQuad";
+	  cut1.name = "GameClear_Approach";
+	  cut1.duration = 0.8f;
+	  gameClearSequence->AddCut(cut1);
+   }
+
+   // カット2: ボスの近くで固定
+   {
+	  CinematicCut cut2;
+	  cut2.config.type = CameraController::CinematicType::FixedPosition;
+	  cut2.config.duration = 1.0f;
+	  cut2.config.startPosition = { bossPos.x, bossPos.y, bossPos.z - 8.0f };
+	  cut2.config.endPosition = { bossPos.x, bossPos.y, bossPos.z - 8.0f };
+	  cut2.config.targetPosition = bossPos;
+	  cut2.config.useEasing = false;
+	  cut2.name = "GameClear_Hold";
+	  cut2.duration = 1.0f;
+	  gameClearSequence->AddCut(cut2);
+   }
+
+   // カット3: ボスから離れる
+   {
+	  CinematicCut cut3;
+	  cut3.config.type = CameraController::CinematicType::Dolly;
+	  cut3.config.duration = 0.3f;
+	  cut3.config.startPosition = { bossPos.x, bossPos.y, bossPos.z - 8.0f };
+	  cut3.config.endPosition = { bossPos.x, bossPos.y, bossPos.z - 12.0f };
+	  cut3.config.startRotation = { 0.0f, 0.0f, 0.0f };
+	  cut3.config.endRotation = { 0.0f, 0.0f, 0.0f };
+	  cut3.config.useEasing = true;
+	  cut3.config.easingType = "EaseOutQuad";
+	  cut3.name = "GameClear_Retreat";
+	  cut3.duration = 0.3f;
+	  gameClearSequence->AddCut(cut3);
+   }
+
+   cameraController_->StartSequence(gameClearSequence);
+}
+
+void GameScene::GameClear() {
+   BaseScene::Update();
+
+   // カメラコントローラーの更新
+   if (cameraController_) {
+	  // カットの切り替えを検知してシェイクを発動
+	  if (cameraController_->IsSequenceActive()) {
+		 int currentCutIndex = cameraController_->GetSequenceCurrentCutIndex();
+
+		 // カット2（インデックス1）からカット3（インデックス2）に切り替わった瞬間
+		 if (lastCutIndex_ == 1 && currentCutIndex == 2) {
+			cameraController_->StartShake(CameraController::ShakeIntensity::Large);
+		 }
+
+		 lastCutIndex_ = currentCutIndex;
+	  } else {
+		 // シーケンスが終了したらリセット
+		 lastCutIndex_ = -1;
+	  }
+
+	  cameraController_->Update();
+   }
+
+   // 雷エフェクトの更新
+   if (lightningManager_) {
+	  lightningManager_->UpdateAllEffects();
+   }
+
+   // 新しいオブジェクトを追加
+   if (!newGameObjectsQueue_.empty()) {
+	  for (auto& newObj : newGameObjectsQueue_) {
+		 gameObjects_.push_back(std::move(newObj));
+	  }
+	  newGameObjectsQueue_.clear();
+   }
+
+   if (playerHitPointUI_) {
+	  playerHitPointUI_->SetHP(player_->GetHP());
+   }
+
+   if (bossHitPointUI_) {
+	  bossHitPointUI_->SetHP(boss_->GetHP());
+   }
+
+   // 帯電ゲージの更新
+   if (playerGauge_) {
+	  playerGauge_->SetValue(player_->GetStoredEnergy());
+	  playerGauge_->Update();
+   }
+
+   if (bossGauge_) {
+	  bossGauge_->SetValue(boss_->GetStoredEnergy());
+	  bossGauge_->Update();
+   }
+
+   // シーケンス終了後にリザルトシーンへ遷移
+   if (!cameraController_->IsSequenceActive()) {
+	  sceneManager_->ChangeScene("ResultScene");
+
+	  json clearTimeData = JsonManager::GetInstance().LoadJson("Resources/Data/CurrentClearTime.json");
+	  clearTimeData["CurrentClearTime"] = time_;
+
+	  JsonManager::GetInstance().SaveJson("Resources/Data/CurrentClearTime.json", clearTimeData);
+
+	  json resultData = JsonManager::GetInstance().LoadJson("Resources/Data/result.json");
+	  resultData["isWin"] = true;
+
+	  JsonManager::GetInstance().SaveJson("Resources/Data/result.json", resultData);
    }
 }

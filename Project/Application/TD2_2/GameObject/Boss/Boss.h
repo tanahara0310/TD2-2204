@@ -96,6 +96,8 @@ public:
 
    float GetStoredEnergy() const { return storedEnergy_; }
 
+   void DecreaseHP(int amount) { hp_ = (std::max)(0, hp_ - amount); }
+
    //======================================================================
    // ビヘイビアツリー関連
    //======================================================================
@@ -140,6 +142,10 @@ private:
    float respawnDuration_ = 0.5f; // リスポーン持続時間（秒）
    GameTimer despawnTimer_;
    GameTimer respawnTimer_;
+
+   GameTimer deathTimer_;
+   GameTimer idleTimer_;
+   float deathDuration_ = 1.0f; // 死亡持続時間（秒）
 
    // ノックバックによる中心バイアス増加
    GameTimer knockbackBiasTimer_;
@@ -221,6 +227,10 @@ private:
    void InitializePunk();
 
    void Punk();
+
+   void InitializeDeath();
+
+   void Death();
 
    /// @brief ダメージ壁との接触判定
    void CheckDamageWallCollision();

@@ -26,7 +26,7 @@ void MyGame::Initialize()
 	sceneManager_->RegisterScene<ResultScene>("ResultScene");
 
 	// 初期シーンを設定
-	sceneManager_->SetInitialScene("RecommendedScene");
+	sceneManager_->SetInitialScene("GameScene");
 
 	// ===== コンソールログ出力とシーンマネージャーの設定 =====
 #ifdef _DEBUG

@@ -27,6 +27,10 @@ void Boss::Initialize(std::unique_ptr<Model> model, TextureManager::LoadedTextur
 }
 
 void Boss::Update() {
+   if (hp_ <= 0) {
+	  stateMachine_->RequestState("Death", 10);
+   }
+
    // ダメージ壁との接触判定（ダメージ状態以外、かつ無敵時間でない場合のみ）
    if (stateMachine_->GetCurrentState() != "Damage" &&
 	  stateMachine_->GetCurrentState() != "Despawn" &&
@@ -235,13 +239,15 @@ void Boss::InitializeStateMachine() {
 	  std::bind(&Boss::InitializePunk, this),
 	  std::bind(&Boss::Punk, this));
 
+   stateMachine_->AddState("Death", std::bind(&Boss::InitializeDeath, this), std::bind(&Boss::Death, this));
+
    // 状態遷移ルール
-   stateMachine_->AddTransitionRule("Normal", { "Stun", "Damage" ,"Punk"});
-   stateMachine_->AddTransitionRule("Stun", { "Normal", "Damage" ,"Punk"});
-   stateMachine_->AddTransitionRule("Damage", { "Despawn" });
+   stateMachine_->AddTransitionRule("Normal", { "Stun", "Damage" ,"Punk","Death" });
+   stateMachine_->AddTransitionRule("Stun", { "Normal", "Damage" ,"Punk","Death" });
+   stateMachine_->AddTransitionRule("Damage", { "Despawn" ,"Death" });
    stateMachine_->AddTransitionRule("Despawn", { "Respawn" });
    stateMachine_->AddTransitionRule("Respawn", { "Normal" });
-   stateMachine_->AddTransitionRule("Punk", { "Normal" , "Damage" });
+   stateMachine_->AddTransitionRule("Punk", { "Normal" , "Damage","Death" });
 }
 
 void Boss::UpdateMovement() {
@@ -461,13 +467,17 @@ void Boss::CheckDamageWallCollision() {
    // ボスがダメージ壁に接触したか判定
    if (std::abs(transform_.translate.x) >= damageWallHalfWidth ||
 	  std::abs(transform_.translate.y) >= damageWallHalfHeight) {
-	  // ダメージステートに遷移
-	  stateMachine_->RequestState("Damage", 2);
+	  if (hp_ > 1) {
+		 // ダメージステートに遷移
+		 stateMachine_->RequestState("Damage", 0);
+	  } else {
+		 stateMachine_->RequestState("Death", 10);
+	  }
    }
 }
 
 void Boss::UpdateEnergy() {
-   if (IsInvincible() || stateMachine_->GetCurrentState() == "Respawn" || stateMachine_->GetCurrentState() == "Despawn" || stateMachine_->GetCurrentState() == "Damage"|| stateMachine_->GetCurrentState() == "Punk") {
+   if (IsInvincible() || stateMachine_->GetCurrentState() == "Respawn" || stateMachine_->GetCurrentState() == "Despawn" || stateMachine_->GetCurrentState() == "Damage" || stateMachine_->GetCurrentState() == "Punk") {
 	  return;
    }
 
@@ -506,7 +516,7 @@ void Boss::InitializePunk() {
 	  startDamageFunction_();
    }
 
-   if (stopEffectFunction_) { 
+   if (stopEffectFunction_) {
 	  stopEffectFunction_();
    }
 
@@ -536,18 +546,58 @@ void Boss::Punk() {
 
 void Boss::StartSparkEffect() {
    if (startSparkEffectFunction_) {
-      startSparkEffectFunction_();
+	  startSparkEffectFunction_();
    }
 }
 
 void Boss::StopSparkEffect() {
    if (stopSparkEffectFunction_) {
-      stopSparkEffectFunction_();
+	  stopSparkEffectFunction_();
    }
 }
 
 void Boss::UpdateSparkEffect() {
    if (updateSparkEffectFunction_) {
-      updateSparkEffectFunction_(GetWorldPosition());
+	  updateSparkEffectFunction_(GetWorldPosition());
+   }
+}
+
+void Boss::InitializeDeath() {
+   StopModelSwapAnimation();
+   velocity_ = { 0.0f, 0.0f };
+   acceleration_ = { 0.0f, 0.0f };
+   ChangeToRegisteredModel("Damage");
+   /* if (deathFunction_) {
+	   deathFunction_();
+	}*/
+
+   idleTimer_.Start(0.8f, false);
+
+   hp_ = 0;
+}
+
+void Boss::Death() {
+   static bool isFinished = false;
+   idleTimer_.Update(GameUtils::GetDeltaTime());
+
+   if (idleTimer_.IsFinished() && !isFinished) {
+	  deathTimer_.Start(1.05f, false);
+	  isFinished = true;
+   }
+
+   if (isFinished) {
+	  deathTimer_.Update(GameUtils::GetDeltaTime());
+
+	  // スケールを0にイージング
+	  float progress = deathTimer_.GetEasedProgress(EasingUtil::Type::EaseInOutCubic);
+	  float scale = GameUtils::Lerp(1.0f, 1.5f, progress);
+	  transform_.scale = { scale, scale, scale };
+
+	  transform_.TransferMatrix();
+
+	  if (deathTimer_.IsFinished()) {
+		 isActive_ = false;
+		 isFinished = false;
+	  }
    }
 }

@@ -249,7 +249,6 @@
     <ClCompile Include="Engine\ObjectCommon\IDrawable.cpp" />
     <ClCompile Include="Application\TD2_2\Utility\KeyConfig.cpp" />
     <ClCompile Include="Application\TD2_2\Utility\GameUtils.cpp" />
-    <ClCompile Include="Application\TD2_2\GameObject\Boss\Boss.cpp" />
     <ClCompile Include="Application\TD2_2\Utility\StateMachine.cpp" />
     <ClCompile Include="Engine\ObjectCommon\SpriteObject.cpp" />
     <ClCompile Include="Engine\Camera\Camera2D.cpp" />
@@ -312,6 +311,7 @@
     <ClCompile Include="Application\TD2_2\GameObject\Recommended\RecommendedModel.cpp" />
     <ClCompile Include="Application\TD2_2\GameObject\TitleUI\YameruModel.cpp" />
     <ClCompile Include="Application\TD2_2\GameObject\TitleUI\StartModel.cpp" />
+    <ClCompile Include="Application\TD2_2\GameObject\Boss\Boss.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Engine\WinApp\WinApp.h">
