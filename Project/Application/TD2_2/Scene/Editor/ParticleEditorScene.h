@@ -6,6 +6,7 @@
 class EngineSystem;
 class Camera;
 class ParticleSystem;
+class Model;
 
 // パーティクル専用エディターシーン（最小構成）
 class ParticleEditorScene : public BaseScene {
@@ -20,5 +21,7 @@ protected:
     void SetupReleaseCameraParameters(Camera* camera) override;
 
 private:
-    ParticleSystem* particleSystem_ = nullptr; // 所有は BaseScene::gameObjects_
+    // モデルパーティクル（ボクセル）
+    ParticleSystem* modelParticle_ = nullptr;
+    std::unique_ptr<Model> voxelModelForParticle_;
 };

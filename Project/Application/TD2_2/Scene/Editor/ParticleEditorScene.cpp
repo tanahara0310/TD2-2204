@@ -9,6 +9,7 @@
 #include "Engine/Graphics/Render/RenderManager.h"
 #include "Engine/Graphics/Resource/ResourceFactory.h"
 #include "Engine/Graphics/Model/ModelManager.h"
+#include "Engine/Graphics/Model/Model.h"
 #include "Engine/Graphics/TextureManager.h"
 #include "Engine/Input/KeyboardInput.h"
 #include "Engine/Particle/ParticleSystem.h"
@@ -16,26 +17,43 @@
 void ParticleEditorScene::Initialize(EngineSystem* engine) {
     BaseScene::Initialize(engine);
 
-    // 必要最小限: パーティクルシステムのみ生成
     auto dxCommon = engine_->GetComponent<DirectXCommon>();
     auto resourceFactory = engine_->GetComponent<ResourceFactory>();
-    if (!dxCommon || !resourceFactory) {
+    auto modelManager = engine_->GetComponent<ModelManager>();
+    if (!dxCommon || !resourceFactory || !modelManager) {
         return;
     }
 
-    auto particle = std::make_unique<ParticleSystem>();
-    particle->Initialize(dxCommon, resourceFactory);
+    // ===== モデルパーティクルシステム（ボクセル）=====
+    {
+        auto particle = std::make_unique<ParticleSystem>();
+        particle->Initialize(dxCommon, resourceFactory);
 
-    // 最小設定（動作確認用）。詳細な調整はデバッグUIで行う
-    particle->SetEmitterPosition({0.0f, 0.0f, 0.0f});
-    particle->SetBlendMode(BlendMode::kBlendModeAdd);
+        // Voxelモデルを読み込む
+        voxelModelForParticle_ = modelManager->CreateStaticModel("Resources/Models/Voxel/Voxel.obj");
+        
+        // ModelResourceを取得してParticleSystemに設定
+        auto* voxelModelResource = modelManager->GetModelResource("Resources/Models/Voxel/Voxel.obj");
+        if (voxelModelResource) {
+            particle->SetModelResource(voxelModelResource);
+        }
+        
+        // テクスチャを設定
+        particle->SetTexture("Resources/SampleResources/white1x1.png");
+        
+        // モデルパーティクルの基本設定
+        particle->SetEmitterPosition({0.0f, 0.0f, 0.0f});
+        particle->SetBlendMode(BlendMode::kBlendModeNormal);
 
-    // そのままUI操作で調整できるように再生だけ開始
-    particle->GetEmissionModule().Play();
-    particle->GetMainModule().Play();
+        // エディタでは自動削除を無効化（ファイル読み込み時にisLoopingがoffでも残る）
+        particle->SetAutoDelete(false);
 
-    particleSystem_ = particle.get();
-    gameObjects_.push_back(std::move(particle));
+        particle->GetEmissionModule().Play();
+        particle->GetMainModule().Play();
+
+        modelParticle_ = particle.get();
+        gameObjects_.push_back(std::move(particle));
+    }
 }
 
 void ParticleEditorScene::Update() {
