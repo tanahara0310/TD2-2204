@@ -8,7 +8,7 @@ void YameruModel::Initialize(std::unique_ptr<Model> model, TextureManager::Loade
 
 	// 初期位置とスケールの設定
 	transform_.translate = { 0.0f, -7.0f, -60.9f };
-	baseScale_ = { 1.0f, 1.0f, 1.0f };
+	baseScale_ = { 0.7f, 0.7f, 0.7f };
 	transform_.scale = baseScale_;
 	breathTimer_ = 0.0f;
 	isSelected_ = false;
