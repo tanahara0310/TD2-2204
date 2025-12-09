@@ -46,6 +46,7 @@ void FleeFromPlayerAction::OnEnter() {
    if (boss_) {
 	  boss_->SetMaxSpeed(5.0f);
 	  boss_->SetDampingPerSecond(0.7f);  // 減衰を弱める（0.3f → 0.7f）
+	  boss_->StartEffect();
    }
 }
 

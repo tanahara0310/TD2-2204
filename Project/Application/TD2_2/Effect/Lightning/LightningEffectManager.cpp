@@ -16,6 +16,31 @@
 #undef max
 #endif
 
+namespace {
+// ロドリゲスの回転公式を用いてベクトルvをaxis周りにangleラジアン回転させる
+Vector3 RotateVector(const Vector3& v, const Vector3& axis, float angle) {
+   float cosTheta = std::cos(angle);
+   float sinTheta = std::sin(angle);
+
+   // v * cos(theta)
+   Vector3 term1 = v * cosTheta;
+
+   // (axis x v) * sin(theta)
+   Vector3 crossProd = {
+	   axis.y * v.z - axis.z * v.y,
+	   axis.z * v.x - axis.x * v.z,
+	   axis.x * v.y - axis.y * v.x
+   };
+   Vector3 term2 = crossProd * sinTheta;
+
+   // axis * (axis . v) * (1 - cos(theta))
+   float dotProd = axis.x * v.x + axis.y * v.y + axis.z * v.z;
+   Vector3 term3 = axis * (dotProd * (1.0f - cosTheta));
+
+   return term1 + term2 + term3;
+}
+}
+
 void LightningEffectManager::Initialize(ModelManager* modelManager, TextureManager* textureManager)
 {
    modelManager->LoadModelResource("Resources/Models/Voxel/", "voxel.obj");
@@ -150,6 +175,8 @@ int LightningEffectManager::CreateEffect(const Vector3& position, const EffectCo
 	  // 球面配置モード：複数の雷を球面上にバランスよく配置
 	  auto spherePoints = GenerateSpherePoints(config.lightningCount, config.sphereRadius);
 
+	  std::shuffle(spherePoints.begin(), spherePoints.end(), *random.GetEngine());
+
 	  for (const auto& point : spherePoints) {
 		 // 開始点と終点を計算（内側から外側へ）
 		 Vector3 direction = point;
@@ -202,8 +229,22 @@ int LightningEffectManager::CreateEffect(const Vector3& position, const EffectCo
 		 lightningData.delay = random.GetFloat(0.0f, 0.05f); // 各ライトニングに小さな遅延
 		 lightningData.noiseSeedOffset = random.GetFloat(0.0f, 100.0f);
 
+		 Vector3 randomAxis = {
+			 random.GetFloat(-1.0f, 1.0f),
+			 random.GetFloat(-1.0f, 1.0f),
+			 random.GetFloat(-1.0f, 1.0f)
+		 };
+		 // 正規化（ゼロ除算対策含む）
+		 float axisLen = std::sqrt(randomAxis.x * randomAxis.x + randomAxis.y * randomAxis.y + randomAxis.z * randomAxis.z);
+		 if (axisLen > 0.001f) {
+			lightningData.orbitAxis = { randomAxis.x / axisLen, randomAxis.y / axisLen, randomAxis.z / axisLen };
+		 } else {
+			lightningData.orbitAxis = { 0.0f, 1.0f, 0.0f };
+		 }
+
 		 effectData.lightnings.push_back(lightningData);
 		 gameObjects.push_back(std::move(lightning));
+
 	  }
    } else {
 	  // 従来モード：単一の雷（初期表示は設定に従う）
@@ -231,6 +272,7 @@ int LightningEffectManager::CreateEffect(const Vector3& position, const EffectCo
 	  lightningData.originalStartPoint = config.startOffset;
 	  lightningData.originalEndPoint = config.endOffset;
 	  lightningData.delay = 0.0f;
+	  lightningData.orbitAxis = { 0.0f, 1.0f, 0.0f };
 
 	  effectData.lightnings.push_back(lightningData);
 	  gameObjects.push_back(std::move(lightning));
@@ -258,19 +300,30 @@ void LightningEffectManager::UpdateAllEffects()
 		 }
 	  }
 
+	  // =========================================================
+	  // ▼ 修正ポイント: 回転角度の計算を条件付きにする
+	  //    球面配置(useSphereDistribution)の場合のみ回転させる
+	  // =========================================================
+	  float orbitAngle = 0.0f;
+	  if (effect.config.useSphereDistribution) {
+		 orbitAngle = currentTime * effect.config.orbitSpeed;
+	  }
+
 	  if (effect.state == AnimationState::Visible) {
 
-		 // ノイズの基準時間（currentTime + ランダムオフセット）
-		 float time = currentTime + effect.startEndNoiseOffset; // 5.0f はノイズ速度の例
-		 float noiseRange = effect.config.randomOffsetRange; // 既存のランダムオフセット範囲を使用
+		 float time = currentTime + effect.startEndNoiseOffset;
+		 float noiseRange = effect.config.randomOffsetRange;
 
 		 for (auto& lightningData : effect.lightnings) {
 			if (!lightningData.lightning) continue;
 
-			// ノイズ値の計算。lightningData.delayとnoiseSeedOffsetを使用してユニークに揺らす
+			// ▼ 修正済みの orbitAngle を使用 (単体モードなら0なので回転しない)
+			Vector3 rotatedStart = RotateVector(lightningData.originalStartPoint, lightningData.orbitAxis, orbitAngle);
+			Vector3 rotatedEnd = RotateVector(lightningData.originalEndPoint, lightningData.orbitAxis, orbitAngle);
+
+			// 2. ノイズの計算 (変更なし)
 			float base = time + lightningData.delay * 10.0f + lightningData.noiseSeedOffset;
 
-			// 始点・終点に揺らぎを与えるノイズ値を計算（Perlin Noiseの代用としてSin/Cosを使用）
 			float startNoiseX = std::sin(base * 1.0f) * noiseRange;
 			float startNoiseY = std::cos(base * 0.8f) * noiseRange;
 			float startNoiseZ = std::sin(base * 1.2f) * noiseRange;
@@ -281,53 +334,53 @@ void LightningEffectManager::UpdateAllEffects()
 
 			auto& config = lightningData.lightning->GetConfig();
 
-			// 始点・終点を再配置
+			// 3. 座標設定
 			config.startPoint = {
-				lightningData.originalStartPoint.x + startNoiseX,
-				lightningData.originalStartPoint.y + startNoiseY,
-				lightningData.originalStartPoint.z + startNoiseZ
+			   rotatedStart.x + startNoiseX,
+			   rotatedStart.y + startNoiseY,
+			   rotatedStart.z + startNoiseZ
 			};
 			config.endPoint = {
-				lightningData.originalEndPoint.x + endNoiseX,
-				lightningData.originalEndPoint.y + endNoiseY,
-				lightningData.originalEndPoint.z + endNoiseZ
+			   rotatedEnd.x + endNoiseX,
+			   rotatedEnd.y + endNoiseY,
+			   rotatedEnd.z + endNoiseZ
 			};
-
-			// 色はAnimationState::FadingIn/Outで設定されているため、ここでは変更しない
 
 			lightningData.lightning->ApplyConfigChanges();
 		 }
-	  }
-
-	  // アニメーション更新
-	  if (effect.state == AnimationState::FadingIn) {
+	  } else if (effect.state == AnimationState::FadingIn) {
 		 effect.animationTimer.Update(deltaTime);
 		 float progress = effect.animationTimer.GetProgress();
 
-		 // 各ライトニングを遅延付きで更新
+		 // ▼ ここでは既に上で計算した orbitAngle が有効です
+		 // float orbitAngle = currentTime * effect.config.orbitSpeed; // ← この行は削除か、上の共通変数を使う
+
 		 for (auto& lightningData : effect.lightnings) {
 			if (!lightningData.lightning) continue;
 
-			// 遅延を考慮した進行度
 			float delayedProgress = std::max(0.0f, (progress - lightningData.delay) / (1.0f - lightningData.delay));
 			delayedProgress = std::clamp(delayedProgress, 0.0f, 1.0f);
 			float delayedEasedProgress = EasingUtil::Apply(delayedProgress, EasingUtil::Type::EaseOutCubic);
 
-			// 始点から終点まで徐々に伸びる
+			// 回転後の座標を取得（単体モードなら元の座標と同じになる）
+			Vector3 currentStart = RotateVector(lightningData.originalStartPoint, lightningData.orbitAxis, orbitAngle);
+			Vector3 currentEnd = RotateVector(lightningData.originalEndPoint, lightningData.orbitAxis, orbitAngle);
+
 			auto& config = lightningData.lightning->GetConfig();
-			config.startPoint = lightningData.originalStartPoint;
+
+			// 以下変更なし
+			config.startPoint = currentStart;
 			config.endPoint = {
-				lightningData.originalStartPoint.x + (lightningData.originalEndPoint.x - lightningData.originalStartPoint.x) * delayedEasedProgress,
-				lightningData.originalStartPoint.y + (lightningData.originalEndPoint.y - lightningData.originalStartPoint.y) * delayedEasedProgress,
-				lightningData.originalStartPoint.z + (lightningData.originalEndPoint.z - lightningData.originalStartPoint.z) * delayedEasedProgress
+			   currentStart.x + (currentEnd.x - currentStart.x) * delayedEasedProgress,
+			   currentStart.y + (currentEnd.y - currentStart.y) * delayedEasedProgress,
+			   currentStart.z + (currentEnd.z - currentStart.z) * delayedEasedProgress
 			};
 
-			// 色もフェードイン
+			float baseAlpha = config.color.w; // SetEffectIntensityで設定された現在のアルファ値(非表示なら0)
+
 			config.color = {
-				effect.config.color.x,
-				effect.config.color.y,
-				effect.config.color.z,
-				effect.config.color.w * delayedEasedProgress
+			   effect.config.color.x, effect.config.color.y, effect.config.color.z,
+			   baseAlpha * delayedEasedProgress
 			};
 
 			lightningData.lightning->ApplyConfigChanges();
@@ -340,39 +393,43 @@ void LightningEffectManager::UpdateAllEffects()
 		 effect.animationTimer.Update(deltaTime);
 		 float progress = effect.animationTimer.GetProgress();
 
-		 // 各ライトニングを遅延付きで更新
+		 // ▼ 同様に修正
+		 // float orbitAngle = currentTime * effect.config.orbitSpeed; // ← 削除
+
 		 for (auto& lightningData : effect.lightnings) {
 			if (!lightningData.lightning) continue;
 
-			// 遅延を考慮した進行度
 			float delayedProgress = std::max(0.0f, (progress - lightningData.delay) / (1.0f - lightningData.delay));
 			delayedProgress = std::clamp(delayedProgress, 0.0f, 1.0f);
 			float delayedEasedProgress = EasingUtil::Apply(delayedProgress, EasingUtil::Type::EaseInCubic);
 
-			// 始点から徐々に縮んでいく
+			// 回転後の座標を取得
+			Vector3 currentStart = RotateVector(lightningData.originalStartPoint, lightningData.orbitAxis, orbitAngle);
+			Vector3 currentEnd = RotateVector(lightningData.originalEndPoint, lightningData.orbitAxis, orbitAngle);
+
 			auto& config = lightningData.lightning->GetConfig();
+
 			float remainingLength = 1.0f - delayedEasedProgress;
 			config.startPoint = {
-				lightningData.originalStartPoint.x + (lightningData.originalEndPoint.x - lightningData.originalStartPoint.x) * delayedEasedProgress,
-				lightningData.originalStartPoint.y + (lightningData.originalEndPoint.y - lightningData.originalStartPoint.y) * delayedEasedProgress,
-				lightningData.originalStartPoint.z + (lightningData.originalEndPoint.z - lightningData.originalStartPoint.z) * delayedEasedProgress
+			   currentStart.x + (currentEnd.x - currentStart.x) * delayedEasedProgress,
+			   currentStart.y + (currentEnd.y - currentStart.y) * delayedEasedProgress,
+			   currentStart.z + (currentEnd.z - currentStart.z) * delayedEasedProgress
 			};
-			config.endPoint = lightningData.originalEndPoint;
+			config.endPoint = currentEnd;
 
-			// 色もフェードアウト
 			config.color = {
-				effect.config.color.x,
-				effect.config.color.y,
-				effect.config.color.z,
-				effect.config.color.w * remainingLength
+			   effect.config.color.x,
+			   effect.config.color.y,
+			   effect.config.color.z,
+			   effect.config.color.w * remainingLength
 			};
 
 			lightningData.lightning->ApplyConfigChanges();
 		 }
 
 		 if (effect.animationTimer.IsFinished()) {
+			// ... (変更なし) ...
 			effect.state = AnimationState::Hidden;
-			// 完全に非表示
 			for (auto& lightningData : effect.lightnings) {
 			   if (lightningData.lightning) {
 				  auto& config = lightningData.lightning->GetConfig();
@@ -380,7 +437,6 @@ void LightningEffectManager::UpdateAllEffects()
 				  lightningData.lightning->ApplyConfigChanges();
 			   }
 			}
-
 			effect.startEndNoiseOffset = GameUtils::RandomFloat(0.0f, 1000.0f);
 		 }
 	  }
@@ -462,4 +518,61 @@ Vector4 LightningEffectManager::GetEffectColor(int effectId) const
    }
 
    return effects_[effectId].config.color;
+}
+
+void LightningEffectManager::SetEffectIntensity(int effectId, float intensity)
+{
+   if (effectId < 0 || effectId >= static_cast<int>(effects_.size())) {
+	  return;
+   }
+
+   auto& effect = effects_[effectId];
+   intensity = std::clamp(intensity, 0.0f, 1.0f);
+
+   // 球面配置（複数の雷）の場合のみ本数制御を行う
+   if (effect.config.useSphereDistribution) {
+	  size_t totalCount = effect.lightnings.size();
+
+	  // 少なくとも1本は表示するか、あるいは0なら完全に消すかの方針に合わせて調整
+	  // ここでは intensity * totalCount の数だけ表示する
+	  size_t activeCount = static_cast<size_t>(std::ceil(totalCount * intensity));
+
+	  // intensityが0より大きいが計算上0になる場合、最低1本出す演出にするなら以下を有効化
+	  // if (intensity > 0.01f && activeCount == 0) activeCount = 1;
+
+	  for (size_t i = 0; i < totalCount; ++i) {
+		 if (!effect.lightnings[i].lightning) continue;
+
+		 auto& lightning = effect.lightnings[i].lightning;
+		 auto& config = lightning->GetConfig();
+
+		 if (i < activeCount) {
+			// 表示: 設定された色を適用
+			// ノイズ速度もエネルギーが高いほど速くすると迫力が出ます
+			float speedMultiplier = 1.0f + intensity * 2.0f;
+			config.noiseSpeed = effect.config.noiseSpeed * speedMultiplier;
+
+			// 色のアルファ値も調整したい場合はここで設定
+			config.color = effect.config.color;
+		 } else {
+			// 非表示: 色を透明にする（SetVisible(false)だと再アクティブ化の管理が複雑になるため透明推奨）
+			config.color = effect.config.hiddenColor;
+		 }
+
+		 lightning->ApplyConfigChanges();
+	  }
+   } else {
+	  // 単一の雷の場合、Intensityをアルファ値や太さ(VoxelScale)に反映させると良いでしょう
+	  if (!effect.lightnings.empty() && effect.lightnings[0].lightning) {
+		 auto& lightning = effect.lightnings[0].lightning;
+		 auto& config = lightning->GetConfig();
+
+		 // 強度に応じてアルファ値を変更
+		 Vector4 color = effect.config.color;
+		 color.w *= intensity;
+		 config.color = intensity > 0.01f ? color : effect.config.hiddenColor;
+
+		 lightning->ApplyConfigChanges();
+	  }
+   }
 }

@@ -62,7 +62,6 @@ NodeState ChargeToPlayerAction::OnExecute() {
 void ChargeToPlayerAction::OnExit() {
    if (boss_) {
       boss_->SetIsCharging(false);
-	  boss_->EndChargeFunction();
    }
 }
 

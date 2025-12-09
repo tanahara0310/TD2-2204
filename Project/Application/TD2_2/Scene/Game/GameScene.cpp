@@ -114,8 +114,9 @@ void GameScene::Initialize(EngineSystem* engine) {
 		 lightningManager_->SetEffectVisible(damageEffectId, false);
 		 });
 
-	  player->SetUpdateEffectFunction([this, damageEffectId](const Vector3& position) {
-		 lightningManager_->SetEffectPosition(damageEffectId, position);
+	  player->SetUpdateEffectFunction([this,damageEffectId](const Vector3& pos, float energyRatio) {
+		 lightningManager_->SetEffectPosition(damageEffectId, pos);
+		 lightningManager_->SetEffectIntensity(damageEffectId, energyRatio);
 		 });
 
 	  player->SetEffectColorFunction([this, damageEffectId](const Vector4& color) {
@@ -215,8 +216,9 @@ void GameScene::Initialize(EngineSystem* engine) {
 		 lightningManager_->SetEffectVisible(damageEffectId, false);
 		 });
 
-	  boss->SetUpdateEffectFunction([this, damageEffectId](const Vector3& position) {
-		 lightningManager_->SetEffectPosition(damageEffectId, position);
+	  boss->SetUpdateEffectFunction([this, damageEffectId](const Vector3& pos, float energyRatio) {
+		 lightningManager_->SetEffectPosition(damageEffectId, pos);
+		 lightningManager_->SetEffectIntensity(damageEffectId, energyRatio);
 		 });
 
 	  boss->SetEffectColorFunction([this, damageEffectId](const Vector4& color) {
@@ -554,7 +556,7 @@ std::unique_ptr<BehaviorTree> GameScene::CreateBossBehaviorTree() {
 		 builder.Selector()
 			.Sequence()
 			.Action<FleeFromPlayerAction>(boss_, player_)
-			/*.Action<ChargeToPlayerAction>(boss_, player_)
+			.Action<ChargeToPlayerAction>(boss_, player_)
 			.WeightedSelector()
 			.WeightedAction<MoveToCenterAction>(0.3f, boss_)
 			.WeightedAction<ShootEightWayAction>(0.2f, boss_, [this](const Vector3& pos, const Vector3& direction, float speed) { CreateBullet(pos, direction, BulletType::ElasticSphere, speed); })
@@ -562,7 +564,7 @@ std::unique_ptr<BehaviorTree> GameScene::CreateBossBehaviorTree() {
 			.WeightedAction<SparkNode>(0.1f, boss_, sparkCollider_)
 			.End()
 			.End()
-			.Action<FleeFromPlayerAction>(boss_, player_)*/
+			.Action<FleeFromPlayerAction>(boss_, player_)
 			.End();
 	  },
 	  "BossMainAI");

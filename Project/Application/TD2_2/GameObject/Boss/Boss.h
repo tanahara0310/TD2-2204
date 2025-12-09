@@ -57,7 +57,7 @@ public:
 	  startChargeFunction_ = func;
    }
 
-   void SetUpdateEffectFunction(const std::function<void(const Vector3&)>& func) {
+   void SetUpdateEffectFunction(const std::function<void(const Vector3&, float)>& func) {
 	  updateEffectFunction_ = func;
    }
 
@@ -93,6 +93,8 @@ public:
    void SetSmokeEffectFunction(const std::function<void(const Vector3&)>& func) {
 	  smokeEffectFunction_ = func;
    }
+
+   void StartEffect();
 
    void StartSparkEffect();
    void StopSparkEffect();
@@ -172,7 +174,7 @@ private:
 
    std::function<void()> startChargeFunction_;
 
-   std::function<void(const Vector3&)> updateEffectFunction_;
+   std::function<void(const Vector3&, float)> updateEffectFunction_;
 
    std::function<void()> stopEffectFunction_;
 
