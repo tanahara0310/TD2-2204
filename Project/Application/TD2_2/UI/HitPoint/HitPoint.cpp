@@ -4,7 +4,7 @@
 namespace {
 // 調整用定数
 static constexpr float kShakeAmplitude = 4.0f; // ピクセル単位の振幅
-static constexpr float kShakeSpeed = 40.0f;     // 速度調整
+static constexpr float kShakeSpeed = 80.0f;     // 速度調整
 } // namespace
 
 std::vector<std::unique_ptr<IDrawable>> HitPoint::Initialize(Vector2 pivot, SettingObject setObj, int hpCount) {
@@ -129,6 +129,7 @@ void HitPoint::SetHP(int currentHPCount) {
 		if (hpIcon_[damageIconNum_]->GetTransform().scale.x <= 0.0f || hpIcon_[damageIconNum_]->GetTransform().scale.y <= 0.0f) {
 			hpIcon_[damageIconNum_]->GetTransform().scale = {0.0f, 0.0f, 1.0f};
 			isFurikoAnimation_ = false;
+			isShakeAnimation_ = false; // シェイク終了
 		}
 	}
 
