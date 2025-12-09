@@ -111,6 +111,12 @@ public:
 
    float GetStoredEnergy() const { return storedEnergy_; }
 
+   // エネルギー戦略用
+   bool IsEnergyLow() const { return storedEnergy_ < maxStoredEnergy_ * 0.3f; }      // 30%未満
+   bool IsEnergyMedium() const { return storedEnergy_ >= maxStoredEnergy_ * 0.3f && storedEnergy_ < maxStoredEnergy_ * 0.7f; } // 30%～70%
+   bool IsEnergyHigh() const { return storedEnergy_ >= maxStoredEnergy_ * 0.7f; }   // 70%以上
+   bool IsEnergyReady() const { return storedEnergy_ >= maxStoredEnergy_ * 0.6f; }  // 60%以上（攻撃推奨）
+
    void DecreaseHP(int amount) { hp_ = (std::max)(0, hp_ - amount); }
 
    //======================================================================

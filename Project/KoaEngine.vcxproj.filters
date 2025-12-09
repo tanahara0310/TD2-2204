@@ -317,6 +317,8 @@
     <ClCompile Include="Application\TD2_2\GameObject\TitleDemo\TitlePlayerDemo.cpp" />
     <ClCompile Include="Application\TD2_2\GameObject\TitleDemo\TitleEnemyDemo.cpp" />
     <ClCompile Include="Application\TD2_2\GameObject\Boss\ActionNode\ChargeAwayFromPlayerAction.cpp" />
+    <ClCompile Include="Application\TD2_2\GameObject\Boss\ActionNode\ChargeTowardsSafetyAction.cpp" />
+    <ClCompile Include="Application\TD2_2\Scene\Game\BossBehaviorTreeFactory.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Engine\WinApp\WinApp.h">
@@ -796,6 +798,8 @@
     <ClInclude Include="Application\TD2_2\GameObject\TitleDemo\TitlePlayerDemo.h" />
     <ClInclude Include="Application\TD2_2\GameObject\TitleDemo\TitleEnemyDemo.h" />
     <ClInclude Include="Application\TD2_2\GameObject\Boss\ActionNode\ChargeAwayFromPlayerAction.h" />
+    <ClInclude Include="Application\TD2_2\GameObject\Boss\ActionNode\ChargeTowardsSafetyAction.h" />
+    <ClInclude Include="Application\TD2_2\Scene\Game\BossBehaviorTreeFactory.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Engine\Particle\README.md">

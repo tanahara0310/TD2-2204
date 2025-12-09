@@ -40,13 +40,16 @@ struct BossAIParameters {
    float closeRangeDistance = 20.0f;     // 近距離攻撃の判定距離
    float mediumRangeMin = 15.0f;         // 中距離の最小値
    float mediumRangeMax = 25.0f;         // 中距離の最大値
+   float dangerZoneDistance = 8.0f;      // 壁との危険距離
 
    // HP3フェーズのウェイト
    struct HP3Weights {
       float chargeOnly = 1.2f;           // 突進のみ（近距離バイアス倍率）
-      float chargeAndFlee = 0.5f;        // 突進→逃げ（増加）
-      float shootOnly = 0.4f;            // ショット（増加）
-      float moveCenterAndCharge = 0.3f;  // 中央移動→突進（増加）
+      float chargeAndFlee = 0.5f;        // 突進→逃げ
+      float doubleCharge = 0.4f;         // 突進×2
+      float shootOnly = 0.4f;            // ショット
+      float shootAndCharge = 0.35f;      // ショット→突進
+      float moveCenterAndCharge = 0.3f;  // 中央移動→突進
    } hp3;
 
    // HP2フェーズのウェイト
@@ -55,6 +58,8 @@ struct BossAIParameters {
       float sparkComboClose = 1.0f;      // スパークコンボ近距離バイアス
       float stunPursuitBias = 1.0f;      // スタン追撃バイアス
       float chargeAndFlee = 0.25f;       // 突進→逃げ
+      float energyChargeCombo = 1.5f;    // エネルギー高時の突進コンボ
+      float fleeWhenLowEnergy = 1.2f;    // エネルギー低時の逃げ
    } hp2;
 
    // HP1フェーズのウェイト
@@ -66,11 +71,13 @@ struct BossAIParameters {
       float shootCenterBias = 0.5f;      // ショット中央バイアス
       float tripleChargeCloseBias = 1.2f;// 3連突進近距離バイアス
       float tripleChargeCenterBias = 0.8f;// 3連突進中央バイアス
-      float quadChargeStunBias = 2.0f;   // 4連突進スタンバイアス
+      float quadChargeStunBias = 2.0f;   // 4連突進スタンバイアス（スパーク前隙専用）
       float feintShoot = 0.3f;           // フェイント→ショット
       float sparkComboFarBias = 0.6f;    // スパークコンボ遠距離バイアス
       float shootCharge = 0.25f;         // ショット→突進
       float retreatDoubleShoot = 0.2f;   // 逃げ→ショット2連
+      float energyReadyCharge = 1.8f;    // エネルギー準備完了時の突進
+      float safetyCharge = 1.5f;         // ピンチ時の安全突進
    } hp1;
 
    // スタン判定
