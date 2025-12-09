@@ -9,6 +9,7 @@
 #include "../../Utility/KeyConfig.h"
 #include "../../GameObject/Background/Background.h"
 #include "../../ClearTimeManager/ClearTimeManager.h"
+#include "../../GameObject/Cloud/Cloud.h"
 
 class EngineSystem;
 class CameraManager;
@@ -81,4 +82,7 @@ private:
 	// サウンド
 	Sound cursorSound_;
 	Sound decideSound_;
+
+	// 雲
+	std::array<Cloud*, 4> clouds_;
 };

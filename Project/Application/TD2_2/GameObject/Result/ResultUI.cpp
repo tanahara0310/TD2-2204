@@ -28,7 +28,7 @@ std::vector<std::unique_ptr<IDrawable>> ResultUI::Initialize([[maybe_unused]] En
 	// ピリオドモデルを作成
 	{
 		auto periodModel = CreatePeriodModel(engine);
-		periodModel->GetTransform().translate = {2.1f, 1.7f, -47.0f};
+		periodModel->GetTransform().translate = {2.1f, 1.2f, -47.0f};
 		periodModel->GetTransform().scale = {4.0f, 4.0f, 4.0f};
 		periodModel_ = periodModel.get();
 		sprites.push_back(std::move(periodModel));
@@ -37,7 +37,7 @@ std::vector<std::unique_ptr<IDrawable>> ResultUI::Initialize([[maybe_unused]] En
 	// コロンモデルを作成
 	{
 		auto colonModel = CreateColonModel(engine);
-		colonModel->GetTransform().translate = {-2.0f, 1.6f, -47.0f};
+		colonModel->GetTransform().translate = {-2.0f, 1.1f, -47.0f};
 		colonModel->GetTransform().scale = {2.0f, 2.0f, 2.0f};
 		colonModel_ = colonModel.get();
 		sprites.push_back(std::move(colonModel));
@@ -47,7 +47,7 @@ std::vector<std::unique_ptr<IDrawable>> ResultUI::Initialize([[maybe_unused]] En
 	for (int i = 1; i <= 3; i++) {
 		auto ranking = CreateNumberModel(engine, i);
 		ranking->GetTransform().scale = {1.0f, 1.0f, 1.0f};
-		ranking->GetTransform().translate = {-5.0f, i * -1.0f + 1.2f, -47.0f};
+		ranking->GetTransform().translate = {-4.0f, i * -1.0f + 0.7f, -47.0f};
 		rankModels_.push_back(ranking.get());
 		sprites.push_back(std::move(ranking));
 	}
@@ -62,13 +62,13 @@ std::vector<std::unique_ptr<IDrawable>> ResultUI::Initialize([[maybe_unused]] En
 
 		if (isWin) { // 勝利時はクリアタイマーを表示
 			auto timer = CreateNumberModel(engine, i);
-			timer->GetTransform().translate = {x, 1.5f, -47.0f};
+			timer->GetTransform().translate = {x, 1.0f, -47.0f};
 			timer->GetTransform().scale = {2.5f, 2.5f, 2.5f};
 			currentTimeModels_.push_back(timer.get());
 			sprites.push_back(std::move(timer));
 		} else { // 敗北時はハイフンを表示
 			auto hyphen = CreateHyphenModel(engine);
-			hyphen->GetTransform().translate = {x, 2.2f, -47.0f};
+			hyphen->GetTransform().translate = {x, 1.7f, -47.0f};
 			hyphen->GetTransform().scale = {8.0f, 4.0f, 1.0f};
 			hyphenModels_.push_back(hyphen.get());
 			sprites.push_back(std::move(hyphen));
@@ -82,7 +82,7 @@ std::vector<std::unique_ptr<IDrawable>> ResultUI::Initialize([[maybe_unused]] En
 
 			// 基本の位置
 			float x = j * 0.5f - 2.2f;
-			float y = i * -1.0f + 1.2f;
+			float y = i * -1.0f + 0.7f;
 
 			// iが2の倍数のときに余分なオフセットを加える
 			x += (j / 2) * 1.0f;
@@ -97,7 +97,7 @@ std::vector<std::unique_ptr<IDrawable>> ResultUI::Initialize([[maybe_unused]] En
 	// ピリオドモデル(ランキング)を作成
 	for (int i = 0; i < 3; i++) {
 		auto periodModel = CreatePeriodModel(engine);
-		periodModel->GetTransform().translate = {1.1f, i * 1.0f - 1.7f, -47.0f};
+		periodModel->GetTransform().translate = {1.1f, i * 1.0f - 2.2f, -47.0f};
 		periodModel->GetTransform().scale = {2.0f, 2.0f, 2.0f};
 		periodModels_.push_back(periodModel.get());
 		sprites.push_back(std::move(periodModel));
@@ -106,7 +106,7 @@ std::vector<std::unique_ptr<IDrawable>> ResultUI::Initialize([[maybe_unused]] En
 	// コロンモデル(ランキング)を作成
 	for (int i = 0; i < 3; i++) {
 		auto colonModel = CreateColonModel(engine);
-		colonModel->GetTransform().translate = {-1.0f, i * 1.0f - 1.7f, -47.0f};
+		colonModel->GetTransform().translate = {-1.0f, i * 1.0f - 2.2f, -47.0f};
 		colonModel->GetTransform().scale = {0.7f, 0.7f, 0.7f};
 		colonModels_.push_back(colonModel.get());
 		sprites.push_back(std::move(colonModel));
@@ -134,8 +134,8 @@ void ResultUI::Update() {
 	stateMachine_.Update();
 
 	// リザルトモデルとsin波で上下に移動させる
-	elapsedTime_ += 1.0f / 60.0f; // 仮のデルタタイム
-	resultModel_->GetTransform().translate.y = 3.3f + std ::sin(elapsedTime_ * 3.0f) * 0.1f;
+	elapsedTime_ += GameUtils::GetDeltaTime(); // 仮のデルタタイム
+	resultModel_->GetTransform().translate.y = 3.2f + std ::sin(elapsedTime_ * 3.0f) * 0.1f;
 
 	// 「タイトルへ」モデルのアニメーション
 	toTitleModel_->SetIsRotateAnimation(isAnimationToTitle_);
@@ -237,7 +237,7 @@ std::unique_ptr<ToTitleModel> ResultUI::CreateToTitleModel(EngineSystem* engine)
 	auto& textureManager = TextureManager::GetInstance();
 
 	auto toTitleModelResource = modelManager->CreateStaticModel("Resources/Models/ToTitle/ToTitle.obj");
-	auto toTitleTexture = textureManager.Load("Resources/SampleResources/white1x1.png");
+	auto toTitleTexture = textureManager.Load("Resources/Textures/yellow.png");
 
 	auto toTitleModel = std::make_unique<ToTitleModel>();
 	toTitleModel->Initialize(std::move(toTitleModelResource), toTitleTexture);
@@ -250,7 +250,7 @@ std::unique_ptr<ReStartModel> ResultUI::CreateReStartModel(EngineSystem* engine)
 	auto& textureManager = TextureManager::GetInstance();
 
 	auto reStartModelResource = modelManager->CreateStaticModel("Resources/Models/ReStart/ReStart.obj");
-	auto reStartTexture = textureManager.Load("Resources/SampleResources/white1x1.png");
+	auto reStartTexture = textureManager.Load("Resources//Textures/yellow.png");
 
 	auto reStartModel = std::make_unique<ReStartModel>();
 	reStartModel->Initialize(std::move(reStartModelResource), reStartTexture);

@@ -17,6 +17,9 @@ void ResultScene::Initialize(EngineSystem* engine) {
 
 	InputSource::Initialize(engine);
 
+	auto modelManager = engine_->GetComponent<ModelManager>();
+	auto& textureManager = TextureManager::GetInstance();
+
 	// 勝敗をJsonから取得
 	json resultData = JsonManager::GetInstance().LoadJson("Resources/Data/result.json");
 
@@ -83,9 +86,6 @@ void ResultScene::Initialize(EngineSystem* engine) {
 
 	// 背景の生成と初期化
 	{
-		auto modelManager = engine_->GetComponent<ModelManager>();
-		auto& textureManager = TextureManager::GetInstance();
-
 		auto backgroundModel = modelManager->CreateStaticModel("Resources/Models/Background/Background2.obj");
 		auto backgroundTexture = textureManager.Load("Resources/Textures/Background2.png");
 		auto background = std::make_unique<Background>();
@@ -111,6 +111,18 @@ void ResultScene::Initialize(EngineSystem* engine) {
 			if (!isPlaying) {
 				mp3Resource_->Play(false);
 			}
+		}
+	}
+
+	// 雲
+	{
+		for (int i = 0; i < clouds_.size(); i++) {
+			auto cloudModel = modelManager->CreateStaticModel("Resources/Models/Cloud/Cloud.obj");
+			auto cloudTexture = textureManager.Load("Resources/Textures/Cloud.png");
+			auto cloud = std::make_unique<Cloud>();
+			clouds_[i] = cloud.get();
+			cloud->Initialize(std::move(cloudModel), cloudTexture);
+			gameObjects_.push_back(std::move(cloud));
 		}
 	}
 }
