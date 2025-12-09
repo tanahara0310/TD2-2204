@@ -288,7 +288,7 @@ void CameraController::UpdateCinematic(float deltaTime)
 	
 	// カメラの向きから注視点を計算（通常追従モードへの移行時に使用）
 	// ただし、演出中のカメラが通常追従モードの俯角と異なる場合があるため、
-	// 演出終了後の最初のフレームで targetPosition_ が急激に変化しないよう、
+	// 演出終了後の最初のフレームで targetPosition_ が急激に変化しないように、
 	// 実際のオブジェクトの中点に近い値を使用
 	if (object1_ && object2_) {
 		// 実際のオブジェクトの中点を計算
@@ -1004,6 +1004,14 @@ void CameraController::StopSequence()
 		activeSequence_->Stop();
 		activeSequence_.reset();
 	}
+}
+
+int CameraController::GetSequenceCurrentCutIndex() const
+{
+	if (activeSequence_ && activeSequence_->IsActive()) {
+		return activeSequence_->GetCurrentCutIndex();
+	}
+	return -1;
 }
 
 void CameraController::UpdateSequence(float deltaTime)
