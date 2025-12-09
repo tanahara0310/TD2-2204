@@ -89,6 +89,12 @@ private:
 	static constexpr float kDemoZBehind_ = 10.0f; // 背景の後ろ（奥、背景のZ: -5.4fより+Z方向）
 	static constexpr float kDemoZFront_ = -10.0f; // 背景の前（手前、背景のZ: -5.4fより-Z方向）
 
+	// デモのY座標管理（3段階）
+	static constexpr float kDemoYTop_ = 28.0f;    // 上段
+	static constexpr float kDemoYMiddle_ = 24.0f; // 中段（デフォルト）
+	static constexpr float kDemoYBottom_ = 20.0f; // 下段
+	int lastDemoYIndex_ = 1; // 前回選択したY座標のインデックス（0:上, 1:中, 2:下）初期値は中段
+
 	// キーコンフィグ
 	std::unique_ptr<KeyConfig> keyConfig_;
 

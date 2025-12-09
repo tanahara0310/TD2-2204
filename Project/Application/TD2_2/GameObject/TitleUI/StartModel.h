@@ -38,7 +38,7 @@ private:
 	void UpdateBreathingAnimation(float deltaTime);
 
 private:
-	Vector3 baseScale_ = { 1.0f, 1.0f, 1.0f }; // 基準スケール
+	Vector3 baseScale_ = { 0.7f, 0.7f, 0.7f }; // 基準スケール（0.7に変更）
 	
 	// 選択状態
 	bool isSelected_ = false;

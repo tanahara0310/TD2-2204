@@ -119,8 +119,8 @@ void TitleScene::Initialize(EngineSystem* engine) {
 		demoPlayer_ = demoPlayer.get();
 		demoPlayer->Initialize(std::move(playerModel), playerTexture);
 		
-		// 初期位置を画面左端に設定（初期は背景の後ろ）
-		Vector3 playerInitPos = { -35.0f, 24.0f, kDemoZBehind_ };
+		// 初期位置を画面左端に設定（初期は背景の後ろ、中段）
+		Vector3 playerInitPos = { -35.0f, kDemoYMiddle_, kDemoZBehind_ };
 		demoPlayer->GetTransform().translate = playerInitPos;
 		demoPlayer->GetTransform().rotate.y = std::numbers::pi_v<float> / 2.0f; // +X方向を向く
 		demoPlayer->SetInitialPosition(playerInitPos); // initialPositionも更新
@@ -137,8 +137,8 @@ void TitleScene::Initialize(EngineSystem* engine) {
 		demoEnemy->Initialize(std::move(enemyModel), enemyTexture);
 		demoEnemy->SetTarget(demoPlayer_);
 		
-		// 初期位置を画面左端（プレイヤーの後ろ）に設定（初期は背景の後ろ）
-		Vector3 enemyInitPos = { -45.0f, 24.0f, kDemoZBehind_ };
+		// 初期位置を画面左端（プレイヤーの後ろ）に設定（初期は背景の後ろ、中段）
+		Vector3 enemyInitPos = { -45.0f, kDemoYMiddle_, kDemoZBehind_ };
 		demoEnemy->GetTransform().translate = enemyInitPos;
 		demoEnemy->GetTransform().rotate.y = std::numbers::pi_v<float> / 2.0f; // +X方向を向く
 		demoEnemy->SetInitialPosition(enemyInitPos); // initialPositionも更新
@@ -173,20 +173,20 @@ void TitleScene::Initialize(EngineSystem* engine) {
 		Vector4 startColor = { 0.6f, 0.9f, 1.0f, 1.0f };
 		Vector4 quitColor = { 0.9f, 1.0f, 1.0f, 1.0f };
 
-		// 矩形サイズ（共通）
-		float halfWidth = 1.9f;
-		float halfHeight = 0.5f;
-		float frameYOffset = 0.0f; // オフセットなし（モデルの中心に合わせる）
+		// 矩形サイズ（共通）- スケール0.7に合わせて調整
+		float halfWidth = 1.35f;  // 上下辺の幅（1.6f → 1.35f に縮小）
+		float halfHeight = 0.58f; // 左右辺の高さ
+		float frameYOffset = 0.3f; // カメラアングルに合わせて上方向に調整
 
 		// 初期中心はStartの位置（新しい座標: {0.0f, -5.5f, -60.9f}）
 		Vector3 startCenter = { 0.0f, -5.5f + frameYOffset, -60.9f };
 
 		config.color = startColor;
-		// 上辺（index 0）
+		// 上辺（index 0）- 幅を短くする
 		config.startOffset = { -halfWidth,  halfHeight, 0.0f };
 		config.endOffset = { halfWidth,  halfHeight, 0.0f };
 		frameEffectIds_[0] = lightningManager_->CreateEffect(startCenter, config, gameObjects_);
-		// 下辺（index 1）
+		// 下辺（index 1）- 幅を短くする
 		config.startOffset = { -halfWidth, -halfHeight, 0.0f };
 		config.endOffset = { halfWidth, -halfHeight, 0.0f };
 		frameEffectIds_[1] = lightningManager_->CreateEffect(startCenter, config, gameObjects_);
@@ -338,7 +338,7 @@ void TitleScene::Update() {
 	// 現在選択中のモデル位置へ枠を移動＆色変更（選択変更時）
 	{
 		bool isStartSelected = (titleUI_->GetSelectionState() == TitleUI::SelectionState::Start);
-		float frameYOffset = 0.0f; // オフセットなし（モデルの中心に合わせる）
+		float frameYOffset = 0.3f; // カメラアングルに合わせて上方向に調整
 		Vector3 startCenter = { 0.0f, -5.5f + frameYOffset, -60.9f };
 		Vector3 quitCenter = { 0.0f, -7.0f + frameYOffset, -60.9f };
 		Vector3 target = isStartSelected ? startCenter : quitCenter;
@@ -693,11 +693,22 @@ void TitleScene::SwitchToEnemyChasePlayer(float direction) {
 }
 
 void TitleScene::SetDemoPositions() {
-	constexpr float kDemoY = 24.0f;
 	constexpr float kLeftStartX = -35.0f;
 	constexpr float kLeftBackX = -45.0f;
 	constexpr float kRightStartX = 45.0f;
 	constexpr float kRightBackX = 55.0f;
+
+	// Y座標の配列（上、中、下）
+	constexpr float yPositions[3] = { kDemoYTop_, kDemoYMiddle_, kDemoYBottom_ };
+
+	// 前回と異なるY座標をランダムに選択
+	 int newYIndex;
+	do {
+		newYIndex = RandomGenerator::GetInstance().GetInt(0, 2); // 0～2のランダム
+	} while (newYIndex == lastDemoYIndex_);
+	lastDemoYIndex_ = newYIndex;
+
+	float demoY = yPositions[newYIndex];
 
 	// Z座標を背景の前後で切り替え
 	float demoZ = isDemoBehindBackground_ ? kDemoZBehind_ : kDemoZFront_;
@@ -713,39 +724,39 @@ void TitleScene::SetDemoPositions() {
 		// 左から右へ
 		if (isPlayerFront) {
 			// 自機が前、敵が後ろ
-			demoPlayer_->GetTransform().translate = { kLeftStartX, kDemoY, demoZ };
+			demoPlayer_->GetTransform().translate = { kLeftStartX, demoY, demoZ };
 			demoPlayer_->GetTransform().rotate.y = rotation;
-			demoPlayer_->SetInitialPosition({ kLeftStartX, kDemoY, demoZ }); // initialPositionも更新
-			demoEnemy_->GetTransform().translate = { kLeftBackX, kDemoY, demoZ };
+			demoPlayer_->SetInitialPosition({ kLeftStartX, demoY, demoZ }); // initialPositionも更新
+			demoEnemy_->GetTransform().translate = { kLeftBackX, demoY, demoZ };
 			demoEnemy_->GetTransform().rotate.y = rotation;
-			demoEnemy_->SetInitialPosition({ kLeftBackX, kDemoY, demoZ }); // initialPositionも更新
+			demoEnemy_->SetInitialPosition({ kLeftBackX, demoY, demoZ }); // initialPositionも更新
 		} else {
 			// 敵が前、自機が後ろ
-			demoEnemy_->GetTransform().translate = { kLeftStartX, kDemoY, demoZ };
+			demoEnemy_->GetTransform().translate = { kLeftStartX, demoY, demoZ };
 			demoEnemy_->GetTransform().rotate.y = rotation;
-			demoEnemy_->SetInitialPosition({ kLeftStartX, kDemoY, demoZ }); // initialPositionも更新
-			demoPlayer_->GetTransform().translate = { kLeftBackX, kDemoY, demoZ };
+			demoEnemy_->SetInitialPosition({ kLeftStartX, demoY, demoZ }); // initialPositionも更新
+			demoPlayer_->GetTransform().translate = { kLeftBackX, demoY, demoZ };
 			demoPlayer_->GetTransform().rotate.y = rotation;
-			demoPlayer_->SetInitialPosition({ kLeftBackX, kDemoY, demoZ }); // initialPositionも更新
+			demoPlayer_->SetInitialPosition({ kLeftBackX, demoY, demoZ }); // initialPositionも更新
 		}
 	} else {
 		// 右から左へ
 		if (isPlayerFront) {
 			// 自機が前、敵が後ろ
-			demoPlayer_->GetTransform().translate = { kRightStartX, kDemoY, demoZ };
+			demoPlayer_->GetTransform().translate = { kRightStartX, demoY, demoZ };
 			demoPlayer_->GetTransform().rotate.y = rotation;
-			demoPlayer_->SetInitialPosition({ kRightStartX, kDemoY, demoZ }); // initialPositionも更新
-			demoEnemy_->GetTransform().translate = { kRightBackX, kDemoY, demoZ };
+			demoPlayer_->SetInitialPosition({ kRightStartX, demoY, demoZ }); // initialPositionも更新
+			demoEnemy_->GetTransform().translate = { kRightBackX, demoY, demoZ };
 			demoEnemy_->GetTransform().rotate.y = rotation;
-			demoEnemy_->SetInitialPosition({ kRightBackX, kDemoY, demoZ }); // initialPositionも更新
+			demoEnemy_->SetInitialPosition({ kRightBackX, demoY, demoZ }); // initialPositionも更新
 		} else {
 			// 敵が前、自機が後ろ
-			demoEnemy_->GetTransform().translate = { kRightStartX, kDemoY, demoZ };
+			demoEnemy_->GetTransform().translate = { kRightStartX, demoY, demoZ };
 			demoEnemy_->GetTransform().rotate.y = rotation;
-			demoEnemy_->SetInitialPosition({ kRightStartX, kDemoY, demoZ }); // initialPositionも更新
-			demoPlayer_->GetTransform().translate = { kRightBackX, kDemoY, demoZ };
+			demoEnemy_->SetInitialPosition({ kRightStartX, demoY, demoZ }); // initialPositionも更新
+			demoPlayer_->GetTransform().translate = { kRightBackX, demoY, demoZ };
 			demoPlayer_->GetTransform().rotate.y = rotation;
-			demoPlayer_->SetInitialPosition({ kRightBackX, kDemoY, demoZ }); // initialPositionも更新
+			demoPlayer_->SetInitialPosition({ kRightBackX, demoY, demoZ }); // initialPositionも更新
 		}
 	}
 }
