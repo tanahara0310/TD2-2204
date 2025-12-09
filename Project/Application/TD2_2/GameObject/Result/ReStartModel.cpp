@@ -4,7 +4,7 @@ void ReStartModel::Initialize(std::unique_ptr<Model> model, TextureManager::Load
 	// 基底クラスの初期化を呼び出す
 	GameObject::Initialize(std::move(model), texture);
 
-	transform_.translate = {-4.0f, -4.0f, -47.0f};
+	transform_.translate = {-4.0f, -4.5f, -47.0f};
 
 	transform_.TransferMatrix();
 }
