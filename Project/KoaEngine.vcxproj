@@ -176,6 +176,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="Application\TD2_2\GameObject\Boss\ActionNode\ChargeAwayFromPlayerAction.cpp" />
     <ClCompile Include="Application\TD2_2\GameObject\Boss\ActionNode\ChargeToPlayerAction.cpp" />
     <ClCompile Include="Application\TD2_2\AI\BehaviorTree\BehaviorTree.cpp" />
+    <ClCompile Include="Application\TD2_2\GameObject\Boss\ActionNode\ChargeTowardsSafetyAction.cpp" />
     <ClCompile Include="Application\TD2_2\GameObject\Boss\ActionNode\FleeFromPlayerAction.cpp" />
     <ClCompile Include="Application\TD2_2\GameObject\Boss\ActionNode\MoveAction.cpp" />
     <ClCompile Include="Application\TD2_2\GameObject\Boss\ActionNode\MoveToCenterAction.cpp" />
@@ -206,6 +207,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="Application\TD2_2\GameObject\TitleUI\YameruModel.cpp" />
     <ClCompile Include="Application\TD2_2\GameObject\Voxel\Voxel.cpp" />
     <ClCompile Include="Application\TD2_2\Scene\Editor\ParticleEditorScene.cpp" />
+    <ClCompile Include="Application\TD2_2\Scene\Game\BossBehaviorTreeFactory.cpp" />
     <ClCompile Include="Application\TD2_2\Scene\Game\RecommendedScene.cpp" />
     <ClCompile Include="Application\TD2_2\UI\GaugeUI.cpp" />
     <ClCompile Include="Application\TD2_2\Utility\StateMachine.cpp" />
@@ -397,6 +399,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="Application\TD2_2\GameObject\Boss\ActionNode\ActionNode.h" />
     <ClInclude Include="Application\TD2_2\GameObject\Boss\ActionNode\ChargeAwayFromPlayerAction.h" />
     <ClInclude Include="Application\TD2_2\GameObject\Boss\ActionNode\ChargeToPlayerAction.h" />
+    <ClInclude Include="Application\TD2_2\GameObject\Boss\ActionNode\ChargeTowardsSafetyAction.h" />
     <ClInclude Include="Application\TD2_2\GameObject\Boss\ActionNode\FleeFromPlayerAction.h" />
     <ClInclude Include="Application\TD2_2\GameObject\Boss\ActionNode\MoveAction.h" />
     <ClInclude Include="Application\TD2_2\GameObject\Boss\ActionNode\MoveToCenterAction.h" />
@@ -430,6 +433,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="Application\TD2_2\GameObject\Voxel\Voxel.h" />
     <ClInclude Include="Application\TD2_2\Scene\Config\GameSceneConfig.h" />
     <ClInclude Include="Application\TD2_2\Scene\Editor\ParticleEditorScene.h" />
+    <ClInclude Include="Application\TD2_2\Scene\Game\BossBehaviorTreeFactory.h" />
     <ClInclude Include="Application\TD2_2\Scene\Game\RecommendedScene.h" />
     <ClInclude Include="Application\TD2_2\UI\GaugeUI.h" />
     <ClInclude Include="Application\TD2_2\Utility\StateMachine.h" />
