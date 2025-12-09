@@ -30,6 +30,15 @@ public:
 	/// @brief 新しいHPをセット
 	void SetHP(int currentHPCount);
 
+	/// @brief シェイクアニメーションフラグを設定
+	void SetIsShakeAnimation(bool isAnim) { isShakeAnimation_ = isAnim; }
+
+	/// @brief シェイクアニメーションフラグのGetter
+	bool GetIsShakeAnimation() { return isShakeAnimation_; }
+
+	// @brief オブジェクトを非Activeにする処理
+	void Clear();
+
 private:
 	// HPアイコンを作成
 	std::unique_ptr<SpriteObject> CreateHPIcon();
@@ -44,9 +53,13 @@ private:
 	// 前フレームのHP値
 	int prevHPCount_ = 0;
 
-	// HP減少時のアニメーション開始フラグ
-	bool isDamageAnimation_ = false;
+	// シェイクアニメーションフラグ
+	bool isShakeAnimation_ = false;
 
+	// HP減少時のアニメーション開始フラグ
+	bool isFurikoAnimation_ = false;
+
+	// ダメージを受けたアイコン番号
 	int damageIconNum_ = 0;
 
 	// 振り子アニメーション用の時間カウンタ
