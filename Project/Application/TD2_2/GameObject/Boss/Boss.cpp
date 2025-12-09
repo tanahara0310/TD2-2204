@@ -527,6 +527,17 @@ void Boss::InitializePunk() {
    if (startEffectFunction_) {
 	  startEffectFunction_();
    }
+
+   Vector3 smokePos = transform_.translate;
+   smokePos.y += 0.8f; // 少し上にずらす
+
+   if (smokeEffectFunction_) {
+	  smokeEffectFunction_(smokePos);
+   }
+
+   if (explosionEffectFunction_) {
+	  explosionEffectFunction_(transform_.translate);
+   }
 }
 
 void Boss::Punk() {
@@ -598,6 +609,9 @@ void Boss::Death() {
 	  if (deathTimer_.IsFinished()) {
 		 isActive_ = false;
 		 isFinished = false;
+		 if (explosionEffectFunction_) {
+			explosionEffectFunction_(transform_.translate);
+		 }
 	  }
    }
 }

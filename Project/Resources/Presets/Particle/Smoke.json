@@ -13,7 +13,7 @@
     "emission": {
         "burstCount": 0,
         "burstTime": 0.5,
-        "rateOverTime": 60
+        "rateOverTime": 20
     },
     "emitterPosition": [
         0.0,
@@ -50,9 +50,9 @@
         ]
     },
     "main": {
-        "duration": 1.0,
+        "duration": 0.5,
         "gravityModifier": 0.0,
-        "looping": true,
+        "looping": false,
         "maxParticles": 100,
         "playOnAwake": true,
         "simulationSpace": 1,

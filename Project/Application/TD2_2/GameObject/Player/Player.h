@@ -50,6 +50,18 @@ public:
 	  setEffectColorFunction_ = func;
    }
 
+   void SetCollisionEffectFunction(const std::function<void(const Vector3&)>& func) {
+	  collisionEffectFunction_ = func;
+   }
+
+   void SetExplosionEffectFunction(const std::function<void(const Vector3&)>& func) {
+	  explosionEffectFunction_ = func;
+   }
+
+   void SetSmokeEffectFunction(const std::function<void(const Vector3&)>& func) {
+	  smokeEffectFunction_ = func;
+   }
+
    // 速度取得
    Vector2 GetVelocity() const { return velocity_; }
 
@@ -135,6 +147,12 @@ private:
    std::function<void(const Vector3&)> updateEffectFunction_;
 
    std::function<void(const Vector4&)> setEffectColorFunction_;
+
+   std::function<void(const Vector3&)> collisionEffectFunction_;
+
+   std::function<void(const Vector3&)> explosionEffectFunction_;
+
+   std::function<void(const Vector3&)> smokeEffectFunction_;
 
    // 突進中フラグ
    bool isCharging_ = false;
