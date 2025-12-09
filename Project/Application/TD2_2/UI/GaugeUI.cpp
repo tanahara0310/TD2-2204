@@ -137,22 +137,39 @@ void GaugeUI::Update() {
 		elapsedTime_ = 0.0f;
 	}
 
-	// Fill の横幅に egmentWidthを追従
+	// Fillの横幅にegmentWidthを追従
 	float fillWidth = spriteFill_->GetTransform().scale.x;
 
-	// 追従速度
-	const float followSpeed = 8.0f;
+	// 増加/減少で分けて計算
+	float dt = GameUtils::GetDeltaTime();
+	float desired = fillWidth;
 
-	// Lerpで追従
-	segmentWidth_ += (fillWidth - segmentWidth_) * followSpeed * GameUtils::GetDeltaTime();
+	if (desired > segmentWidth_) {
+		// 増加方向
+		if (segmentIncreaseDuration_ <= 0.0f) {
+			segmentWidth_ = desired;
+		} else {
+			float accel = 1.0f / std::max(1e-6f, segmentIncreaseDuration_);
+			// lerp factor per second
+			float lerpPerSecond = accel; // simple first-order
+			segmentWidth_ += (desired - segmentWidth_) * std::clamp(lerpPerSecond * dt, 0.0f, 1.0f);
+		}
+	} else {
+		// 減少方向
+		if (segmentDecreaseDuration_ <= 0.0f) {
+			segmentWidth_ = desired;
+		} else {
+			float accel = 1.0f / std::max(1e-6f, segmentDecreaseDuration_);
+			float lerpPerSecond = accel;
+			segmentWidth_ += (desired - segmentWidth_) * std::clamp(lerpPerSecond * dt, 0.0f, 1.0f);
+		}
+	}
 
 	// スケール反映
 	spriteSegment_->GetTransform().scale = {segmentWidth_, maxSpriteSize_.y, 1.0f};
 }
 
-void GaugeUI::SetFillColor(const Vector4& color) {
-   fillColor_ = color;
-}
+void GaugeUI::SetFillColor(const Vector4& color) { fillColor_ = color; }
 
 void GaugeUI::SetSegmentColor(const Vector4& color) {
 	if (spriteSegment_) {
@@ -189,8 +206,8 @@ std::unique_ptr<SpriteObject> GaugeUI::CreateSegment() {
 	return sprite;
 }
 
-void GaugeUI::Clear() { 
-	spriteFill_->SetActive(false); 
-	spriteBG_->SetActive(false); 
-	spriteSegment_->SetActive(false); 
+void GaugeUI::Clear() {
+	spriteFill_->SetActive(false);
+	spriteBG_->SetActive(false);
+	spriteSegment_->SetActive(false);
 }

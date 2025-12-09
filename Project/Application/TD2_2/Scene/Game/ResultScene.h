@@ -101,5 +101,5 @@ private:
 	std::array<Cloud*, 4> clouds_;
 
 	// パーティクル
-	ParticleSystem* fireworkParticle_;
+	ParticleSystem* fireworkParticle_ = nullptr;
 };

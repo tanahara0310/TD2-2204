@@ -1,8 +1,8 @@
 #pragma once
 #include "Engine/Graphics/Sprite/Sprite.h"
 #include "Engine/Graphics/TextureManager.h"
-#include "MathCore.h"
 #include "Engine/ObjectCommon/SpriteObject.h"
+#include "MathCore.h"
 #include <memory>
 #include <string>
 
@@ -42,6 +42,9 @@ public:
 	// 点滅の基本速度を指定
 	void SetBlinkBaseSpeed(float blinkBaseSpeed) { blinkBaseSpeed_ = blinkBaseSpeed; }
 
+	// セグメントが減少するときに追従する時間（秒）を設定
+	void SetSegmentDecreaseDuration(float seconds) { segmentDecreaseDuration_ = seconds; }
+
 	// @brief オブジェクトを非Activeにする処理
 	void Clear();
 
@@ -57,8 +60,8 @@ private:
 
 private:
 	// ゲームシーンからSpriteを借りてくる
-	SpriteObject* spriteFill_ = nullptr; // 実際のHP
-	SpriteObject* spriteBG_ = nullptr;   // 背景
+	SpriteObject* spriteFill_ = nullptr;    // 実際のHP
+	SpriteObject* spriteBG_ = nullptr;      // 背景
 	SpriteObject* spriteSegment_ = nullptr; // ブロック
 
 	CameraManager* cameraManager_ = nullptr;
@@ -74,9 +77,6 @@ private:
 
 	// 分割数分増やす
 	float segmentWidth_ = 0.0f;
-
-	// Segmentが増える速度
-	float segmentDecreaseSpeed_ = 0.1f;
 
 	// 位置オフセット
 	Vector2 screenOffset_ = {0.0f, -100.0f};
@@ -96,5 +96,9 @@ private:
 	// 基本点滅速度
 	float blinkBaseSpeed_ = 14.0f;
 
-	Vector4 fillColor_ = { 0.8f, 1.0f, 0.0f, 1.0f };
+	Vector4 fillColor_ = {0.8f, 1.0f, 0.0f, 1.0f};
+
+	// セグメント追従の時間（秒）
+	float segmentIncreaseDuration_ = 0.125f;
+	float segmentDecreaseDuration_ = 1.0f;
 };

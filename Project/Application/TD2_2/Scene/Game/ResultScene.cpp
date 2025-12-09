@@ -127,10 +127,12 @@ void ResultScene::Initialize(EngineSystem* engine) {
 	}
 
 	// パーティクル
-	auto fireworkParticle = CreateParticleSystem("Resources/Presets/Particle/Firework.json");
-	fireworkParticle_ = fireworkParticle.get();
-	gameObjects_.push_back(std::move(fireworkParticle));
-	EmitParticle(fireworkParticle_, {0.0f,0.0f,0.0f});
+	if (isWin_) {
+		auto fireworkParticle = CreateParticleSystem("Resources/Presets/Particle/Firework.json");
+		fireworkParticle_ = fireworkParticle.get();
+		gameObjects_.push_back(std::move(fireworkParticle));
+		EmitParticle(fireworkParticle_, {0.0f, 0.0f, 0.0f});
+	}
 }
 
 void ResultScene::Update() {
@@ -207,14 +209,16 @@ void ResultScene::Update() {
 		resultUI_->Update();
 
 	// パーティクルの座標更新
-	Vector3 emitPos;
-	emitPos.x = RandomGenerator::GetInstance().GetFloat(-20.0f, 20.0f);
-	emitPos.y = RandomGenerator::GetInstance().GetFloat(-8.0f, 13.0f);
-	emitPos.z = 0.0f;
+	if (isWin_) {
+		Vector3 emitPos;
+		emitPos.x = RandomGenerator::GetInstance().GetFloat(-20.0f, 20.0f);
+		emitPos.y = RandomGenerator::GetInstance().GetFloat(-8.0f, 13.0f);
+		emitPos.z = 0.0f;
 
-	fireworkParticle_->SetEmitterPosition(emitPos);
+		fireworkParticle_->SetEmitterPosition(emitPos);
 
-	CheckParticleAutoDeactivate(fireworkParticle_);
+		CheckParticleAutoDeactivate(fireworkParticle_);
+	}
 }
 
 void ResultScene::UpdateSceneTransition(float deltaTime) {
