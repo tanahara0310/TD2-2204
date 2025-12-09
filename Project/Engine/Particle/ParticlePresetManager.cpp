@@ -346,6 +346,10 @@ if (presetData.contains("version")) {
 		particleSystem->GetNoiseModule().SetNoiseData(noiseData);
 	}
 
+	// プリセット読み込み後、パーティクルシステムを再生状態にする
+	// looping=falseの場合でも即座に削除されないようにするため
+	particleSystem->Play();
+
 	// 現在のプリセット情報を保存
 	currentPresetPath_ = filePath;
 	currentPresetName_ = GetFileNameWithoutExtension(std::filesystem::path(filePath).filename().string());

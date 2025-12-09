@@ -273,6 +273,18 @@ public:
 		statistics_.systemRuntime = 0.0f;
 	}
 
+	// ──────────────────────────────────────────────────────────
+	// ライフサイクル管理
+	// ──────────────────────────────────────────────────────────
+
+	/// @brief 自動削除を有効/無効にする（エディタなど手動管理用）
+	/// @param enable 自動削除を有効にする場合true、無効にする場合false
+	void SetAutoDelete(bool enable) { autoDeleteEnabled_ = enable; }
+
+	/// @brief 自動削除が有効かどうか
+	/// @return 自動削除が有効な場合true
+	bool IsAutoDeleteEnabled() const { return autoDeleteEnabled_; }
+
 private:
 	// ──────────────────────────────────────────────────────────
 	// パーティクルシステムのコア
@@ -304,6 +316,9 @@ private:
 	float deltaTimeAccumulator_ = 0.0f;
 	float lastElapsedTime_ = 0.0f;  // ループ検出用（インスタンスごと）
 
+	// 自動削除制御（エディタなど手動管理用）
+	bool autoDeleteEnabled_ = true;
+
 	// ──────────────────────────────────────────────────────────
 	// モジュール
 	// ──────────────────────────────────────────────────────────
@@ -321,7 +336,7 @@ private:
 	std::unique_ptr<ParticlePresetManager> presetManager_ = std::make_unique<ParticlePresetManager>();
 
 	// ──────────────────────────────────────────────────────────
-	// Core関連（リファクタリング）
+	// Core関連
 	// ──────────────────────────────────────────────────────────
 
 	std::unique_ptr<ParticleResourceManager> resourceManager_;
