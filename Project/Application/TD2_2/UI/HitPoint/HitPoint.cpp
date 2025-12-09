@@ -2,13 +2,9 @@
 #include "Application/TD2_2/Utility/GameUtils.h"
 
 namespace {
-// 各アイコンの基準位置を保持（ポインタをキーにする）
-static std::unordered_map<SpriteObject*, Vector3> s_basePositions;
-// シェイク用の時間カウンタ
-static float s_shakeTime = 0.0f;
 // 調整用定数
 static constexpr float kShakeAmplitude = 4.0f; // ピクセル単位の振幅
-static constexpr float kShakeSpeed = 6.0f;     // 速度調整
+static constexpr float kShakeSpeed = 40.0f;     // 速度調整
 } // namespace
 
 std::vector<std::unique_ptr<IDrawable>> HitPoint::Initialize(Vector2 pivot, SettingObject setObj, int hpCount) {
@@ -18,6 +14,10 @@ std::vector<std::unique_ptr<IDrawable>> HitPoint::Initialize(Vector2 pivot, Sett
 	maxHPCount_ = hpCount;
 	currentHPCount_ = hpCount;
 	prevHPCount_ = hpCount;
+
+	// 既存の基準位置をクリア（インスタンス毎）
+	basePositions_.clear();
+	shakeTime_ = 0.0f;
 
 	// 指定するオブジェクト（使いたいスプライト）
 	setObj_ = setObj;
@@ -35,13 +35,49 @@ std::vector<std::unique_ptr<IDrawable>> HitPoint::Initialize(Vector2 pivot, Sett
 		hpIcon->GetTransform().translate.y = pivot.y;
 		hpIcon->GetTransform().translate.z = 0.0f;
 		hpIcon_.push_back(hpIcon.get());
+
+		// 基準位置を保存（後でシェイクのオフセット計算に使う）
+		basePositions_[hpIcon.get()] = hpIcon->GetTransform().translate;
+
 		sprites.push_back(std::move(hpIcon));
 	}
 
 	return sprites;
 }
 
-void HitPoint::Update() {}
+void HitPoint::Update() {
+	// シェイク処理
+	if (isShakeAnimation_ && !hpIcon_.empty()) {
+		// 時間を進める
+		shakeTime_ += GameUtils::GetDeltaTime(); // おおよそ60FPSでの1フレーム分と同等の増分
+
+		for (size_t i = 0; i < hpIcon_.size(); ++i) {
+			SpriteObject* icon = hpIcon_[i];
+			auto it = basePositions_.find(icon);
+			if (it == basePositions_.end())
+				continue; // 基準位置が無ければスキップ
+
+			const Vector3 base = it->second;
+
+			// 各アイコンにわずかな位相差をつけて自然な振動にする
+			float phase = static_cast<float>(i) * 0.6f;
+			float xOffset = std::sin(shakeTime_ * kShakeSpeed + phase) * kShakeAmplitude * 0.5f;               // 横方向は小さめ
+			float yOffset = std::sin(shakeTime_ * kShakeSpeed * 1.1f + phase * 1.3f) * kShakeAmplitude * 0.6f; // 縦方向
+
+			icon->GetTransform().translate.x = base.x + xOffset;
+			icon->GetTransform().translate.y = base.y + yOffset;
+		}
+	} else if (!hpIcon_.empty()) {
+		// シェイクOFFなら基準位置へ復帰させる
+		for (SpriteObject* icon : hpIcon_) {
+			auto it = basePositions_.find(icon);
+			if (it == basePositions_.end())
+				continue;
+			const Vector3 base = it->second;
+			icon->GetTransform().translate = base;
+		}
+	}
+}
 
 void HitPoint::SetHP(int currentHPCount) {
 	// 範囲チェック
@@ -63,43 +99,6 @@ void HitPoint::SetHP(int currentHPCount) {
 	// 通常アイコンに戻す（回復した分）
 	for (int i = 0; i < currentHPCount_; i++) {
 		hpIcon_[i]->SetTexture(normalIconFilePath);
-	}
-
-	// 外部からフラグを受け取ってシェイク処理を加える
-	/*if (isShakeAnimation_) {
-
-	}*/
-
-	// シェイク処理
-	if (isShakeAnimation_ && !hpIcon_.empty()) {
-		// 時間を進める（フレームごとの増分は調整可）
-		s_shakeTime += 0.0666f; // おおよそ60FPSでの1フレーム分と同等の増分
-
-		for (size_t i = 0; i < hpIcon_.size(); ++i) {
-			SpriteObject* icon = hpIcon_[i];
-			auto it = s_basePositions.find(icon);
-			if (it == s_basePositions.end())
-				continue; // 基準位置が無ければスキップ
-
-			const Vector3 base = it->second;
-
-			// 各アイコンにわずかな位相差をつけて自然な振動にする
-			float phase = static_cast<float>(i) * 0.6f;
-			float xOffset = std::sin(s_shakeTime * kShakeSpeed + phase) * kShakeAmplitude * 0.5f;               // 横方向は小さめ
-			float yOffset = std::sin(s_shakeTime * kShakeSpeed * 1.1f + phase * 1.3f) * kShakeAmplitude * 0.6f; // 縦方向
-
-			icon->GetTransform().translate.x = base.x + xOffset;
-			icon->GetTransform().translate.y = base.y + yOffset;
-		}
-	} else if (!hpIcon_.empty()) {
-		// シェイクOFFなら基準位置へ復帰させる
-		for (SpriteObject* icon : hpIcon_) {
-			auto it = s_basePositions.find(icon);
-			if (it == s_basePositions.end())
-				continue;
-			const Vector3 base = it->second;
-			icon->GetTransform().translate = base;
-		}
 	}
 
 	// ダメージを受けた場合画像を少し拡大して0に縮小するアニメーションをつける
@@ -132,7 +131,6 @@ void HitPoint::SetHP(int currentHPCount) {
 			isFurikoAnimation_ = false;
 		}
 	}
-
 
 	// 前回のHPを保存
 	prevHPCount_ = currentHPCount_;

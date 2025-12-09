@@ -201,7 +201,7 @@ void ResultUI::InitializeStateMachine() {
 	stateMachine_.AddTransitionRule("ReStart", {"ToTitle"});
 
 	// 初期状態をStartに設定
-	stateMachine_.RequestState("ToTitle", 100);
+	stateMachine_.RequestState("ReStart", 100);
 }
 
 std::unique_ptr<NumbersModel> ResultUI::CreateNumberModel(EngineSystem* engine, int num) {
