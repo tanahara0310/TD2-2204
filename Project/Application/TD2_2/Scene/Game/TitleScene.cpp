@@ -119,9 +119,12 @@ void TitleScene::Initialize(EngineSystem* engine) {
 		demoPlayer_ = demoPlayer.get();
 		demoPlayer->Initialize(std::move(playerModel), playerTexture);
 		
-		// 初期位置を画面左端に設定
-		demoPlayer->GetTransform().translate = { -35.0f, 24.0f, 10.0f };
+		// 初期位置を画面左端に設定（初期は背景の後ろ）
+		Vector3 playerInitPos = { -35.0f, 24.0f, kDemoZBehind_ };
+		demoPlayer->GetTransform().translate = playerInitPos;
 		demoPlayer->GetTransform().rotate.y = std::numbers::pi_v<float> / 2.0f; // +X方向を向く
+		demoPlayer->SetInitialPosition(playerInitPos); // initialPositionも更新
+		demoPlayer->SetMoveSpeed(23.0f); // 初期速度を設定（調整済み）
 		demoPlayer->GetTransform().TransferMatrix();
 		
 		gameObjects_.push_back(std::move(demoPlayer));
@@ -134,9 +137,12 @@ void TitleScene::Initialize(EngineSystem* engine) {
 		demoEnemy->Initialize(std::move(enemyModel), enemyTexture);
 		demoEnemy->SetTarget(demoPlayer_);
 		
-		// 初期位置を画面左端（プレイヤーの後ろ）に設定
-		demoEnemy->GetTransform().translate = { -45.0f, 24.0f, 10.0f };
+		// 初期位置を画面左端（プレイヤーの後ろ）に設定（初期は背景の後ろ）
+		Vector3 enemyInitPos = { -45.0f, 24.0f, kDemoZBehind_ };
+		demoEnemy->GetTransform().translate = enemyInitPos;
 		demoEnemy->GetTransform().rotate.y = std::numbers::pi_v<float> / 2.0f; // +X方向を向く
+		demoEnemy->SetInitialPosition(enemyInitPos); // initialPositionも更新
+		demoEnemy->SetChaseSpeed(20.0f); // 初期速度を設定（調整済み）
 		demoEnemy->GetTransform().TransferMatrix();
 		
 		gameObjects_.push_back(std::move(demoEnemy));
@@ -249,6 +255,12 @@ void TitleScene::Update() {
 			? "Enemy Chase Player" : "Player Chase Enemy";
 		ImGui::Text("Current Pattern: %s", patternName);
 		ImGui::Text("Moving Direction: %s", isMovingRight_ ? "+X (Right)" : "-X (Left)");
+		ImGui::Text("Z Position: %s", isDemoBehindBackground_ ? "Behind Background" : "In Front of Background");
+		ImGui::Text("Switch Counter: %d / %d (Behind: %d, Front: %d)", 
+			demoSwitchCounter_, 
+			kDemoTotalCycle_,
+			kDemoBehindCount_,
+			kDemoInFrontCount_);
 
 		ImGui::Spacing();
 
@@ -426,7 +438,7 @@ void TitleScene::Update() {
 		}
 
 		if (keyConfig_->GetDown("Right")) {
-			titleUI_->SelectNextPreset();
+		 titleUI_->SelectNextPreset();
 			stickInputCooldown_ = kStickInputDelay;
 		}
 
@@ -613,81 +625,130 @@ void TitleScene::SwitchDemoPattern() {
 		return;
 	}
 
+	// カウンターを増加
+	demoSwitchCounter_++;
+
+	// カウンターが総サイクルに達したらリセット
+	if (demoSwitchCounter_ >= kDemoTotalCycle_) {
+		demoSwitchCounter_ = 0;
+	}
+
+	// 2回後ろ→1回前のパターン
+	// カウンター 0, 1 → 背景の後ろ
+	// カウンター 2 → 背景の前
+	if (demoSwitchCounter_ < kDemoBehindCount_) {
+		isDemoBehindBackground_ = true; // 背景の後ろ
+	} else {
+		isDemoBehindBackground_ = false; // 背景の前
+	}
+
 	// 移動方向を反転
 	isMovingRight_ = !isMovingRight_;
 	float direction = isMovingRight_ ? 1.0f : -1.0f;
 
 	// パターンを切り替え
 	if (currentDemoPattern_ == DemoPattern::EnemyChasePlayer) {
-		// 次は自機が敵を追跡
-		currentDemoPattern_ = DemoPattern::PlayerChaseEnemy;
-
-		// 自機: 追跡モード（遅い）
-		demoPlayer_->SetChasingMode(true);
-		demoPlayer_->SetTarget(demoEnemy_);
-		demoPlayer_->SetMoveDirection(direction);
-		demoPlayer_->SetMoveSpeed(11.6f); // 追跡側は遅い
-
-		// 敵: 通常移動モード（逃げる、速い）
-		demoEnemy_->SetChasingMode(false);
-		demoEnemy_->SetMoveDirection(direction);
-		demoEnemy_->SetChaseSpeed(16.0f); // 逃げる側は速い
+		SwitchToPlayerChaseEnemy(direction);
 	} else {
-		// 次は敵が自機を追跡
-		currentDemoPattern_ = DemoPattern::EnemyChasePlayer;
-
-		// 自機: 通常移動モード（逃げる、速い）
-		demoPlayer_->SetChasingMode(false);
-		demoPlayer_->SetMoveDirection(direction);
-		demoPlayer_->SetMoveSpeed(14.0f); // 逃げる側は速い
-
-		// 敵: 追跡モード（遅い）
-		demoEnemy_->SetChasingMode(true);
-		demoEnemy_->SetMoveDirection(direction);
-		demoEnemy_->SetChaseSpeed(11.6f); // 追跡側は遅い
+		SwitchToEnemyChasePlayer(direction);
 	}
 
 	// 位置と回転を設定
-	// 移動方向に応じて初期位置を設定
-	if (isMovingRight_) {
-		// +X方向: 左から右へ
-		float rotation = std::numbers::pi_v<float> / 2.0f; // 90度
-		if (currentDemoPattern_ == DemoPattern::EnemyChasePlayer) {
-			// 自機が前、敵が後ろ
-			demoPlayer_->GetTransform().translate = { -35.0f, 24.0f };  // さらに左から開始
-			demoPlayer_->GetTransform().rotate.y = rotation;
-			demoEnemy_->GetTransform().translate = { -45.0f, 24.0f };  // さらに左から開始
-			demoEnemy_->GetTransform().rotate.y = rotation;
-		} else {
-			// 敵が前、自機が後ろ
-			demoEnemy_->GetTransform().translate = { -35.0f, 24.0f };  // さらに左から開始
-			demoEnemy_->GetTransform().rotate.y = rotation;
-			demoPlayer_->GetTransform().translate = { -45.0f, 24.0f };  // さらに左から開始
-			demoPlayer_->GetTransform().rotate.y = rotation;
-		}
-	} else {
-		// -X方向: 右から左へ
-		float rotation = -std::numbers::pi_v<float> / 2.0f; // -90度
-		if (currentDemoPattern_ == DemoPattern::EnemyChasePlayer) {
-			// 自機が前、敵が後ろ
-			demoPlayer_->GetTransform().translate = { 45.0f, 24.0f };
-			demoPlayer_->GetTransform().rotate.y = rotation;
-			demoEnemy_->GetTransform().translate = { 55.0f, 24.0f };
-			demoEnemy_->GetTransform().rotate.y = rotation;
-		} else {
-			// 敵が前、自機が後ろ
-			demoEnemy_->GetTransform().translate = { 45.0f, 24.0f };
-			demoEnemy_->GetTransform().rotate.y = rotation;
-			demoPlayer_->GetTransform().translate = { 55.0f, 24.0f };
-			demoPlayer_->GetTransform().rotate.y = rotation;
-		}
-	}
+	SetDemoPositions();
 
 	// トランスフォームを更新
 	demoPlayer_->GetTransform().TransferMatrix();
 	demoEnemy_->GetTransform().TransferMatrix();
 }
 
+void TitleScene::SwitchToPlayerChaseEnemy(float direction) {
+	// 次は自機が敵を追跡
+	currentDemoPattern_ = DemoPattern::PlayerChaseEnemy;
+
+	// 自機: 追跡モード（遅い）
+	demoPlayer_->SetChasingMode(true);
+	demoPlayer_->SetTarget(demoEnemy_);
+	demoPlayer_->SetMoveDirection(direction);
+	demoPlayer_->SetMoveSpeed(20.0f); // 速度を上げる（17.5f → 20.0f）
+
+	// 敵: 通常移動モード（逃げる、速い）
+	demoEnemy_->SetChasingMode(false);
+	demoEnemy_->SetMoveDirection(direction);
+	demoEnemy_->SetChaseSpeed(23.0f); // 速度を下げる（24.0f → 23.0f）
+}
+
+void TitleScene::SwitchToEnemyChasePlayer(float direction) {
+	// 次は敵が自機を追跡
+	currentDemoPattern_ = DemoPattern::EnemyChasePlayer;
+
+	// 自機: 通常移動モード（逃げる、速い）
+	demoPlayer_->SetChasingMode(false);
+	demoPlayer_->SetMoveDirection(direction);
+	demoPlayer_->SetMoveSpeed(23.0f); // 速度を下げる（25.0f → 23.0f）
+
+	// 敵: 追跡モード（遅い）
+	demoEnemy_->SetChasingMode(true);
+	demoEnemy_->SetMoveDirection(direction);
+	demoEnemy_->SetChaseSpeed(20.0f); // 速度を下げる（22.5f → 20.0f）
+}
+
+void TitleScene::SetDemoPositions() {
+	constexpr float kDemoY = 24.0f;
+	constexpr float kLeftStartX = -35.0f;
+	constexpr float kLeftBackX = -45.0f;
+	constexpr float kRightStartX = 45.0f;
+	constexpr float kRightBackX = 55.0f;
+
+	// Z座標を背景の前後で切り替え
+	float demoZ = isDemoBehindBackground_ ? kDemoZBehind_ : kDemoZFront_;
+
+	float rotation = isMovingRight_ 
+		? std::numbers::pi_v<float> / 2.0f    // +X方向: 90度
+		: -std::numbers::pi_v<float> / 2.0f;  // -X方向: -90度
+
+	// 追跡パターンに応じて前後を決定
+	bool isPlayerFront = (currentDemoPattern_ == DemoPattern::EnemyChasePlayer);
+	
+	if (isMovingRight_) {
+		// 左から右へ
+		if (isPlayerFront) {
+			// 自機が前、敵が後ろ
+			demoPlayer_->GetTransform().translate = { kLeftStartX, kDemoY, demoZ };
+			demoPlayer_->GetTransform().rotate.y = rotation;
+			demoPlayer_->SetInitialPosition({ kLeftStartX, kDemoY, demoZ }); // initialPositionも更新
+			demoEnemy_->GetTransform().translate = { kLeftBackX, kDemoY, demoZ };
+			demoEnemy_->GetTransform().rotate.y = rotation;
+			demoEnemy_->SetInitialPosition({ kLeftBackX, kDemoY, demoZ }); // initialPositionも更新
+		} else {
+			// 敵が前、自機が後ろ
+			demoEnemy_->GetTransform().translate = { kLeftStartX, kDemoY, demoZ };
+			demoEnemy_->GetTransform().rotate.y = rotation;
+			demoEnemy_->SetInitialPosition({ kLeftStartX, kDemoY, demoZ }); // initialPositionも更新
+			demoPlayer_->GetTransform().translate = { kLeftBackX, kDemoY, demoZ };
+			demoPlayer_->GetTransform().rotate.y = rotation;
+			demoPlayer_->SetInitialPosition({ kLeftBackX, kDemoY, demoZ }); // initialPositionも更新
+		}
+	} else {
+		// 右から左へ
+		if (isPlayerFront) {
+			// 自機が前、敵が後ろ
+			demoPlayer_->GetTransform().translate = { kRightStartX, kDemoY, demoZ };
+			demoPlayer_->GetTransform().rotate.y = rotation;
+			demoPlayer_->SetInitialPosition({ kRightStartX, kDemoY, demoZ }); // initialPositionも更新
+			demoEnemy_->GetTransform().translate = { kRightBackX, kDemoY, demoZ };
+			demoEnemy_->GetTransform().rotate.y = rotation;
+			demoEnemy_->SetInitialPosition({ kRightBackX, kDemoY, demoZ }); // initialPositionも更新
+		} else {
+			// 敵が前、自機が後ろ
+			demoEnemy_->GetTransform().translate = { kRightStartX, kDemoY, demoZ };
+			demoEnemy_->GetTransform().rotate.y = rotation;
+			demoEnemy_->SetInitialPosition({ kRightStartX, kDemoY, demoZ }); // initialPositionも更新
+			demoPlayer_->GetTransform().translate = { kRightBackX, kDemoY, demoZ };
+			demoPlayer_->GetTransform().rotate.y = rotation;
+			demoPlayer_->SetInitialPosition({ kRightBackX, kDemoY, demoZ }); // initialPositionも更新
+		}
+	}
+}
 
 void TitleScene::UpdateConfirmAnimation(float deltaTime) {
 	if (!titleUI_) {

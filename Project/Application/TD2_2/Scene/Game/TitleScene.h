@@ -51,6 +51,17 @@ private:
 	/// @brief デモパターンを切り替える
 	void SwitchDemoPattern();
 
+	/// @brief プレイヤーが敵を追跡するパターンに切り替え
+	/// @param direction 移動方向（1.0 = 右, -1.0 = 左）
+	void SwitchToPlayerChaseEnemy(float direction);
+
+	/// @brief 敵がプレイヤーを追跡するパターンに切り替え
+	/// @param direction 移動方向（1.0 = 右, -1.0 = 左）
+	void SwitchToEnemyChasePlayer(float direction);
+
+	/// @brief デモキャラクターの位置を設定
+	void SetDemoPositions();
+
 private:
 	std::unique_ptr<TitleUI> titleUI_;
 
@@ -68,6 +79,15 @@ private:
 	};
 	DemoPattern currentDemoPattern_ = DemoPattern::EnemyChasePlayer;
 	bool isMovingRight_ = true; // true = +X方向, false = -X方向
+
+	// デモのZ位置管理
+	bool isDemoBehindBackground_ = true; // true = 背景の後ろ, false = 背景の前
+	int demoSwitchCounter_ = 0; // パターン切り替え回数カウンター
+	static constexpr int kDemoBehindCount_ = 2; // 背景の後ろで移動する回数
+	static constexpr int kDemoInFrontCount_ = 1; // 背景の前で移動する回数
+	static constexpr int kDemoTotalCycle_ = kDemoBehindCount_ + kDemoInFrontCount_; // 合計サイクル（3回）
+	static constexpr float kDemoZBehind_ = 10.0f; // 背景の後ろ（奥、背景のZ: -5.4fより+Z方向）
+	static constexpr float kDemoZFront_ = -10.0f; // 背景の前（手前、背景のZ: -5.4fより-Z方向）
 
 	// キーコンフィグ
 	std::unique_ptr<KeyConfig> keyConfig_;
