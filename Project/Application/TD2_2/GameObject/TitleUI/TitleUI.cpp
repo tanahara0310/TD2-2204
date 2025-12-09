@@ -205,7 +205,7 @@ std::unique_ptr<TitleModel> TitleUI::CreateTitleModel(EngineSystem* engine)
 	auto& textureManager = TextureManager::GetInstance();
 	
 	auto titleModelResource = modelManager->CreateStaticModel("Resources/GameResources/Title/Title/title.obj");
-	auto titleTexture = textureManager.Load("Resources/SampleResources/white1x1.png");
+	auto titleTexture = textureManager.Load("Resources/Textures/Title.png");
 	
 	auto titleModel = std::make_unique<TitleModel>();
 	titleModel->Initialize(std::move(titleModelResource), titleTexture);
@@ -219,7 +219,7 @@ std::unique_ptr<GekitotsuModel> TitleUI::CreateGekitotsuModel(EngineSystem* engi
 	auto& textureManager = TextureManager::GetInstance();
 	
 	auto gekitotsuModelResource = modelManager->CreateStaticModel("Resources/GameResources/Title/Title/Gekitotsu.obj");
-	auto gekitotsuTexture = textureManager.Load("Resources/SampleResources/white1x1.png");
+	auto gekitotsuTexture = textureManager.Load("Resources/Textures/Gekitotsu.png");
 	
 	auto gekitotsuModel = std::make_unique<GekitotsuModel>();
 	gekitotsuModel->Initialize(std::move(gekitotsuModelResource), gekitotsuTexture);

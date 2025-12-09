@@ -7,6 +7,11 @@ void Background::Initialize(std::unique_ptr<Model> model, TextureManager::Loaded
 
 	transform_.translate = {0.0f, 0.0f, 44.5f};
 
+	// シェーディングモードをトゥーンに設定
+	if (model_ && model_->GetMaterialManager()) {
+		model_->GetMaterialManager()->SetShadingMode(3); // 3 = Toon
+	}
+
 	transform_.TransferMatrix();
 }
 
