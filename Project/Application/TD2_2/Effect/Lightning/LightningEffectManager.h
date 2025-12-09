@@ -31,6 +31,8 @@ public:
 	  float sphereStartRadiusRatio = 0.5f; // 開始位置の半径比率（0.0f～1.0f）
 	  float randomOffsetRange = 0.3f;     // 位置のランダムオフセット範囲
 
+	  float orbitSpeed = 1.5f;
+
 	  // アニメーション設定
 	  float fadeInDuration = 0.2f;  // フェードイン時間
 	  float fadeOutDuration = 0.3f; // フェードアウト時間
@@ -78,6 +80,8 @@ public:
    /// @return 現在の色（RGBA）、エフェクトが存在しない場合は白色を返す
    Vector4 GetEffectColor(int effectId) const;
 
+   void SetEffectIntensity(int effectId, float intensity);
+
 private:
    std::chrono::time_point<std::chrono::steady_clock> startTime_;
 
@@ -98,6 +102,7 @@ private:
 	  Vector3 originalEndPoint;
 	  float delay = 0.0f; // ランダムな遅延
 	  float noiseSeedOffset = 0.0f;
+	  Vector3 orbitAxis = { 0.0f, 1.0f, 0.0f };
    };
 
    struct EffectData {

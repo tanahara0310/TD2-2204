@@ -126,6 +126,8 @@ void Boss::OnCollisionEnter(GameObject* other) {
 	  // スタン状態に遷移
 	  stateMachine_->RequestState("Stun", 0);
    }
+
+   UpdateEnergy();
 }
 
 void Boss::OnCollisionStay(GameObject* other) {
@@ -162,6 +164,8 @@ void Boss::OnCollisionStay(GameObject* other) {
 	  // スタン状態に遷移
 	  stateMachine_->RequestState("Stun", 0);
    }
+
+   UpdateEnergy();
 }
 
 void Boss::OnCollisionExit(GameObject* other) {
@@ -174,6 +178,8 @@ void Boss::OnCollisionExit(GameObject* other) {
    }
 
    isCharging_ = false;
+
+   UpdateEnergy();
 }
 
 void Boss::StartChargeFunction() {
@@ -311,6 +317,14 @@ void Boss::InitializeNormal() {
    isCharging_ = false;
 
    StartModelSwapAnimation("Boss1", "Boss2", 0.02f);
+
+   if (setEffectColorFunction_) {
+	  setEffectColorFunction_({ 0.5f, 0.0f, 0.5f, 1.0f });
+   }
+
+   if (startEffectFunction_) {
+	  startEffectFunction_();
+   }
 }
 
 void Boss::Normal() {
@@ -327,18 +341,12 @@ void Boss::InitializeStun() {
    float stunTime = stunDuration_ + playerStoredEnergy_ * energyScale_;
    stunTimer_.Start(stunTime, false);
 
-   if (playerStoredEnergy_ > 0.0f) {
-	  if (stopEffectFunction_) {
-		 stopEffectFunction_();
-	  }
+   if (setEffectColorFunction_) {
+	  setEffectColorFunction_({ 1.0f, 0.1f, 0.1f, 1.0f });
+   }
 
-	  if (setEffectColorFunction_) {
-		 setEffectColorFunction_({ 1.0f, 1.0f, 0.0f, 1.0f });
-	  }
-
-	  if (startEffectFunction_) {
-		 startEffectFunction_();
-	  }
+   if (startEffectFunction_) {
+	  startEffectFunction_();
    }
 
    // シェイクの開始
@@ -359,10 +367,6 @@ void Boss::Stun() {
    if (stunTimer_.IsFinished()) {
 	  // スタン終了、通常状態に戻る
 	  stateMachine_->RequestState("Normal", 0);
-
-	  if (stopEffectFunction_) {
-		 stopEffectFunction_();
-	  }
    }
 }
 
@@ -417,6 +421,10 @@ void Boss::InitializeDespawn() {
    ChangeToRegisteredModel("Damage");
 
    isCharging_ = false;
+
+   if (stopEffectFunction_) {
+	  stopEffectFunction_();
+   }
 }
 
 void Boss::Despawn() {
@@ -442,10 +450,18 @@ void Boss::InitializeRespawn() {
    acceleration_ = { 0.0f, 0.0f };
 
    StartModelSwapAnimation("Boss1", "Boss2", 0.02f);
+
+   if (stopEffectFunction_) {
+	  stopEffectFunction_();
+   }
 }
 
 void Boss::Respawn() {
    respawnTimer_.Update(GameUtils::GetDeltaTime());
+
+   if (stopEffectFunction_) {
+	  stopEffectFunction_();
+   }
 
    // スケールを1に戻すイージング
    float progress = respawnTimer_.GetEasedProgress(EasingUtil::Type::EaseOutCubic);
@@ -483,17 +499,37 @@ void Boss::UpdateEnergy() {
 
    storedEnergy_ += GameUtils::GetDeltaTime() * energyDecayPerSecond_;
 
+   storedEnergy_ = std::clamp(storedEnergy_, 0.0f, maxStoredEnergy_);
+
    if (storedEnergy_ >= maxStoredEnergy_) {
 	  // エネルギーが最大に達したらパンク状態に遷移
 	  stateMachine_->RequestState("Punk", 1);
    }
 
-   storedEnergy_ = std::clamp(storedEnergy_, 0.0f, maxStoredEnergy_);
 }
 
 void Boss::UpdateEffect() {
+   float energyRatio = 0.0f;
+   if (maxStoredEnergy_ > 0.0f) {
+	  if (stateMachine_->GetCurrentState() == "Stun") {
+		 energyRatio = playerStoredEnergy_ / maxStoredEnergy_;
+	  } else {
+		 energyRatio = storedEnergy_ / maxStoredEnergy_;
+	  }
+   }
+
+   energyRatio = std::clamp(energyRatio, 0.0f, 1.0f);
+
+   // コールバック呼び出し（位置とエネルギー率を渡す）
    if (updateEffectFunction_) {
-	  updateEffectFunction_(GetWorldPosition());
+	  // Normal状態以外は最大強度でエフェクトを表示
+	  if (stateMachine_->GetCurrentState() == "Normal" || stateMachine_->GetCurrentState() == "Stun") {
+		 updateEffectFunction_(transform_.translate, energyRatio);
+	  } else if (stateMachine_->GetCurrentState() == "Despawn" || stateMachine_->GetCurrentState() == "Respawn" || IsInvincible()) {
+		 updateEffectFunction_(Vector3(-1000.0f, -1000.0f, -1000.0f), 0.0f);
+	  } else {
+		 updateEffectFunction_(transform_.translate, 1.0f);
+	  }
    }
 }
 
@@ -516,12 +552,8 @@ void Boss::InitializePunk() {
 	  startDamageFunction_();
    }
 
-   if (stopEffectFunction_) {
-	  stopEffectFunction_();
-   }
-
    if (setEffectColorFunction_) {
-	  setEffectColorFunction_({ 0.5f, 0.0f, 0.5f, 1.0f });
+	  setEffectColorFunction_({ 1.0f, 0.1f, 0.1f, 1.0f });
    }
 
    if (startEffectFunction_) {
@@ -548,10 +580,12 @@ void Boss::Punk() {
    if (punkTimer_.IsFinished()) {
 	  // スタン終了、通常状態に戻る
 	  stateMachine_->RequestState("Normal", 0);
+   }
+}
 
-	  if (stopEffectFunction_) {
-		 stopEffectFunction_();
-	  }
+void Boss::StartEffect() {
+   if (startEffectFunction_) {
+	  startEffectFunction_();
    }
 }
 
@@ -611,6 +645,10 @@ void Boss::Death() {
 		 isFinished = false;
 		 if (explosionEffectFunction_) {
 			explosionEffectFunction_(transform_.translate);
+		 }
+
+		 if (startDamageFunction_) {
+			startDamageFunction_();
 		 }
 	  }
    }

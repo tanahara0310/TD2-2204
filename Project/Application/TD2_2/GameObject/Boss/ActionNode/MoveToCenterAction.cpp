@@ -23,6 +23,7 @@ void MoveToCenterAction::OnEnter() {
       // 初期加速度をリセット
       boss_->SetAcceleration({ 0.0f, 0.0f });
 	  boss_->SetMaxSpeed(10.0f);
+      boss_->StartEffect();
    }
 }
 

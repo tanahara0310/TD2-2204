@@ -34,10 +34,6 @@ public:
 	  startChargeFunction_ = func;
    }
 
-   void SetUpdateEffectFunction(const std::function<void(const Vector3&)>& func) {
-	  updateEffectFunction_ = func;
-   }
-
    void SetStartEffectFunction(const std::function<void()>& func) {
 	  startEffectFunction_ = func;
    }
@@ -79,6 +75,10 @@ public:
    void DecreaseHP(int amount) { hp_ = (std::max)(0, hp_ - amount); }
 
    float GetStoredEnergy() const { return storedEnergy_; }
+
+   void SetUpdateEffectFunction(const std::function<void(const Vector3&, float)>& func) {
+	  updateEffectFunction_ = func;
+   }
 private:
 
    Vector2 acceleration_ = { 0.0f, 0.0f }; // 加速度ベクトル
@@ -144,7 +144,7 @@ private:
 
    std::function<void()> startChargeFunction_;
 
-   std::function<void(const Vector3&)> updateEffectFunction_;
+   std::function<void(const Vector3&, float)> updateEffectFunction_;
 
    std::function<void(const Vector4&)> setEffectColorFunction_;
 
