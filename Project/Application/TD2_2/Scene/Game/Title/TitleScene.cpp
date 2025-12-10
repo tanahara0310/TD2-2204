@@ -43,26 +43,6 @@ void TitleScene::Initialize(EngineSystem* engine) {
 		for (auto& obj : uiObjects) {
 			gameObjects_.push_back(std::move(obj));
 		}
-		
-		// ロゴのアニメーションを開始
-		if (titleUI_->GetTitleModel()) {
-			titleUI_->GetTitleModel()->StartIntroAnimation();
-		}
-		
-		// ゲキトツロゴは少し遅延させて開始（1.0秒後）
-		if (titleUI_->GetGekitotsuModel()) {
-			titleUI_->GetGekitotsuModel()->StartIntroAnimation(1.0f);
-		}
-		
-		// スタートモデルは2.8秒後に左から登場
-		if (titleUI_->GetStartModel()) {
-			titleUI_->GetStartModel()->StartIntroAnimation(2.8f);
-		}
-		
-		// やめるモデルは2.8秒後に右から登場
-		if (titleUI_->GetYameruModel()) {
-			titleUI_->GetYameruModel()->StartIntroAnimation(2.8f);
-		}
 	}
 
 	// KeyConfigの設定
@@ -180,8 +160,8 @@ void TitleScene::Initialize(EngineSystem* engine) {
 		lightningFrameManager_ = std::make_unique<TitleLightningFrameManager>();
 		lightningFrameManager_->Initialize(lightningManager_.get(), gameObjects_);
 		
-		// 初期状態では雷エフェクトを非表示（ロゴアニメーション後に表示）
-		lightningFrameManager_->HideAllEdges();
+		// 初期状態は非表示（ボタンアニメーション完了後に表示）
+		// lightningFrameManager_->ShowAllEdges(); <- 削除
 	}
 
 	// 決定演出マネージャーの初期化
@@ -209,9 +189,17 @@ void TitleScene::Initialize(EngineSystem* engine) {
 		}
 	}
 	
-	// ステートマシーンの初期化
-	InitializeStateMachine();
-
+	// イントロアニメーションを開始
+	if (titleUI_) {
+		titleUI_->StartIntroAnimation();
+		
+		// 白フラッシュコールバックを設定
+		titleUI_->SetFlashCallback([this]() {
+			// 白フラッシュを開始
+			isWhiteFlashing_ = true;
+			whiteFlashTimer_.Start(kWhiteFlashDuration, false);
+		});
+	}
 }
 
 void TitleScene::Update() {
@@ -256,45 +244,57 @@ void TitleScene::Update() {
 		demoManager_->Update(deltaTime);
 	}
 	
-	// ステートマシーンの更新
-	introStateMachine_.Update();
-	
-	// ロゴアニメーションの完了チェック
-	if (!isLogoAnimationComplete_) {
-		// 演出スキップの入力チェック（スペースキーまたはAボタン）
-		if (keyConfig_->GetDown("Confirm")) {
-			SkipIntroAnimation();
-		}
+	// 白フラッシュの更新
+	if (isWhiteFlashing_) {
+		whiteFlashTimer_.Update(deltaTime);
 		
-		bool allAnimationsComplete = true;
+		// 進行度を取得（0.0～1.0）
+		float progress = whiteFlashTimer_.GetProgress();
 		
-		// 全てのロゴアニメーションが完了しているかチェック
-		if (titleUI_->GetTitleModel() && titleUI_->GetTitleModel()->IsAnimating()) {
-			allAnimationsComplete = false;
-		}
-		if (titleUI_->GetGekitotsuModel() && titleUI_->GetGekitotsuModel()->IsAnimating()) {
-			allAnimationsComplete = false;
-		}
-		if (titleUI_->GetStartModel() && titleUI_->GetStartModel()->IsAnimating()) {
-			allAnimationsComplete = false;
-		}
-		if (titleUI_->GetYameruModel() && titleUI_->GetYameruModel()->IsAnimating()) {
-			allAnimationsComplete = false;
-		}
+		// イーズアウトで徐々に消える（1.0から0.0へ）
+		float flashAlpha = 1.0f - EasingUtil::Apply(progress, EasingUtil::Type::EaseOutQuad);
 		
-		// 全てのアニメーションが完了したら雷エフェクトを表示
-		if (allAnimationsComplete) {
-			isLogoAnimationComplete_ = true;
-			if (lightningFrameManager_) {
-				lightningFrameManager_->ShowAllEdges();
+		// PostEffectManagerを取得して白フェードを適用
+		{
+			auto* postEffectManager = engine_->GetComponent<PostEffectManager>();
+			if (postEffectManager) {
+				auto* fadeEffect = postEffectManager->GetEffect<FadeEffect>(PostEffectNames::FadeEffect);
+				if (fadeEffect) {
+					// フェードエフェクトを有効化
+					postEffectManager->SetEffectEnabled(PostEffectNames::FadeEffect, true);
+					
+					// 白フェードを設定
+					fadeEffect->SetFadeType(FadeEffect::FadeType::WhiteFade);
+					// フラッシュアルファを設定（1.0→0.0で徐々に消える）
+					fadeEffect->SetFadeAlpha(flashAlpha);
+				}
 			}
-			// ステートマシーンを"Interactive"状態に移行
-			introStateMachine_.RequestState("Interactive", 100);
+		}
+		
+		// フラッシュが完了したら無効化
+		if (whiteFlashTimer_.IsFinished()) {
+			isWhiteFlashing_ = false;
+			
+			// フェードエフェクトを無効化
+			{
+				auto* postEffectManager = engine_->GetComponent<PostEffectManager>();
+				if (postEffectManager) {
+					postEffectManager->SetEffectEnabled(PostEffectNames::FadeEffect, false);
+				}
+			}
 		}
 	}
-
-	// 雷エフェクトフレームの更新（アニメーション完了後のみ）
-	if (lightningFrameManager_ && isLogoAnimationComplete_) {
+	
+	// イントロアニメーション完了チェック（雷演出開始タイミング）
+	if (!lightningEffectShown_ && titleUI_ && titleUI_->IsIntroAnimationCompleted()) {
+		lightningEffectShown_ = true;
+		if (lightningFrameManager_) {
+			lightningFrameManager_->ShowAllEdges();
+		}
+	}
+	
+	// 雷エフェクトフレームの更新
+	if (lightningFrameManager_) {
 		bool isConfirmAnimating = confirmAnimationManager_ && confirmAnimationManager_->IsAnimating();
 		lightningFrameManager_->Update(deltaTime, isConfirmAnimating);
 
@@ -326,9 +326,9 @@ void TitleScene::Update() {
 			stickInputCooldown_ = kStickInputDelay;
 		}
 
-		// プリセット選択（左右キー）		
+		// 左右キーでのプリセット選択
 		if (keyConfig_->GetDown("Left")) {
-			titleUI_->SelectPreviousPreset();
+		 titleUI_->SelectPreviousPreset();
 			stickInputCooldown_ = kStickInputDelay;
 		}
 
@@ -448,61 +448,8 @@ void TitleScene::UpdateSceneTransition(float deltaTime) {
 	}
 }
 
-void TitleScene::InitializeStateMachine() {
-	// IntroAnimation状態（イントロアニメーション中）
-	introStateMachine_.AddState("IntroAnimation",
-		[this]() {
-			// 入場時の処理
-		},
-		[this]() {
-			// 更新時の処理
-		}
-	);
-	
-	// Interactive状態（操作可能）
-	introStateMachine_.AddState("Interactive",
-		[this]() {
-			// 入場時の処理
-		},
-		[this]() {
-			// 更新時の処理
-		}
-	);
-	
-	// 遷移ルールの設定
-	introStateMachine_.AddTransitionRule("IntroAnimation", { "Interactive" });
-	
-	// 初期状態をIntroAnimationに設定
-	introStateMachine_.RequestState("IntroAnimation", 100);
-}
-
-void TitleScene::SkipIntroAnimation() {
-	// 全てのモデルの演出をスキップ
-	if (titleUI_->GetTitleModel()) {
-		titleUI_->GetTitleModel()->SkipIntroAnimation();
-	}
-	if (titleUI_->GetGekitotsuModel()) {
-		titleUI_->GetGekitotsuModel()->SkipIntroAnimation();
-	}
-	if (titleUI_->GetStartModel()) {
-		titleUI_->GetStartModel()->SkipIntroAnimation();
-	}
-	if (titleUI_->GetYameruModel()) {
-		titleUI_->GetYameruModel()->SkipIntroAnimation();
-	}
-	
-	// 雷エフェクトを即座に表示
-	isLogoAnimationComplete_ = true;
-	if (lightningFrameManager_) {
-		lightningFrameManager_->ShowAllEdges();
-	}
-	
-	// ステートマシーンを"Interactive"状態に移行
-	introStateMachine_.RequestState("Interactive", 100);
-}
-
 void TitleScene::UpdateFadeOut(float deltaTime) {
-	// タイマーの更新
+	// フェード処理をここに実装
 	fadeOutTimer_.Update(deltaTime);
 
 	// 進行度を取得（0.0～1.0）

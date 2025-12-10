@@ -16,7 +16,6 @@
 #include "TitleDemoManager.h"
 #include "TitleLightningFrameManager.h"
 #include "TitleConfirmAnimationManager.h"
-#include "../../../Utility/StateMachine.h"
 
 
 class EngineSystem;
@@ -48,12 +47,6 @@ private:
 	
 	/// @brief フェードアウト処理の更新
 	void UpdateFadeOut(float deltaTime);
-	
-	/// @brief ステートマシーンの初期化
-	void InitializeStateMachine();
-	
-	/// @brief 演出をスキップして完了状態にする
-	void SkipIntroAnimation();
 
 private:
 	std::unique_ptr<TitleUI> titleUI_;
@@ -104,9 +97,11 @@ private:
 	// 枠エフェクトID（LightningFrameManagerから参照するため保持）
 	int frameEffectIds_[4] = { -1, -1, -1, -1 };
 	
-	// ロゴアニメーション完了フラグ
-	bool isLogoAnimationComplete_ = false;
+	// イントロアニメーション管理
+	bool lightningEffectShown_ = false; // 雷演出を既に表示したか
 	
-	// ステートマシーン
-	StateMachine introStateMachine_;
+	// 白フラッシュ管理
+	bool isWhiteFlashing_ = false;
+	GameTimer whiteFlashTimer_;
+	static constexpr float kWhiteFlashDuration = 1.3f; // フラッシュの継続時間（1.5秒に延長
 };

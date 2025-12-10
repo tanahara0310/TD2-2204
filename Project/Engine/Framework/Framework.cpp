@@ -22,7 +22,7 @@ void Framework::Run()
 
 	// ウィンドウアプリケーションの生成・初期化
 	winApp_ = std::make_unique<WinApp>();
-	winApp_->Initialize(WinApp::kClientWidth, WinApp::kClientHeight, L"KoaEngine");
+	winApp_->Initialize(WinApp::kClientWidth, WinApp::kClientHeight, L"2204_ゲキトツ!!ビリピヨランブル!!");
 
 	// エンジンシステムの生成・初期化
 	engineSystem_ = std::make_unique<EngineSystem>();

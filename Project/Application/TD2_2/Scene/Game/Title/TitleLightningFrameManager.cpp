@@ -100,6 +100,11 @@ void TitleLightningFrameManager::UpdatePulseEffect(float deltaTime) {
 	if (!lightningManager_) {
 		return;
 	}
+	
+	// 演出が有効でない場合は何もしない
+	if (!isEffectEnabled_) {
+		return;
+	}
 
 	// 初回起動時に即座に演出を開始
 	if (visibleTimer_ <= 0.0f && pulseTimer_ == 0.0f) {
@@ -173,7 +178,18 @@ void TitleLightningFrameManager::ShowAllEdges() {
 	if (!lightningManager_) {
 		return;
 	}
+	
+	// 演出を有効化
+	isEffectEnabled_ = true;
+	
+	// パルスタイマーをリセットして演出を開始
+	pulseTimer_ = 0.0f;
+	visibleTimer_ = 0.0f;
+	currentEdgeIndexA_ = -1;
+	currentEdgeIndexB_ = -1;
+	flickerTimer_ = 0.0f;
 
+	// 全ての辺を一旦表示
 	for (int i = 0; i < 4; ++i) {
 		if (frameEffectIds_[i] >= 0) {
 			lightningManager_->SetEffectVisibleImmediate(frameEffectIds_[i], true);
@@ -185,6 +201,9 @@ void TitleLightningFrameManager::HideAllEdges() {
 	if (!lightningManager_) {
 		return;
 	}
+	
+	// 演出を無効化
+	isEffectEnabled_ = false;
 
 	for (int i = 0; i < 4; ++i) {
 		if (frameEffectIds_[i] >= 0) {

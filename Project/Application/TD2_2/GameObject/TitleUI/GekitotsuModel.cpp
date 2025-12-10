@@ -1,9 +1,20 @@
 #include "GekitotsuModel.h"
 #include "Engine/Math/Easing/EasingUtil.h"
+#include "../../Utility/GameUtils.h"
+#include <cmath>
 
 #ifdef _DEBUG
 #include <imgui.h>
 #endif
+
+namespace {
+	// カスタムEaseOutBack関数（大きくオーバーシュートする）
+	float CustomEaseOutBackLarge(float t) {
+		const float c1 = 6.5f; // 標準は1.70158f、これを大きくするとオーバーシュートが増える
+		const float c3 = c1 + 1.0f;
+		return 1.0f + c3 * std::pow(t - 1.0f, 3.0f) + c1 * std::pow(t - 1.0f, 2.0f);
+	}
+}
 
 void GekitotsuModel::Initialize(std::unique_ptr<Model> model, TextureManager::LoadedTexture texture) {
 	// 基底クラスの初期化
@@ -14,10 +25,13 @@ void GekitotsuModel::Initialize(std::unique_ptr<Model> model, TextureManager::Lo
 	targetScale_ = { 1.0f, 1.0f, 2.0f };
 	baseScale_ = targetScale_;
 	
-	// 初期位置は目標位置、スケールは0
+	// 初期位置と回転を設定
 	transform_.translate = targetPosition_;
-	transform_.scale = startScale_; // スケール0から開始
 	transform_.rotate = { 0.0f, 0.0f, 0.0f };
+	
+	// イントロアニメーション用に初期スケールを0に設定
+	transform_.scale = { 0.0f, 0.0f, 0.0f };
+	isIntroPlaying_ = false;
 	
 	// シェーディングモードをトゥーンに設定
 	if (model_ && model_->GetMaterialManager()) {
@@ -28,22 +42,28 @@ void GekitotsuModel::Initialize(std::unique_ptr<Model> model, TextureManager::Lo
 }
 
 void GekitotsuModel::Update() {
-	float deltaTime = 1.0f / 60.0f;
-	
-	// 遅延中の処理
-	if (isDelaying_) {
-		delayTimer_ += deltaTime;
-		if (delayTimer_ >= delayDuration_) {
-			isDelaying_ = false;
-			animationTimer_.Start(kAnimationDuration, false);
+	// イントロアニメーションの更新
+	if (isIntroPlaying_) {
+		float deltaTime = GameUtils::GetDeltaTime();
+		if (deltaTime <= 0.0f) {
+			deltaTime = 1.0f / 60.0f;
 		}
-		transform_.TransferMatrix();
-		return;
-	}
-	
-	// イントロアニメーション中の更新
-	if (isAnimating_) {
-		UpdateIntroAnimation(deltaTime);
+		introTimer_.Update(deltaTime);
+		
+		// カスタムEaseOutBackで大きくオーバーしてから目標スケールに戻る
+		float t = introTimer_.GetProgress();
+		float easedT = CustomEaseOutBackLarge(t);
+		
+		transform_.scale = {
+			easedT * targetScale_.x,
+			easedT * targetScale_.y,
+			easedT * targetScale_.z
+		};
+		
+		if (introTimer_.IsFinished()) {
+			isIntroPlaying_ = false;
+			transform_.scale = targetScale_;
+		}
 	}
 	
 	// トランスフォームを更新
@@ -72,54 +92,8 @@ Vector4 GekitotsuModel::GetColor() const {
 	return { 1.0f, 1.0f, 1.0f, 1.0f };
 }
 
-void GekitotsuModel::StartIntroAnimation(float delayTime) {
-	isAnimating_ = true;
-	
-	if (delayTime > 0.0f) {
-		isDelaying_ = true;
-		delayTimer_ = 0.0f;
-		delayDuration_ = delayTime;
-	} else {
-		isDelaying_ = false;
-		animationTimer_.Start(kAnimationDuration, false);
-	}
-	
-	// 開始位置は目標位置、スケールは0
-	transform_.translate = targetPosition_;
-	transform_.scale = startScale_;
-}
-
-void GekitotsuModel::SkipIntroAnimation() {
-	if (!isAnimating_ && !isDelaying_) {
-		return;
-	}
-	
-	// アニメーションを即座に終了
-	isAnimating_ = false;
-	isDelaying_ = false;
-	transform_.translate = targetPosition_;
-	transform_.scale = targetScale_;
-}
-
-void GekitotsuModel::UpdateIntroAnimation(float deltaTime) {
-	animationTimer_.Update(deltaTime);
-	
-	float t = animationTimer_.GetProgress();
-	
-	if (t >= 1.0f) {
-		// アニメーション終了
-		isAnimating_ = false;
-		transform_.translate = targetPosition_;
-		transform_.scale = targetScale_;
-		return;
-	}
-	
-	// 位置は固定
-	transform_.translate = targetPosition_;
-	
-	// スケールを0から目標スケールまで拡大（EaseOutBack - 少しオーバーシュートして戻る）
-	float easedT = EasingUtil::Apply(t, EasingUtil::Type::EaseOutBack);
-	transform_.scale.x = EasingUtil::Lerp(startScale_.x, targetScale_.x, easedT);
-	transform_.scale.y = EasingUtil::Lerp(startScale_.y, targetScale_.y, easedT);
-	transform_.scale.z = EasingUtil::Lerp(startScale_.z, targetScale_.z, easedT);
+void GekitotsuModel::StartIntroAnimation() {
+	isIntroPlaying_ = true;
+	introTimer_.Start(kIntroDuration, false);
+	transform_.scale = { 0.0f, 0.0f, 0.0f };
 }
