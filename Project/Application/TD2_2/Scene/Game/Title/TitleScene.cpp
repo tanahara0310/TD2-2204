@@ -33,7 +33,9 @@ void TitleScene::Initialize(EngineSystem* engine) {
 
 	// InputSourceの初期化（必須）
 	InputSource::Initialize(engine);
-
+	
+	// イントロステートマシーンの初期化
+	InitializeIntroStateMachine();
 
 	cameraController_ = std::make_unique<TitleCameraController>();
 	// TitleUIの初期化
@@ -249,6 +251,9 @@ void TitleScene::Update() {
 	}
 
 	float deltaTime = 1.0f / 60.0f;
+	
+	// イントロステートマシーンの更新
+	introStateMachine_.Update();
 
 	// クールダウンタイマーを減少
 	if (stickInputCooldown_ > 0.0f) {
@@ -318,6 +323,16 @@ void TitleScene::Update() {
 			cameraController_->StartTargetAnimation();
 		}
 	}
+	
+	// イントロアニメーション中のスキップ入力処理（Playingステート時のみ）
+	if (!lightningEffectShown_ && introStateMachine_.GetCurrentState() == "Playing") {
+		// スペースキーまたはAボタンでスキップ
+		if (keyConfig_->GetDown("Confirm")) {
+			introStateMachine_.RequestState("Skipping", 100);
+			// スキップ直後の入力を無効化（次フレーム以降から入力を受け付ける）
+			return;
+		}
+	}
 
 	// 雷エフェクトフレームの更新
 	if (lightningFrameManager_) {
@@ -360,15 +375,15 @@ void TitleScene::Update() {
 
 		if (keyConfig_->GetDown("Down")) {
 			if (previousState != TitleUI::SelectionState::Quit) {
-				titleUI_->SetSelectionState(TitleUI::SelectionState::Quit);
-				selectionChanged = true;
+			 titleUI_->SetSelectionState(TitleUI::SelectionState::Quit);
+			 selectionChanged = true;
 			}
 			stickInputCooldown_ = kStickInputDelay;
 		}
 
 		// 左右キーでのプリセット選択
 		if (keyConfig_->GetDown("Left")) {
-			titleUI_->SelectPreviousPreset();
+		 titleUI_->SelectPreviousPreset();
 			stickInputCooldown_ = kStickInputDelay;
 		}
 
@@ -392,8 +407,8 @@ void TitleScene::Update() {
 			// 下方向（Y軸負）
 			else if (moveInput.y < -kStickThreshold) {
 				if (previousState != TitleUI::SelectionState::Quit) {
-					titleUI_->SetSelectionState(TitleUI::SelectionState::Quit);
-					selectionChanged = true;
+				 titleUI_->SetSelectionState(TitleUI::SelectionState::Quit);
+				 selectionChanged = true;
 				}
 				stickInputCooldown_ = kStickInputDelay;
 			}
@@ -529,5 +544,77 @@ void TitleScene::SetupReleaseCameraParameters(Camera* camera)
 	// カメラコントローラーを使ってカメラパラメータを適用
 	if (cameraController_) {
 		cameraController_->ApplyToCamera(camera);
+	}
+}
+
+void TitleScene::InitializeIntroStateMachine()
+{
+	// Playingステート：通常のイントロアニメーション再生中
+	introStateMachine_.AddState("Playing",
+		[this]() {
+			// 何もしない（通常の再生）
+		},
+		[this]() {
+			// 毎フレーム通常通り更新
+		}
+	);
+
+	// Skippingステート：イントロアニメーションをスキップ
+	introStateMachine_.AddState("Skipping",
+		[this]() {
+			// スキップ処理を実行
+			SkipIntroAnimation();
+		},
+		[this]() {
+			// スキップ後は何もしない
+		}
+	);
+
+	// 遷移ルールの設定
+	introStateMachine_.AddTransitionRule("Playing", { "Skipping" });
+	introStateMachine_.AddTransitionRule("Skipping", {}); // Skippingからは遷移しない
+
+	// 初期状態をPlayingに設定
+	introStateMachine_.RequestState("Playing", 100);
+}
+
+void TitleScene::SkipIntroAnimation()
+{
+	if (introSkipped_) {
+		return;
+	}
+	
+	introSkipped_ = true;
+	
+	// TitleUIのスキップメソッドを使用
+	if (titleUI_) {
+		titleUI_->SkipIntroAnimation();
+	}
+	
+	// 雷エフェクトを即座に表示
+	lightningEffectShown_ = true;
+	if (lightningFrameManager_) {
+		lightningFrameManager_->ShowAllEdges();
+	}
+	
+	// タイトルロゴの雷エフェクトを表示
+	if (logoLightningManager_) {
+		logoLightningManager_->ShowLightning();
+	}
+
+	// カメラのターゲット移動アニメーションを開始
+	if (cameraController_) {
+		cameraController_->StartTargetAnimation();
+	}
+	
+	// 白フラッシュが再生中なら即座に停止
+	if (isWhiteFlashing_) {
+		isWhiteFlashing_ = false;
+		
+		// フェードエフェクトを無効化
+		auto* postEffectManager = engine_->GetComponent<PostEffectManager>();
+		if (postEffectManager) {
+			postEffectManager->SetEffectEnabled(PostEffectNames::FadeEffect, false);
+		}
 	}
 }

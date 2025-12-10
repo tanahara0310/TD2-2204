@@ -17,6 +17,7 @@
 #include "TitleLightningFrameManager.h"
 #include "TitleLogoLightningManager.h"
 #include "TitleConfirmAnimationManager.h"
+#include "../../../Utility/StateMachine.h"
 
 
 class EngineSystem;
@@ -48,6 +49,12 @@ private:
 	
 	/// @brief フェードアウト処理の更新
 	void UpdateFadeOut(float deltaTime);
+	
+	/// @brief イントロステートマシーンの初期化
+	void InitializeIntroStateMachine();
+	
+	/// @brief イントロスキップ処理
+	void SkipIntroAnimation();
 
 private:
 	std::unique_ptr<TitleUI> titleUI_;
@@ -71,6 +78,10 @@ private:
 	std::unique_ptr<TitleLightningFrameManager> lightningFrameManager_;
 	std::unique_ptr<TitleLogoLightningManager> logoLightningManager_;
 	std::unique_ptr<TitleConfirmAnimationManager> confirmAnimationManager_;
+	
+	// イントロステートマシーン
+	StateMachine introStateMachine_;
+	bool introSkipped_ = false;
 
 	// スティック入力のクールダウン
 	float stickInputCooldown_ = 0.0f;
@@ -99,11 +110,11 @@ private:
 	// 枠エフェクトID（LightningFrameManagerから参照するため保持）
 	int frameEffectIds_[4] = { -1, -1, -1, -1 };
 	
-	// イントロアニメーション管理
-	bool lightningEffectShown_ = false; // 雷演出を既に表示したか
+	// 雷エフェクト表示フラグ
+	bool lightningEffectShown_ = false;
 	
-	// 白フラッシュ管理
+	// 白フラッシュ演出用
 	bool isWhiteFlashing_ = false;
 	GameTimer whiteFlashTimer_;
-	static constexpr float kWhiteFlashDuration = 1.3f; // フラッシュの継続時間（1.5秒に延長
+	static constexpr float kWhiteFlashDuration = 0.3f;
 };

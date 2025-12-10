@@ -73,6 +73,9 @@ public:
 	/// @return 完了していればtrue
 	bool IsIntroAnimationCompleted() const { return introAnimationCompleted_; }
 	
+	/// @brief イントロアニメーションをスキップ（即座に完了）
+	void SkipIntroAnimation();
+	
 	/// @brief 白フラッシュコールバックを設定
 	/// @param callback フラッシュ発生時に呼ばれる関数
 	void SetFlashCallback(std::function<void()> callback) { flashCallback_ = callback; }

@@ -93,3 +93,9 @@ void TitleModel::StartIntroAnimation() {
 	introTimer_.Start(kIntroDuration, false);
 	transform_.translate = startPosition_;
 }
+
+void TitleModel::SkipIntroAnimation() {
+	isIntroPlaying_ = false;
+	transform_.translate = targetPosition_;
+	transform_.TransferMatrix();
+}

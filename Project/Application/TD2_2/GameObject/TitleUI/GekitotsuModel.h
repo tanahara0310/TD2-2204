@@ -37,6 +37,9 @@ public:
 	/// @brief イントロアニメーションが完了したかを取得
 	/// @return 完了していればtrue
 	bool IsIntroAnimationFinished() const { return !isIntroPlaying_; }
+	
+	/// @brief イントロアニメーションをスキップ（即座に完了）
+	void SkipIntroAnimation();
 
 private:
 	Vector3 baseScale_ = { 1.0f, 1.0f, 1.0f };

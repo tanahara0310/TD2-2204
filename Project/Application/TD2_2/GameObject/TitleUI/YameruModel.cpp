@@ -101,3 +101,10 @@ void YameruModel::StartIntroAnimation() {
 	introTimer_.Start(kIntroDuration, false);
 	transform_.translate = startPosition_;
 }
+
+void YameruModel::SkipIntroAnimation() {
+	isIntroPlaying_ = false;
+	transform_.translate = targetPosition_;
+	transform_.scale = targetScale_;
+	transform_.TransferMatrix();
+}
