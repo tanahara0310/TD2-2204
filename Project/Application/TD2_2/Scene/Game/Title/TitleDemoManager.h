@@ -58,7 +58,7 @@ private:
 	static constexpr int kDemoInFrontCount_ = 1; // 背景の前で移動する回数
 	static constexpr int kDemoTotalCycle_ = kDemoBehindCount_ + kDemoInFrontCount_; // 合計サイクル（3回）
 	static constexpr float kDemoZBehind_ = 10.0f; // 背景の後ろ
-	static constexpr float kDemoZFront_ = -10.0f; // 背景の前
+	static constexpr float kDemoZFront_ = -15.0f; // 背景の前（めり込み防止のためより手前に）
 
 	// デモのY座標管理（3段階）
 	static constexpr float kDemoYTop_ = 28.0f;    // 上段
