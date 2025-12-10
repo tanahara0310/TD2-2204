@@ -237,7 +237,7 @@
     <ClCompile Include="Engine\Graphics\Render\Particle\ParticleRenderer.cpp" />
     <ClCompile Include="Application\TD2_2\Scene\Game\GameScene.cpp" />
     <ClCompile Include="Application\TD2_2\Scene\Game\ResultScene.cpp" />
-    <ClCompile Include="Application\TD2_2\Scene\Game\TitleScene.cpp" />
+    <ClCompile Include="Application\TD2_2\Scene\Game\Title\TitleScene.cpp" />
     <ClCompile Include="Engine\Scene\BaseScene.cpp" />
     <ClCompile Include="Application\TD2_2\Collider\AABBCollider.cpp" />
     <ClCompile Include="Application\TD2_2\Collider\Collider.cpp" />
@@ -319,9 +319,9 @@
     <ClCompile Include="Application\TD2_2\GameObject\Boss\ActionNode\ChargeAwayFromPlayerAction.cpp" />
     <ClCompile Include="Application\TD2_2\GameObject\Boss\ActionNode\ChargeTowardsSafetyAction.cpp" />
     <ClCompile Include="Application\TD2_2\Scene\Game\BossBehaviorTreeFactory.cpp" />
-    <ClCompile Include="Application\TD2_2\Scene\Game\TitleDemoManager.cpp" />
-    <ClCompile Include="Application\TD2_2\Scene\Game\TitleLightningFrameManager.cpp" />
-    <ClCompile Include="Application\TD2_2\Scene\Game\TitleConfirmAnimationManager.cpp" />
+    <ClCompile Include="Application\TD2_2\Scene\Game\Title\TitleDemoManager.cpp" />
+    <ClCompile Include="Application\TD2_2\Scene\Game\Title\TitleLightningFrameManager.cpp" />
+    <ClCompile Include="Application\TD2_2\Scene\Game\Title\TitleConfirmAnimationManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Engine\WinApp\WinApp.h">
@@ -717,7 +717,7 @@
     <ClInclude Include="Application\GameObject\GameObject.h" />
     <ClInclude Include="Application\TD2_2\Scene\Game\GameScene.h" />
     <ClInclude Include="Application\TD2_2\Scene\Game\ResultScene.h" />
-    <ClInclude Include="Application\TD2_2\Scene\Game\TitleScene.h" />
+    <ClInclude Include="Application\TD2_2\Scene\Game\Title\TitleScene.h" />
     <ClInclude Include="Engine\Scene\BaseScene.h" />
     <ClInclude Include="Application\TD2_2\Collider\AABBCollider.h" />
     <ClInclude Include="Application\TD2_2\Collider\Collider.h" />
@@ -803,9 +803,9 @@
     <ClInclude Include="Application\TD2_2\GameObject\Boss\ActionNode\ChargeAwayFromPlayerAction.h" />
     <ClInclude Include="Application\TD2_2\GameObject\Boss\ActionNode\ChargeTowardsSafetyAction.h" />
     <ClInclude Include="Application\TD2_2\Scene\Game\BossBehaviorTreeFactory.h" />
-    <ClInclude Include="Application\TD2_2\Scene\Game\TitleDemoManager.h" />
-    <ClInclude Include="Application\TD2_2\Scene\Game\TitleLightningFrameManager.h" />
-    <ClInclude Include="Application\TD2_2\Scene\Game\TitleConfirmAnimationManager.h" />
+    <ClInclude Include="Application\TD2_2\Scene\Game\Title\TitleDemoManager.h" />
+    <ClInclude Include="Application\TD2_2\Scene\Game\Title\TitleLightningFrameManager.h" />
+    <ClInclude Include="Application\TD2_2\Scene\Game\Title\TitleConfirmAnimationManager.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Engine\Particle\README.md">
