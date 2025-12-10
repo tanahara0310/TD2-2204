@@ -1,6 +1,7 @@
 #pragma once
 #include "../GameObject.h"
 #include <memory>
+#include <numbers>
 
 class ReStartModel : public GameObject {
 public:
@@ -20,7 +21,10 @@ public:
 	bool IsSelected() const { return isSelected_; }
 
 	/// @brief 回転アニメーションのフラグを設定
-	void SetIsRotateAnimation(bool isROtateAnimation) { isRotateAnimation_ = isROtateAnimation; }
+	void SetIsRotateAnimation(bool isRotateAnimation) { isRotateAnimation_ = isRotateAnimation; }
+
+	/// @brief スケールアニメーションのフラグを設定
+	void SetScalAnimation(bool isScaleAnimation) { isScaleAnimation_ = isScaleAnimation; }
 
 private:
 	/// @brief 呼吸アニメーションの更新
@@ -28,6 +32,9 @@ private:
 
 	/// @brief 回転アニメーションの更新
 	void UpdateRotateAnimation(float deltaTime);
+
+	/// @brief スケールアニメーションの更新
+	void UpdateScaleAnimation(float deltaTime);
 
 private:
 	Vector3 baseScale_ = {1.0f, 1.0f, 1.0f}; // 基準スケール
@@ -43,6 +50,19 @@ private:
 
 	// 回転アニメーションフラグ
 	bool isRotateAnimation_ = false;
+
+	// スケールアニメーションフラグ
+	bool isScaleAnimation_ = false;
+
+	// スケールアニメーション用変数
+	bool hasScaleLaunched_ = false;                 // スケールアニメ開始済みフラグ
+	float scaleTimer_ = 0.0f;                       // スケールアニメ経過時間
+	float startScaleZ_ = 1.0f;                      // アニメ開始時の Z スケール
+	static constexpr float kScaleDuration = 0.20f;  // アニメ総時間（秒）
+	static constexpr float kScalePeakMultiplier = 1.6f; // ピーク時の倍率（Z方向）
+
+	// カメラ方向に拡大するための直近カメラ位置（Drawで更新）
+	Vector3 lastCameraPos_ = {0.0f, 0.0f, 0.0f};
 
 	// 打ち上げアニメーション用変数
 	bool hasLaunched_ = false;                                                // 既に打ち上げ済みか

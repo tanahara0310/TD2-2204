@@ -201,6 +201,7 @@ void ResultScene::Update() {
 			case ResultUI::SelectionState::ReStart:
 				// リスタート遷移開始
 				isGameTransitioning_ = true;
+				resultUI_->SetIsScaleAnimationReStart(true);
 				transitionTimer_ = 0.0f;
 
 				// アニメーションフラグを立てる

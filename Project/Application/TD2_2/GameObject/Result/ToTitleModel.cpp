@@ -71,7 +71,7 @@ void ToTitleModel::UpdateRotateAnimation(float deltaTime) {
 
 		// 上下移動
 		const float kPi = 3.14159265358979323846f;
-		float verticalEase = std::sin(kPi * t); 
+		float verticalEase = std::sin(kPi * t);
 		transform_.translate.y = startY_ + kLaunchHeight * verticalEase;
 
 		// 回転

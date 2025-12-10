@@ -143,6 +143,9 @@ void ResultUI::Update() {
 	// 「リスタート」モデルのアニメーション
 	reStartModel_->SetIsRotateAnimation(isAnimationReStart_);
 
+	// 「リスタート」スケールアニメーション
+	reStartModel_->SetScalAnimation(isAnimationScaleReStart_);
+
 	// 選択演出の更新
 	UpdateSelectionEffect();
 }
@@ -224,7 +227,7 @@ std::unique_ptr<ResultModel> ResultUI::CreateResultModel(EngineSystem* engine, b
 	// 勝敗に応じてモデル切り替え
 	auto resultModelResource = modelManager->CreateStaticModel(isWin ? "Resources/Models/Win/Win.obj" : "Resources/Models/Lose/Lose.obj");
 
-	auto resultTexture = textureManager.Load(isWin ? "Resources/Textures/red.png" : "Resources/Textures/Lose.png");
+	auto resultTexture = textureManager.Load(isWin ? "Resources/Textures/red.png" : "Resources/Textures/blue.png");
 
 	auto resultModel = std::make_unique<ResultModel>();
 	resultModel->Initialize(std::move(resultModelResource), resultTexture);
