@@ -89,8 +89,8 @@ void TitleScene::Initialize(EngineSystem* engine) {
 		auto modelManager = engine_->GetComponent<ModelManager>();
 		auto& textureManager = TextureManager::GetInstance();
 
-		auto backgroundModel = modelManager->CreateStaticModel("Resources/Models/Background/Background.obj");
-		auto backgroundTexture = textureManager.Load("Resources/Textures/Background.png");
+		auto backgroundModel = modelManager->CreateStaticModel("Resources/Models/Background/Background2.obj");
+		auto backgroundTexture = textureManager.Load("Resources/Textures/Background2.png");
 		auto background = std::make_unique<Background>();
 		background_ = background.get();
 		background->Initialize(std::move(backgroundModel), backgroundTexture);
@@ -167,6 +167,10 @@ void TitleScene::Initialize(EngineSystem* engine) {
 
 		lightningFrameManager_ = std::make_unique<TitleLightningFrameManager>();
 		lightningFrameManager_->Initialize(lightningManager_.get(), gameObjects_);
+
+		// タイトルロゴの雷エフェクトを初期化
+		logoLightningManager_ = std::make_unique<TitleLogoLightningManager>();
+		logoLightningManager_->Initialize(lightningManager_.get(), gameObjects_);
 
 		// 初期状態は非表示（ボタンアニメーション完了後に表示）
 		// lightningFrameManager_->ShowAllEdges(); <- 削除
@@ -303,6 +307,11 @@ void TitleScene::Update() {
 		if (lightningFrameManager_) {
 			lightningFrameManager_->ShowAllEdges();
 		}
+		
+		// タイトルロゴの雷エフェクトを表示
+		if (logoLightningManager_) {
+			logoLightningManager_->ShowLightning();
+		}
 
 		// カメラのターゲット移動アニメーションを開始
 		if (cameraController_) {
@@ -318,6 +327,11 @@ void TitleScene::Update() {
 		// 現在選択中のモデル位置へ枠を移動＆色変更
 		bool isStartSelected = (titleUI_->GetSelectionState() == TitleUI::SelectionState::Start);
 		lightningFrameManager_->UpdateFramePosition(isStartSelected);
+	}
+
+	// タイトルロゴ雷エフェクトの更新
+	if (logoLightningManager_) {
+		logoLightningManager_->Update(deltaTime);
 	}
 
 	// 遷移中または決定演出中でなければ入力を受け付ける

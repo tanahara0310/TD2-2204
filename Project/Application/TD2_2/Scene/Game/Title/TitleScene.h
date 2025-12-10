@@ -15,6 +15,7 @@
 #include "../../../Effect/Lightning/LightningEffectManager.h"
 #include "TitleDemoManager.h"
 #include "TitleLightningFrameManager.h"
+#include "TitleLogoLightningManager.h"
 #include "TitleConfirmAnimationManager.h"
 
 
@@ -68,6 +69,7 @@ private:
 	std::unique_ptr<TitleDemoManager> demoManager_;
 	std::unique_ptr<LightningEffectManager> lightningManager_;
 	std::unique_ptr<TitleLightningFrameManager> lightningFrameManager_;
+	std::unique_ptr<TitleLogoLightningManager> logoLightningManager_;
 	std::unique_ptr<TitleConfirmAnimationManager> confirmAnimationManager_;
 
 	// スティック入力のクールダウン

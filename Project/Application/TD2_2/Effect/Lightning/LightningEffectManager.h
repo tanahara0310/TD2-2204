@@ -81,6 +81,12 @@ public:
    Vector4 GetEffectColor(int effectId) const;
 
    void SetEffectIntensity(int effectId, float intensity);
+   
+   /// @brief エフェクトのオフセット（始点・終点）を更新
+   /// @param effectId エフェクトID
+   /// @param startOffset 新しい始点オフセット
+   /// @param endOffset 新しい終点オフセット
+   void SetEffectOffsets(int effectId, const Vector3& startOffset, const Vector3& endOffset);
 
 private:
    std::chrono::time_point<std::chrono::steady_clock> startTime_;
