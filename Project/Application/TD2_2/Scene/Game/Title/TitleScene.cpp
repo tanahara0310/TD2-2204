@@ -155,7 +155,7 @@ void TitleScene::Initialize(EngineSystem* engine) {
 		demoPlayer->GetTransform().translate = playerInitPos;
 		demoPlayer->GetTransform().rotate.y = std::numbers::pi_v<float> / 2.0f; // +X方向を向く
 		demoPlayer->SetInitialPosition(playerInitPos); // initialPositionも更新
-		demoPlayer->SetMoveSpeed(23.0f); // 初期 velocidade を設定（調整済み）
+		demoPlayer->SetMoveSpeed(23.0f); // velocidade を設定（調整済み）
 		demoPlayer->GetTransform().TransferMatrix();
 
 		gameObjects_.push_back(std::move(demoPlayer));
@@ -235,6 +235,23 @@ void TitleScene::Initialize(EngineSystem* engine) {
 			isWhiteFlashing_ = true;
 			whiteFlashTimer_.Start(kWhiteFlashDuration, false);
 			});
+	}
+
+	// ヴィネットエフェクトの読み込みと適用
+	{
+		auto* postEffectManager = engine_->GetComponent<PostEffectManager>();
+		if (postEffectManager) {
+			// ヴィネットプリセットを読み込み
+			bool loaded = postEffectManager->GetPresetManager().LoadPreset(
+				postEffectManager,
+				"Resources/Presets/PostEffect/Vignette.json"
+			);
+			
+			if (loaded) {
+				// ヴィネットを有効化
+				postEffectManager->SetEffectEnabled(PostEffectNames::Vignette, true);
+			}
+		}
 	}
 }
 

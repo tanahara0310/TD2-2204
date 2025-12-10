@@ -119,7 +119,7 @@ private:
 	RotationState rotationState_ = RotationState::Rotating; // 回転状態
 	float rotationDuration_ = 0.4f; // 1回の回転にかける時間（秒）- 長くしてイージングを見やすく
 	float rotationCount_ = 4.0f; // 回転回数
-	float rotationWaitTime_ = 0.3f; // 回転後の待機時間（秒）
+	float rotationWaitTime_ = 0.2f; // 回転後の待機時間（秒）
 	float rotationTimer_ = 0.0f; // 回転タイマー
 	float waitTimer_ = 0.0f; // 待機タイマー
 	EasingUtil::Type rotationEasing_ = EasingUtil::Type::EaseOutCubic; // 終盤に減速が目立つイージング
