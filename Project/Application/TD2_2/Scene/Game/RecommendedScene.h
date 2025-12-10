@@ -39,6 +39,8 @@ private:
 	
 	// Recommendedモデル（複数の文字）
 	std::vector<RecommendedModel*> textModels_;
+
+	Sound decideSe_;
 	
 	// ボタン入力待ちフラグ
 	bool waitingForInput_ = false;

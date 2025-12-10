@@ -91,7 +91,12 @@ private:
 	static constexpr float kFadeOutDuration = 0.5f;
 
 	Sound titleBGM_;
+	Sound confirmSE_;
+	Sound cursorSE_;
 
 	// 枠エフェクトID（LightningFrameManagerから参照するため保持）
 	int frameEffectIds_[4] = { -1, -1, -1, -1 };
+	
+	// ロゴアニメーション完了フラグ
+	bool isLogoAnimationComplete_ = false;
 };

@@ -1,6 +1,6 @@
 #include "TitleDemoManager.h"
-#include "../../GameObject/TitleDemo/TitlePlayerDemo.h"
-#include "../../GameObject/TitleDemo/TitleEnemyDemo.h"
+#include "../../../GameObject/TitleDemo/TitlePlayerDemo.h"
+#include "../../../GameObject/TitleDemo/TitleEnemyDemo.h"
 #include "Engine/Utility/Random/RandomGenerator.h"
 #include <numbers>
 

@@ -43,6 +43,26 @@ void TitleScene::Initialize(EngineSystem* engine) {
 		for (auto& obj : uiObjects) {
 			gameObjects_.push_back(std::move(obj));
 		}
+		
+		// ロゴのアニメーションを開始
+		if (titleUI_->GetTitleModel()) {
+			titleUI_->GetTitleModel()->StartIntroAnimation();
+		}
+		
+		// ゲキトツロゴは少し遅延させて開始（0.6秒後）
+		if (titleUI_->GetGekitotsuModel()) {
+			titleUI_->GetGekitotsuModel()->StartIntroAnimation(0.6f);
+		}
+		
+		// スタートモデルは1.8秒後に左から登場
+		if (titleUI_->GetStartModel()) {
+			titleUI_->GetStartModel()->StartIntroAnimation(1.8f);
+		}
+		
+		// やめるモデルは1.8秒後に右から登場
+		if (titleUI_->GetYameruModel()) {
+			titleUI_->GetYameruModel()->StartIntroAnimation(1.8f);
+		}
 	}
 
 	// KeyConfigの設定
@@ -159,6 +179,9 @@ void TitleScene::Initialize(EngineSystem* engine) {
 
 		lightningFrameManager_ = std::make_unique<TitleLightningFrameManager>();
 		lightningFrameManager_->Initialize(lightningManager_.get(), gameObjects_);
+		
+		// 初期状態では雷エフェクトを非表示（ロゴアニメーション後に表示）
+		lightningFrameManager_->HideAllEdges();
 	}
 
 	// 決定演出マネージャーの初期化
@@ -177,6 +200,12 @@ void TitleScene::Initialize(EngineSystem* engine) {
 				titleBGM_->Play(true);
 				titleBGM_->SetVolume(0.5f);
 			}
+			
+			// 選択決定SE読み込み
+			confirmSE_ = audio->CreateSoundResource("Resources/Audio/SE/decide.mp3");
+			
+			// カーソル移動SE読み込み
+			cursorSE_ = audio->CreateSoundResource("Resources/Audio/SE/cursor.mp3");
 		}
 	}
 
@@ -223,9 +252,36 @@ void TitleScene::Update() {
 	if (demoManager_) {
 		demoManager_->Update(deltaTime);
 	}
+	
+	// ロゴアニメーションの完了チェック
+	if (!isLogoAnimationComplete_) {
+		bool allAnimationsComplete = true;
+		
+		// 全てのロゴアニメーションが完了しているかチェック
+		if (titleUI_->GetTitleModel() && titleUI_->GetTitleModel()->IsAnimating()) {
+			allAnimationsComplete = false;
+		}
+		if (titleUI_->GetGekitotsuModel() && titleUI_->GetGekitotsuModel()->IsAnimating()) {
+			allAnimationsComplete = false;
+		}
+		if (titleUI_->GetStartModel() && titleUI_->GetStartModel()->IsAnimating()) {
+			allAnimationsComplete = false;
+		}
+		if (titleUI_->GetYameruModel() && titleUI_->GetYameruModel()->IsAnimating()) {
+			allAnimationsComplete = false;
+		}
+		
+		// 全てのアニメーションが完了したら雷エフェクトを表示
+		if (allAnimationsComplete) {
+			isLogoAnimationComplete_ = true;
+			if (lightningFrameManager_) {
+				lightningFrameManager_->ShowAllEdges();
+			}
+		}
+	}
 
-	// 雷エフェクトフレームの更新
-	if (lightningFrameManager_) {
+	// 雷エフェクトフレームの更新（アニメーション完了後のみ）
+	if (lightningFrameManager_ && isLogoAnimationComplete_) {
 		bool isConfirmAnimating = confirmAnimationManager_ && confirmAnimationManager_->IsAnimating();
 		lightningFrameManager_->Update(deltaTime, isConfirmAnimating);
 
@@ -238,17 +294,22 @@ void TitleScene::Update() {
 	bool isConfirmAnimating = confirmAnimationManager_ && confirmAnimationManager_->IsAnimating();
 	if (!isTransitioning_ && !isConfirmAnimating) {
 		bool selectionChanged = false;
+		TitleUI::SelectionState previousState = titleUI_->GetSelectionState();
 
 		// キーボード/十字キーでの選択
 		if (keyConfig_->GetDown("Up")) {
-			titleUI_->SetSelectionState(TitleUI::SelectionState::Start);
-			selectionChanged = true;
+			if (previousState != TitleUI::SelectionState::Start) {
+				titleUI_->SetSelectionState(TitleUI::SelectionState::Start);
+				selectionChanged = true;
+			}
 			stickInputCooldown_ = kStickInputDelay;
 		}
 
 		if (keyConfig_->GetDown("Down")) {
-			titleUI_->SetSelectionState(TitleUI::SelectionState::Quit);
-			selectionChanged = true;
+			if (previousState != TitleUI::SelectionState::Quit) {
+				titleUI_->SetSelectionState(TitleUI::SelectionState::Quit);
+				selectionChanged = true;
+			}
 			stickInputCooldown_ = kStickInputDelay;
 		}
 
@@ -269,12 +330,18 @@ void TitleScene::Update() {
 
 			// 上方向（Y軸正）
 			if (moveInput.y > kStickThreshold) {
-				titleUI_->SetSelectionState(TitleUI::SelectionState::Start);
+				if (previousState != TitleUI::SelectionState::Start) {
+					titleUI_->SetSelectionState(TitleUI::SelectionState::Start);
+					selectionChanged = true;
+				}
 				stickInputCooldown_ = kStickInputDelay;
 			}
 			// 下方向（Y軸負）
 			else if (moveInput.y < -kStickThreshold) {
-				titleUI_->SetSelectionState(TitleUI::SelectionState::Quit);
+				if (previousState != TitleUI::SelectionState::Quit) {
+					titleUI_->SetSelectionState(TitleUI::SelectionState::Quit);
+					selectionChanged = true;
+				}
 				stickInputCooldown_ = kStickInputDelay;
 			}
 			// 左方向（X軸負）
@@ -288,9 +355,23 @@ void TitleScene::Update() {
 				stickInputCooldown_ = kStickInputDelay;
 			}
 		}
+		
+		// 選択状態が変わった時のみカーソルSEを再生
+		if (selectionChanged) {
+			if (cursorSE_ && cursorSE_->IsValid()) {
+				cursorSE_->Play(false);
+				cursorSE_->SetVolume(0.3f);
+			}
+		}
 
 		// 決定ボタン（キーボード or ゲームパッド）
 		if (keyConfig_->GetDown("Confirm")) {
+			// 選択決定SEを再生
+			if (confirmSE_ && confirmSE_->IsValid()) {
+				confirmSE_->Play(false);
+				confirmSE_->SetVolume(0.3f);
+			}
+			
 			bool isStartSelected = (titleUI_->GetSelectionState() == TitleUI::SelectionState::Start);
 			if (confirmAnimationManager_) {
 				confirmAnimationManager_->StartAnimation(isStartSelected, frameEffectIds_);
@@ -327,7 +408,7 @@ void TitleScene::Update() {
 		if (quitWaitTimer_ >= kQuitWaitDuration) {
 			// 待機時間が経過したらフェードアウトを開始
 			isWaitingForQuit_ = false;
-			isFadingOut_ = true;
+		 isFadingOut_ = true;
 			fadeOutTimer_.Start(kFadeOutDuration, false);
 		}
 	}
