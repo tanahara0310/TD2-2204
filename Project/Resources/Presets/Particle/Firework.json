@@ -4,8 +4,8 @@
     "color": {
         "endColor": [
             1.0,
-            1.0,
-            1.0,
+            0.07772022485733032,
+            0.07772022485733032,
             0.0
         ],
         "useGradient": true
@@ -16,14 +16,14 @@
         "rateOverTime": 0
     },
     "emitterPosition": [
-        0.0,
-        0.0,
+        5.4846343994140625,
+        1.615316390991211,
         0.0
     ],
     "force": {
         "acceleration": [
             0.0,
-            0.0,
+            -16.700000762939453,
             0.0
         ],
         "areaMax": [
@@ -36,7 +36,7 @@
             3.4028234663852886e+38,
             3.4028234663852886e+38
         ],
-        "drag": 0.0,
+        "drag": 1.0,
         "gravity": [
             0.0,
             -9.800000190734863,
@@ -57,14 +57,14 @@
         "playOnAwake": true,
         "simulationSpace": 1,
         "startColor": [
-            1.0,
-            0.031088054180145264,
-            0.0,
+            0.9015544056892395,
+            0.5372924208641052,
+            0.49982550740242004,
             1.0
         ],
-        "startColorRandomness": 0.0,
-        "startLifetime": 1.0,
-        "startLifetimeRandomness": 0.0,
+        "startColorRandomness": 0.05999999865889549,
+        "startLifetime": 0.5,
+        "startLifetimeRandomness": 0.11999999731779099,
         "startRotation": [
             0.0,
             0.0,
@@ -76,8 +76,8 @@
             8.0,
             8.0
         ],
-        "startSizeRandomness": 0.0,
-        "startSpeed": 12.0,
+        "startSizeRandomness": 0.18000000715255737,
+        "startSpeed": 40.0,
         "startSpeedRandomness": 0.0
     },
     "noise": {

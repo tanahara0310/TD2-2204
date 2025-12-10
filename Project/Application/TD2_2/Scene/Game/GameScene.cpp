@@ -454,7 +454,7 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  playerGauge_ = std::make_unique<GaugeUI>();
 	  auto sprites = playerGauge_->Initialize(cameraManager_.get(), 5.0f);
 	  playerGauge_->SetTarget(player_);
-	  playerGauge_->SetSegmentColor({ 0.8f, 0.0f, 0.0f, 1.0f });
+	  playerGauge_->SetSegmentColor({ 1.0f, 1.0f, 0.0f, 1.0f });
 
 	  for (auto& sprite : sprites) {
 		 gameObjects_.push_back(std::move(sprite));
@@ -467,7 +467,7 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  auto sprites = bossGauge_->Initialize(cameraManager_.get(), 5.0f);
 	  bossGauge_->SetTarget(boss_);
 	  bossGauge_->SetFillColor({ 0.5f, 0.0f, 0.5f, 1.0f });
-	  bossGauge_->SetSegmentColor({ 0.8f, 0.0f, 0.0f, 1.0f });
+	  bossGauge_->SetSegmentColor({ 0.5f, 0.0f, 0.5f, 1.0f });
 
 	  for (auto& sprite : sprites) {
 		 gameObjects_.push_back(std::move(sprite));
