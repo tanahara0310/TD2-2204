@@ -499,7 +499,7 @@ void TitleScene::UpdateSceneTransition(float deltaTime) {
 
 	// 遷移時間が経過したらシーン遷移
 	if (transitionTimer_ >= kTransitionDuration) {
-		sceneManager_->ChangeScene("GameScene");
+		sceneManager_->ChangeScene("TipsScene");
 	}
 }
 

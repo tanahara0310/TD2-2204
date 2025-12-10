@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Scene/BaseScene.h"
+#include "Engine/Utility/Timer/GameTimer.h"
 #include <array>
 
 class EngineSystem;
@@ -35,4 +36,6 @@ private:
 
 	// tipsの配列番号
 	static int tipsNum;
+
+	GameTimer changeTimer_;
 };

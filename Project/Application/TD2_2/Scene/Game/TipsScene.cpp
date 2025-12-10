@@ -7,11 +7,15 @@
 #include "Engine/ObjectCommon/SpriteObject.h"
 
 #include <string>
+#include <Application/TD2_2/Utility/GameUtils.h>
 
 int TipsScene::tipsNum = -1;
 
 void TipsScene::Initialize(EngineSystem* engine) {
 	BaseScene::Initialize(engine);
+
+	// ゲームユーティリティの初期化
+	GameUtils::Initialize(engine_);
 
 	// 背景スプライトの作成
 	{
@@ -67,16 +71,17 @@ void TipsScene::Initialize(EngineSystem* engine) {
 			tipsSprite_[i]->SetActive(false);
 		}
 	}
+
+	changeTimer_.Start(2.0f);
 }
 
 void TipsScene::Update() {
 	BaseScene::Update();
 
-	auto input = engine_->GetComponent<KeyboardInput>();
-	auto pad = engine_->GetComponent<GamepadInput>();
+	changeTimer_.Update(GameUtils::GetDeltaTime());
 
-	if (input->IsKeyTriggered(DIK_SPACE) || pad->IsButtonTriggered(GamepadButton::A)) {
-		sceneManager_->ChangeScene("ResultScene");
+	if (changeTimer_.IsFinished()) {
+		sceneManager_->ChangeScene("GameScene");
 	}
 }
 
