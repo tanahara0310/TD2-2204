@@ -62,7 +62,7 @@ void GameScene::Initialize(EngineSystem* engine) {
 			cameraController_->StartShake(CameraController::ShakeIntensity::Large);
 		 }
 
-		 if (damageSound_ && damageSound_->IsValid()) {
+		 if (damageSound_) {
 			damageSound_->Play(false);
 		 }
 		 });
@@ -71,12 +71,12 @@ void GameScene::Initialize(EngineSystem* engine) {
 			cameraController_->StartShake(CameraController::ShakeIntensity::Medium);
 		 }
 
-		 if (hitSound_ && hitSound_->IsValid()) {
+		 if (hitSound_) {
 			hitSound_->Play(false);
 		 }
 		 });
 	  player->SetStartChargeFunction([this]() {
-		 if (chargeSound_ && chargeSound_->IsValid()) {
+		 if (chargeSound_) {
 			chargeSound_->Play(false);
 		 }
 		 });
@@ -168,12 +168,12 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  boss->RegisterModelResource("Boss1", "Resources/Models/Boss/Boss.obj");
 	  boss->RegisterModelResource("Boss2", "Resources/Models/BossPropeller/BossPropeller.obj");
 	  boss->SetStartDamageFunction([this]() {
-		 if (damageSound_ && damageSound_->IsValid()) {
+		 if (damageSound_) {
 			damageSound_->Play(false);
 		 }
 		 });
 	  boss->SetStartChargeFunction([this]() {
-		 if (chargeSound_ && chargeSound_->IsValid()) {
+		 if (chargeSound_) {
 			chargeSound_->Play(false);
 		 }
 		 });
@@ -247,7 +247,7 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  sparkEffectConfig.segmentCount = 5;
 	  sparkEffectConfig.voxelScale = { 2.0f, 2.0f, 2.0f };
 	  sparkEffectConfig.fadeInDuration = 0.1f;
-	  sparkEffectConfig.fadeOutDuration = 0.15f;
+	  sparkEffectConfig.fadeOutDuration = 0.3f;
 
 	  sparkEffectId_ = lightningManager_->CreateEffect(
 		 boss->GetWorldPosition(),
@@ -257,7 +257,7 @@ void GameScene::Initialize(EngineSystem* engine) {
 
 	  boss->SetStartSparkEffectFunction([this]() {
 		 lightningManager_->SetEffectVisible(sparkEffectId_, true);
-		 if (biribiriSound_ && biribiriSound_->IsValid()) {
+		 if (biribiriSound_) {
 			biribiriSound_->Play(false);
 		 }
 		 });

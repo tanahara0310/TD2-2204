@@ -20,7 +20,7 @@ void SparkNode::Reset() {
 
    // リセット時にスパークを非アクティブに
    if (sparkCollider_) {
-      sparkCollider_->SetSparkActive(false);
+	  sparkCollider_->SetSparkActive(false);
    }
 }
 
@@ -33,7 +33,7 @@ NodeState SparkNode::OnExecute() {
    sparkStateMachine_->Update();
 
    if (isFinished_) {
-      return NodeState::Success;
+	  return NodeState::Success;
    }
 
    return NodeState::Running;
@@ -42,13 +42,13 @@ NodeState SparkNode::OnExecute() {
 void SparkNode::OnExit() {
    // スパークを非アクティブに
    if (sparkCollider_) {
-      sparkCollider_->SetSparkActive(false);
+	  sparkCollider_->SetSparkActive(false);
 	  sparkCollider_->SetPosition({ 0.0f, 0.0f, -1000.0f });
    }
 
    // スパークエフェクトを停止
    if (boss_) {
-      boss_->StopSparkEffect();
+	  boss_->StopSparkEffect();
    }
 }
 
@@ -72,14 +72,10 @@ void SparkNode::SetupSparkStateMachine() {
 void SparkNode::InitializeStartup() {
    // ボスの移動を停止
    if (boss_) {
-      boss_->SetAcceleration({ 0.0f, 0.0f });
-      boss_->SetVelocity({ 0.0f, 0.0f });
-      boss_->SetDirection({ 0.0f, 0.0f });
-   }
-
-   // スパークを非アクティブに（念のため）
-   if (sparkCollider_) {
-      sparkCollider_->SetSparkActive(false);
+	  boss_->SetAcceleration({ 0.0f, 0.0f });
+	  boss_->SetVelocity({ 0.0f, 0.0f });
+	  boss_->SetDirection({ 0.0f, 0.0f });
+	  boss_->UpdateSparkEffect();
    }
 
    // スタートアップタイマー開始
@@ -91,20 +87,21 @@ void SparkNode::Startup() {
 
    // スタートアップ時間が終了したらアクティブ状態に遷移
    if (timer_.IsFinished()) {
-      sparkStateMachine_->RequestState("Active", 0);
+	  sparkStateMachine_->RequestState("Active", 0);
+	  boss_->UpdateSparkEffect();
    }
 }
 
 void SparkNode::InitializeActive() {
    // スパークコライダーの位置をボスの位置に設定し、アクティブに
    if (sparkCollider_ && boss_) {
-      sparkCollider_->SetPosition(boss_->GetWorldPosition());
-      sparkCollider_->SetSparkActive(true);
+	  sparkCollider_->SetPosition(boss_->GetWorldPosition());
    }
 
    // スパークエフェクトを開始（Boss経由）
    if (boss_) {
-      boss_->StartSparkEffect();
+	  boss_->StartSparkEffect();
+	  boss_->UpdateSparkEffect();
    }
 
    // アクティブタイマー開始
@@ -116,32 +113,36 @@ void SparkNode::Active() {
 
    // スパークコライダーの位置をボスの位置に追従させる
    if (sparkCollider_ && boss_) {
-      sparkCollider_->SetPosition(boss_->GetWorldPosition());
+	  sparkCollider_->SetPosition(boss_->GetWorldPosition());
    }
 
    // スパークエフェクトの位置を更新
    if (boss_) {
-      boss_->SetAcceleration({ 0.0f, 0.0f });
-      boss_->SetVelocity({ 0.0f, 0.0f });
-      boss_->SetDirection({ 0.0f, 0.0f });
-      boss_->UpdateSparkEffect();
+	  boss_->SetAcceleration({ 0.0f, 0.0f });
+	  boss_->SetVelocity({ 0.0f, 0.0f });
+	  boss_->SetDirection({ 0.0f, 0.0f });
+	  boss_->UpdateSparkEffect();
    }
 
    // アクティブ時間が終了したらリカバリー状態に遷移
    if (timer_.IsFinished()) {
-      sparkStateMachine_->RequestState("Recovery", 0);
+	  sparkStateMachine_->RequestState("Recovery", 0);
+	  if (sparkCollider_) {
+		 sparkCollider_->SetSparkActive(true);
+	  }
    }
 }
 
 void SparkNode::InitializeRecovery() {
    // スパークを非アクティブに
    if (sparkCollider_) {
-      sparkCollider_->SetSparkActive(false);
+	  sparkCollider_->SetSparkActive(false);
    }
 
    // スパークエフェクトを停止
    if (boss_) {
-      boss_->StopSparkEffect();
+	  boss_->StopSparkEffect();
+	  boss_->UpdateSparkEffect();
    }
 
    // リカバリータイマー開始
@@ -153,6 +154,6 @@ void SparkNode::Recovery() {
 
    // リカバリー時間が終了したら完了
    if (timer_.IsFinished()) {
-      isFinished_ = true;
+	  isFinished_ = true;
    }
 }

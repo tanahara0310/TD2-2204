@@ -9,7 +9,7 @@ class DirectXCommon;
 class Render {
 public: // メンバ関数
     // 統一クリアカラー（黒）
-    static constexpr float kClearColor[4] = {0.1f, 0.25f, 0.5f, 1.0f};
+    static constexpr float kClearColor[4] = {0.1f, 0.25f, 0.8f, 1.0f};
 
     /// <summary>                                    
     /// 初期化                                    
