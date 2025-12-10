@@ -7,6 +7,9 @@ void ReStartModel::Initialize(std::unique_ptr<Model> model, TextureManager::Load
 
 	transform_.translate = {-4.0f, -4.5f, -47.0f};
 
+	transform_.scale = {0.8f, 0.8f, 0.8f};
+	baseScale_ = transform_.scale;
+
 	transform_.TransferMatrix();
 }
 
@@ -23,6 +26,10 @@ void ReStartModel::Update() {
 	} else {
 		// 回転アニメーションの更新
 		UpdateRotateAnimation(deltaTime);
+	}
+
+	if (!isSelected_) {
+		transform_.scale = {0.5f, 0.5f, 0.5f};
 	}
 
 	transform_.TransferMatrix();

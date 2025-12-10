@@ -30,7 +30,7 @@ private:
 	void UpdateRotateAnimation(float deltaTime);
 
 private:
-	Vector3 baseScale_ = {1.0f, 1.0f, 1.0f}; // 基準スケール
+	Vector3 baseScale_ = {}; // 基準スケール
 
 	// 選択状態
 	bool isSelected_ = false;
@@ -39,7 +39,7 @@ private:
 	float breathTimer_ = 0.0f;                      // 呼吸タイマー
 	static constexpr float kBreathSpeed = 3.0f;     // 呼吸の速度
 	static constexpr float kBreathAmplitude = 0.1f; // 呼吸の振幅（スケールの変化量）
-	static constexpr float kBaseScale = 1.0f;       // 基本スケール
+	static constexpr float kBaseScale = 0.8f;       // 基本スケール
 
 	float angleY_ = 0.0f;
 
@@ -51,7 +51,7 @@ private:
 	float launchTimer_ = 0.0f;                                                // 経過タイマー
 	static constexpr float kLaunchDuration = 0.5f;                            // 打ち上げと戻りにかかる時間
 	static constexpr float kLaunchHeight = 2.0f;                              // ピーク時の高さオフセット
-	static constexpr float kTotalRotation = 2.0f * std::numbers::pi_v<float>; // 一回転
+	static constexpr float kTotalRotation = 4.0f * std::numbers::pi_v<float>; // 一回転
 	float startY_ = 0.0f;                                                     // 打ち上げ開始時のY位置
 	Quaternion startQuaternion_ = {0.0f, 0.0f, 0.0f, 1.0f};                   // 開始時の回転
 };
