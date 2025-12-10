@@ -576,3 +576,22 @@ void LightningEffectManager::SetEffectIntensity(int effectId, float intensity)
 	  }
    }
 }
+
+void LightningEffectManager::SetEffectOffsets(int effectId, const Vector3& startOffset, const Vector3& endOffset)
+{
+   if (effectId < 0 || effectId >= static_cast<int>(effects_.size())) {
+      return;
+   }
+
+   auto& effect = effects_[effectId];
+   
+   // 全てのライトニングのオリジナル座標を更新
+   for (auto& lightningData : effect.lightnings) {
+      lightningData.originalStartPoint = effect.position + startOffset;
+      lightningData.originalEndPoint = effect.position + endOffset;
+   }
+   
+   // コンフィグも更新
+   effect.config.startOffset = startOffset;
+   effect.config.endOffset = endOffset;
+}

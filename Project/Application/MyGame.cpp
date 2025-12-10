@@ -6,6 +6,7 @@
 #include "TD2_2/Scene/Game/Title/TitleScene.h"
 #include "TD2_2/Scene/Game/GameScene.h"
 #include "TD2_2/Scene/Game/ResultScene.h"
+#include "TD2_2/Scene/Game/TipsScene.h"
 #include "TD2_2/Scene/Editor/ParticleEditorScene.h"
 
 MyGame::~MyGame() = default;
@@ -25,6 +26,7 @@ void MyGame::Initialize()
 	sceneManager_->RegisterScene<TitleScene>("TitleScene");
 	sceneManager_->RegisterScene<GameScene>("GameScene");
 	sceneManager_->RegisterScene<ResultScene>("ResultScene");
+	sceneManager_->RegisterScene<TipsScene>("TipsScene");
 	// パーティクルエディターシーン（最小構成）
 	sceneManager_->RegisterScene<ParticleEditorScene>("ParticleEditor");
 
