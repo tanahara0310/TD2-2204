@@ -1,5 +1,5 @@
 #include "ReStartModel.h"
-#include "Engine/Math/Easing/EasingUtil.h"
+#include <cmath>
 
 void ReStartModel::Initialize(std::unique_ptr<Model> model, TextureManager::LoadedTexture texture) {
 	// 基底クラスの初期化を呼び出す
@@ -16,14 +16,14 @@ void ReStartModel::Update() {
 		deltaTime = 1.0f / 60.0f;
 	}
 
-	// 呼吸アニメーションの更新
-	UpdateBreathingAnimation(deltaTime);
-
-	// 回転アニメーションの更新
-	//UpdateRotateAnimation(deltaTime);
-
-	// 選択に応じたZ軸拡大アニメーションの更新
-	UpdateScaleAnimation(deltaTime);
+	// 非スケールアニメーション時
+	if (!isScaleAnimation_) {
+		// 呼吸アニメーションの更新
+		UpdateBreathingAnimation(deltaTime);
+	} else {
+		// 回転アニメーションの更新
+		UpdateRotateAnimation(deltaTime);
+	}
 
 	transform_.TransferMatrix();
 }
@@ -32,6 +32,9 @@ void ReStartModel::Draw(const ICamera* camera) {
 	if (!model_ || !camera) {
 		return;
 	}
+
+	// カメラ位置を保持（UpdateではICameraが渡らないためDrawで保存）
+	lastCameraPos_ = camera->GetPosition();
 
 	// モデルの描画
 	model_->Draw(transform_, camera, texture_.gpuHandle);
@@ -93,41 +96,78 @@ void ReStartModel::UpdateRotateAnimation(float deltaTime) {
 }
 
 void ReStartModel::UpdateScaleAnimation(float deltaTime) {
-	// 選択が立ち上がった瞬間にアニメーション開始
-	if (isSelected_ && !prevSelected_) {
-		isScaleAnimating_ = true;
+	// イージング付きで Z スケールを素早く拡大して戻すアニメーション（カメラ方向で強度変化）
+	if (isScaleAnimation_) {
+		// 初回開始処理
+		if (!hasScaleLaunched_) {
+			hasScaleLaunched_ = true;
+			scaleTimer_ = 0.0f;
+			// 現在の Z スケールを記録（呼吸等を踏まえた現在値）
+			startScaleZ_ = transform_.scale.z;
+		}
+
+		// タイマー更新
+		scaleTimer_ += deltaTime;
+		float t = scaleTimer_ / kScaleDuration;
+		if (t > 1.0f) t = 1.0f;
+
+		// イージング関数（シンプルな cubic easing）
+		auto easeOutCubic = [](float x) -> float { return 1.0f - std::pow(1.0f - x, 3.0f); };
+		auto easeInCubic  = [](float x) -> float { return x * x * x; };
+
+		// ピーク倍率差（1.0 -> kScalePeakMultiplier）
+		const float peakDelta = kScalePeakMultiplier - 1.0f;
+
+		// イーズ値（0..1..0 の形）
+		float easeVal = 0.0f;
+		if (t <= 0.5f) {
+			float p = t / 0.5f; // 0..1
+			easeVal = easeOutCubic(p); // 0..1
+		} else {
+			float p = (t - 0.5f) / 0.5f; // 0..1
+			easeVal = 1.0f - easeInCubic(p); // 1..0
+		}
+
+		// カメラ方向との整合度を計算（0..1）
+		// モデルのワールド位置 -> カメラへの単位ベクトル
+		Vector3 modelWorldPos = transform_.GetWorldPosition();
+		Vector3 toCamera = {
+			lastCameraPos_.x - modelWorldPos.x,
+			lastCameraPos_.y - modelWorldPos.y,
+			lastCameraPos_.z - modelWorldPos.z
+		};
+		float lenToCam = MathCore::Vector::Length(toCamera);
+		float align = 0.0f;
+		if (lenToCam > 1e-6f) {
+			toCamera = MathCore::Vector::Normalize(toCamera);
+			// ローカル前方（Z軸）をワールドに回す
+			Vector3 localForward = MathCore::QuaternionMath::RotateVector({0.0f, 0.0f, 1.0f}, transform_.quaternionRotate);
+			localForward = MathCore::Vector::Normalize(localForward);
+			// 内積で整合（背面は効果を弱める）
+			align = MathCore::Vector::Dot(localForward, toCamera);
+			if (align < 0.0f) align = 0.0f;
+			if (align > 1.0f) align = 1.0f;
+		}
+
+		// Z スケールを startScaleZ_ を基準に決定（align と easeVal で重み付け）
+		float newZ = startScaleZ_ * (1.0f + peakDelta * easeVal * align);
+
+		// X,Y は基準スケールを維持（必要なら呼吸アニメ等と組み合わせる）
+		transform_.scale.x = baseScale_.x;
+		transform_.scale.y = baseScale_.y;
+		transform_.scale.z = newZ;
+
+		// 終了処理
+		if (scaleTimer_ >= kScaleDuration) {
+			// 完全に元に戻してフラグリセットし、呼吸等に戻るようにする
+			transform_.scale.z = startScaleZ_;
+			hasScaleLaunched_ = false;
+			scaleTimer_ = 0.0f;
+			isScaleAnimation_ = false;
+		}
+	} else {
+		// スケールアニメ無効時は初期化
+		hasScaleLaunched_ = false;
 		scaleTimer_ = 0.0f;
-		scaleStartZ_ = transform_.scale.z; // 現在のZスケールを開始値にする
-	}
-
-	prevSelected_ = isSelected_;
-
-	if (!isScaleAnimating_) {
-		return;
-	}
-
-	// タイマー更新
-	scaleTimer_ += deltaTime;
-	float t = scaleTimer_ / kScaleDuration;
-	if (t > 1.0f) t = 1.0f;
-
-	// 山なりのイージング：前半はEaseOutCubicで上昇、後半はEaseInCubicで降下
-	float eased = EasingUtil::ApplyComposite(t, EasingUtil::Type::EaseOutCubic, EasingUtil::Type::EaseInCubic, 0.5f);
-
-	// bump は0->1->0 の形（山なり）
-	float bump = std::sin(3.14159265358979323846f * t);
-	float peakFactor = eased * bump;
-
-	float peakZ = baseScale_.z * kScalePeakMultiplier;
-	float newZ = scaleStartZ_ + (peakZ - scaleStartZ_) * peakFactor;
-
-	// Apply new Z scale while preserving X/Y from current scale
-	transform_.scale.z = newZ;
-
-	// 終了判定
-	if (scaleTimer_ >= kScaleDuration) {
-		isScaleAnimating_ = false;
-		// Reset scale.z to base to avoid drift (keep breathing effect if any)
-		transform_.scale.z = baseScale_.z;
 	}
 }

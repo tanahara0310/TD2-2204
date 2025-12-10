@@ -61,6 +61,8 @@ public:
 	/// @brief 「リスタート」アニメーションフラグを設定
 	void SetIsAnimationReStart(bool isAnim) { isAnimationReStart_ = isAnim; }
 
+	void SetIsScaleAnimationReStart(bool isAnim) { isAnimationScaleReStart_ = isAnim; }
+
 	/// @brief ステートマシーンを取得
 	StateMachine& GetStateMachine() { return stateMachine_; }
 
@@ -107,7 +109,7 @@ private:
 	std::vector<NumbersModel*> rankTimeModels_{};    // 1位から3位までのクリアタイムモデル
 	std::vector<PeriodModel*> periodModels_{};       // 1位から3位までのピリオドモデル
 	std::vector<ColonModel*> colonModels_{};         // 1位から3位までのピリオドモデル
-	std::vector<HyphenModel*> hyphenModels_ = {};     // ハイフンモデル
+	std::vector<HyphenModel*> hyphenModels_ = {};    // ハイフンモデル
 
 	// 選択状態
 	SelectionState selectionState_ = SelectionState::ReStart;
@@ -132,4 +134,7 @@ private:
 
 	// 「リスタート」アニメーションフラグ
 	bool isAnimationReStart_ = false;
+
+	// 「リスタート」アニメーションフラグ
+	bool isAnimationScaleReStart_ = false;
 };

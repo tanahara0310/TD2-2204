@@ -1,15 +1,15 @@
 #pragma once
 
-#include <memory>
-#include "Scene/BaseScene.h"
+#include "../../ClearTimeManager/ClearTimeManager.h"
+#include "../../GameObject/Background/Background.h"
+#include "../../GameObject/Cloud/Cloud.h"
+#include "../../GameObject/Result/ResultUI.h"
+#include "../../Utility/KeyConfig.h"
 #include "Engine/Graphics/Sprite/Sprite.h"
 #include "Engine/Graphics/TextureManager.h"
 #include "Engine/ObjectCommon/SpriteObject.h"
-#include "../../GameObject/Result/ResultUI.h"
-#include "../../Utility/KeyConfig.h"
-#include "../../GameObject/Background/Background.h"
-#include "../../ClearTimeManager/ClearTimeManager.h"
-#include "../../GameObject/Cloud/Cloud.h"
+#include "Scene/BaseScene.h"
+#include <memory>
 
 class EngineSystem;
 class CameraManager;
@@ -44,7 +44,7 @@ private:
 	/// @param position 発生位置
 	void EmitParticle(ParticleSystem* particleSystem, const Vector3& position);
 
-	 /// @brief パーティクルシステムの自動非アクティブ化をチェック
+	/// @brief パーティクルシステムの自動非アクティブ化をチェック
 	/// @param particleSystem パーティクルシステム
 	void CheckParticleAutoDeactivate(ParticleSystem* particleSystem);
 
@@ -54,7 +54,7 @@ protected:
 
 	/// @brief クリアタイマーを時:分:秒に分解する
 	/// @param time クリアタイマー
-	std::array<int, 6> FormatTime(float time); 
+	std::array<int, 6> FormatTime(float time);
 
 private:
 	// クリア時間　上位3つ
