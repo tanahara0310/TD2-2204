@@ -50,19 +50,16 @@ private:
 	float flickerTimer_ = 0.0f;
 	static constexpr float kPulseDuration_ = 0.25f;
 	static constexpr float kFlickerInterval_ = 0.03f;
-	static constexpr float kPulseIntervalMin_ = 0.2f;
-	static constexpr float kPulseIntervalMax_ = 1.0f;
-	float nextPulseInterval_ = 0.5f;
 
 	// 選択状態キャッシュ
 	bool lastIsStartSelected_ = true;
 
 	// 色定義
 	static constexpr Vector4 kStartColor_ = { 0.6f, 0.9f, 1.0f, 1.0f };
-	static constexpr Vector4 kQuitColor_ = { 0.9f, 1.0f, 1.0f, 1.0f };
+	static constexpr Vector4 kQuitColor_ = { 0.6f, 0.9f, 1.0f, 1.0f };
 
 	// 位置定義
 	static constexpr float kFrameYOffset_ = 0.3f;
-	static constexpr Vector3 kStartCenter_ = { 0.0f, -5.5f + kFrameYOffset_, -60.9f };
-	static constexpr Vector3 kQuitCenter_ = { 0.0f, -7.0f + kFrameYOffset_, -60.9f };
+	static constexpr Vector3 kStartCenter_ = { 0.0f, -5.5f + kFrameYOffset_, -60.4f };
+	static constexpr Vector3 kQuitCenter_ = { 0.0f, -7.0f + kFrameYOffset_, -60.4f };
 };

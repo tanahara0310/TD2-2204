@@ -106,6 +106,30 @@ void YameruModel::StartIntroAnimation(float delayTime) {
 	transform_.scale = targetScale_;
 }
 
+void YameruModel::SkipIntroAnimation() {
+	if (!isAnimating_ && !isDelaying_) {
+		return;
+	}
+	
+	// アニメーションを即座に終了
+	isAnimating_ = false;
+	isDelaying_ = false;
+	transform_.translate = targetPosition_;
+	baseScale_ = targetScale_;
+	
+	// 選択状態に応じたスケールを設定
+	if (isSelected_) {
+		transform_.scale = baseScale_;
+	} else {
+		static constexpr float kNonSelectedScale = 0.9f;
+		transform_.scale = {
+			baseScale_.x * kNonSelectedScale,
+			baseScale_.y * kNonSelectedScale,
+			baseScale_.z * kNonSelectedScale
+		};
+	}
+}
+
 void YameruModel::UpdateIntroAnimation(float deltaTime) {
 	animationTimer_.Update(deltaTime);
 	

@@ -36,6 +36,9 @@ public:
 	
 	/// @brief 演出中かどうかを取得
 	bool IsAnimating() const { return isAnimating_; }
+	
+	/// @brief 演出をスキップして完了状態にする
+	void SkipIntroAnimation();
 
 private:
 	/// @brief イントロアニメーションの更新
@@ -52,10 +55,8 @@ private:
 	float delayTimer_ = 0.0f;
 	float delayDuration_ = 0.0f;
 	GameTimer animationTimer_;
-	static constexpr float kAnimationDuration = 1.2f;
+	static constexpr float kAnimationDuration = 1.8f; // 1.2秒から1.8秒に変更
 	
-	// 左右からの衝突演出用
-	Vector3 leftStartPosition_ = { -80.0f, -1.9f, -59.9f };
-	Vector3 rightStartPosition_ = { 80.0f, -1.9f, -59.9f };
-	float splitOffset_ = 40.0f; // 左右に分離する距離
+	// スケール演出用（位置は固定）
+	Vector3 startScale_ = { 0.0f, 0.0f, 0.0f }; // スケール0から開始
 };

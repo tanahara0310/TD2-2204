@@ -14,9 +14,9 @@ void GekitotsuModel::Initialize(std::unique_ptr<Model> model, TextureManager::Lo
 	targetScale_ = { 1.0f, 1.0f, 2.0f };
 	baseScale_ = targetScale_;
 	
-	// 初期位置を画面外（左）に設定
-	transform_.translate = leftStartPosition_;
-	transform_.scale = targetScale_;
+	// 初期位置は目標位置、スケールは0
+	transform_.translate = targetPosition_;
+	transform_.scale = startScale_; // スケール0から開始
 	transform_.rotate = { 0.0f, 0.0f, 0.0f };
 	
 	// シェーディングモードをトゥーンに設定
@@ -84,8 +84,20 @@ void GekitotsuModel::StartIntroAnimation(float delayTime) {
 		animationTimer_.Start(kAnimationDuration, false);
 	}
 	
-	// 開始位置を画面外左に設定
-	transform_.translate = leftStartPosition_;
+	// 開始位置は目標位置、スケールは0
+	transform_.translate = targetPosition_;
+	transform_.scale = startScale_;
+}
+
+void GekitotsuModel::SkipIntroAnimation() {
+	if (!isAnimating_ && !isDelaying_) {
+		return;
+	}
+	
+	// アニメーションを即座に終了
+	isAnimating_ = false;
+	isDelaying_ = false;
+	transform_.translate = targetPosition_;
 	transform_.scale = targetScale_;
 }
 
@@ -102,54 +114,12 @@ void GekitotsuModel::UpdateIntroAnimation(float deltaTime) {
 		return;
 	}
 	
-	// フェーズを3つに分割
-	// フェーズ1 (0.0 ~ 0.4): 左右から高速接近
-	// フェーズ2 (0.4 ~ 0.5): 衝突の瞬間（スケール拡大）
-	// フェーズ3 (0.5 ~ 1.0): バウンドして定位置に収まる
+	// 位置は固定
+	transform_.translate = targetPosition_;
 	
-	if (t < 0.4f) {
-		// フェーズ1: 左右から衝突するように接近
-		float phase1T = t / 0.4f;
-		float easedT = EasingUtil::Apply(phase1T, EasingUtil::Type::EaseInCubic);
-		
-		// 左半分は左から、右半分は右から来るように見せる
-		// 実際には1つのモデルなので中心に向かって移動
-		float leftX = EasingUtil::Lerp(leftStartPosition_.x, targetPosition_.x - splitOffset_, easedT);
-		float rightX = EasingUtil::Lerp(rightStartPosition_.x, targetPosition_.x + splitOffset_, easedT);
-		
-		// 中間地点を計算（左右の平均）
-		transform_.translate.x = (leftX + rightX) * 0.5f;
-		transform_.translate.y = targetPosition_.y;
-		transform_.translate.z = targetPosition_.z;
-		
-		// 通常スケール
-		transform_.scale = targetScale_;
-		
-	} else if (t < 0.5f) {
-		// フェーズ2: 衝突の瞬間（スケールが瞬間的に拡大）
-		float phase2T = (t - 0.4f) / 0.1f;
-		
-		// 衝突位置に到達
-		transform_.translate = targetPosition_;
-		
-		// スケールを一瞬大きくする（インパクト演出）
-		float impactScale = 1.0f + (1.0f - phase2T) * 0.8f; // 最大1.8倍
-		transform_.scale.x = targetScale_.x * impactScale;
-		transform_.scale.y = targetScale_.y * impactScale;
-		transform_.scale.z = targetScale_.z;
-		
-	} else {
-		// フェーズ3: バウンドして定位置に収まる
-		float phase3T = (t - 0.5f) / 0.5f;
-		
-		// 定位置
-		transform_.translate = targetPosition_;
-		
-		// スケールをバウンドさせながら元に戻す
-		float bounceT = EasingUtil::Apply(phase3T, EasingUtil::Type::EaseOutBounce);
-		float bounceScale = 1.8f + (1.0f - 1.8f) * bounceT; // 1.8倍から1.0倍に
-		transform_.scale.x = targetScale_.x * bounceScale;
-		transform_.scale.y = targetScale_.y * bounceScale;
-		transform_.scale.z = targetScale_.z;
-	}
+	// スケールを0から目標スケールまで拡大（EaseOutBack - 少しオーバーシュートして戻る）
+	float easedT = EasingUtil::Apply(t, EasingUtil::Type::EaseOutBack);
+	transform_.scale.x = EasingUtil::Lerp(startScale_.x, targetScale_.x, easedT);
+	transform_.scale.y = EasingUtil::Lerp(startScale_.y, targetScale_.y, easedT);
+	transform_.scale.z = EasingUtil::Lerp(startScale_.z, targetScale_.z, easedT);
 }

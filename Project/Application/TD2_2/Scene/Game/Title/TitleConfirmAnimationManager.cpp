@@ -1,6 +1,6 @@
 #include "TitleConfirmAnimationManager.h"
-#include "../../GameObject/TitleUI/TitleUI.h"
-#include "../../Effect/Lightning/LightningEffectManager.h"
+#include "../../../GameObject/TitleUI/TitleUI.h"
+#include "../../../Effect/Lightning/LightningEffectManager.h"
 #include "Engine/Math/Easing/EasingUtil.h"
 
 void TitleConfirmAnimationManager::Initialize(TitleUI* titleUI, LightningEffectManager* lightningManager) {

@@ -39,6 +39,9 @@ public:
 	
 	/// @brief 演出中かどうかを取得
 	bool IsAnimating() const { return isAnimating_; }
+	
+	/// @brief 演出をスキップして完了状態にする
+	void SkipIntroAnimation();
 
 private:
 	/// @brief 呼吸アニメーションの更新
@@ -67,12 +70,12 @@ private:
 	float delayTimer_ = 0.0f;
 	float delayDuration_ = 0.0f;
 	GameTimer animationTimer_;
-	static constexpr float kAnimationDuration = 0.8f;
+	static constexpr float kAnimationDuration = 1.2f; // 0.8秒から1.2秒に変更
 	
 	Vector3 startPosition_ = { -40.0f, -5.5f, -60.9f }; // 左から登場
 	
 	// 呼吸アニメーション定数
-	static constexpr float kBreathSpeed = 3.0f;
-	static constexpr float kBreathAmplitude = 0.3f; // 振幅を大きく（より目立つ拡縮）
+	static constexpr float kBreathSpeed = 2.0f;      // 速度を遅く（よりゆっくりした呼吸）
+	static constexpr float kBreathAmplitude = 0.15f; // 振幅を大きく（より目立つ拡縮）
 	static constexpr float kBaseScale = 1.0f;
 };

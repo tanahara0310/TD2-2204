@@ -5,17 +5,18 @@
 
 // ゲームオブジェクトのインクルード
 #include "Object3d.h"
-#include "../../GameObject/Voxel/Voxel.h"
-#include "../../GameObject/TitleUI/TitleUI.h"
-#include "../../GameObject/Background/Background.h"
-#include "../../GameObject/TitleDemo/TitlePlayerDemo.h"
-#include "../../GameObject/TitleDemo/TitleEnemyDemo.h"
-#include "../../Utility/KeyConfig.h"
-#include "../../Camera/TitleCameraController.h"
-#include "../../Effect/Lightning/LightningEffectManager.h"
+#include "../../../GameObject/Voxel/Voxel.h"
+#include "../../../GameObject/TitleUI/TitleUI.h"
+#include "../../../GameObject/Background/Background.h"
+#include "../../../GameObject/TitleDemo/TitlePlayerDemo.h"
+#include "../../../GameObject/TitleDemo/TitleEnemyDemo.h"
+#include "../../../Utility/KeyConfig.h"
+#include "../../../Camera/TitleCameraController.h"
+#include "../../../Effect/Lightning/LightningEffectManager.h"
 #include "TitleDemoManager.h"
 #include "TitleLightningFrameManager.h"
 #include "TitleConfirmAnimationManager.h"
+#include "../../../Utility/StateMachine.h"
 
 
 class EngineSystem;
@@ -47,6 +48,12 @@ private:
 	
 	/// @brief フェードアウト処理の更新
 	void UpdateFadeOut(float deltaTime);
+	
+	/// @brief ステートマシーンの初期化
+	void InitializeStateMachine();
+	
+	/// @brief 演出をスキップして完了状態にする
+	void SkipIntroAnimation();
 
 private:
 	std::unique_ptr<TitleUI> titleUI_;
@@ -99,4 +106,7 @@ private:
 	
 	// ロゴアニメーション完了フラグ
 	bool isLogoAnimationComplete_ = false;
+	
+	// ステートマシーン
+	StateMachine introStateMachine_;
 };

@@ -1,5 +1,5 @@
 #include "TitleLightningFrameManager.h"
-#include "../../Effect/Lightning/LightningEffectManager.h"
+#include "../../../Effect/Lightning/LightningEffectManager.h"
 #include "Engine/Utility/Random/RandomGenerator.h"
 #include "IDrawable.h"
 
@@ -101,16 +101,11 @@ void TitleLightningFrameManager::UpdatePulseEffect(float deltaTime) {
 		return;
 	}
 
-	pulseTimer_ += deltaTime;
-
-	// パルス未表示状態で、間隔到達したら開始
-	if (visibleTimer_ <= 0.0f && pulseTimer_ >= nextPulseInterval_) {
-		pulseTimer_ = 0.0f;
+	// 初回起動時に即座に演出を開始
+	if (visibleTimer_ <= 0.0f && pulseTimer_ == 0.0f) {
+		// 初回演出を開始
 		visibleTimer_ = kPulseDuration_;
 		flickerTimer_ = 0.0f;
-
-		// 次回間隔を乱数で設定
-		nextPulseInterval_ = RandomGenerator::GetInstance().GetFloat(kPulseIntervalMin_, kPulseIntervalMax_);
 
 		// 辺をランダム選択（2本、重複なし）
 		currentEdgeIndexA_ = RandomGenerator::GetInstance().GetInt(0, 3);
@@ -118,12 +113,13 @@ void TitleLightningFrameManager::UpdatePulseEffect(float deltaTime) {
 			currentEdgeIndexB_ = RandomGenerator::GetInstance().GetInt(0, 3);
 		} while (currentEdgeIndexB_ == currentEdgeIndexA_);
 
-		// 選ばれた2辺のみ即座に表示、その他は即座に非表示
+		// 選ばれた2辺のみ即座に表示
 		for (int i = 0; i < 4; i++) {
 			if (frameEffectIds_[i] < 0) continue;
 			bool isSelected = (i == currentEdgeIndexA_ || i == currentEdgeIndexB_);
 			lightningManager_->SetEffectVisibleImmediate(frameEffectIds_[i], isSelected);
 		}
+		pulseTimer_ = 0.01f; // 初回フラグを立てる
 	}
 
 	// 表示中なら雷っぽく点滅
@@ -144,15 +140,31 @@ void TitleLightningFrameManager::UpdatePulseEffect(float deltaTime) {
 			}
 		}
 
-		// 表示時間終了で全て非表示
+		// 表示時間終了で即座に次の演出を開始
 		if (visibleTimer_ <= 0.0f) {
-			for (int i = 0; i < 4; ++i) {
-				if (frameEffectIds_[i] >= 0) {
-					lightningManager_->SetEffectVisibleImmediate(frameEffectIds_[i], false);
-				}
+			// 前回とは異なる辺をランダムに選択（2本、重複なし）
+			int prevA = currentEdgeIndexA_;
+			int prevB = currentEdgeIndexB_;
+			
+			// 新しい辺を選択（前回と完全に同じ組み合わせは避ける）
+			do {
+				currentEdgeIndexA_ = RandomGenerator::GetInstance().GetInt(0, 3);
+				do {
+					currentEdgeIndexB_ = RandomGenerator::GetInstance().GetInt(0, 3);
+				} while (currentEdgeIndexB_ == currentEdgeIndexA_);
+			} while ((currentEdgeIndexA_ == prevA && currentEdgeIndexB_ == prevB) || 
+			         (currentEdgeIndexA_ == prevB && currentEdgeIndexB_ == prevA));
+
+			// 即座に次の演出を開始
+			visibleTimer_ = kPulseDuration_;
+			flickerTimer_ = 0.0f;
+
+			// 選ばれた2辺のみ即座に表示
+			for (int i = 0; i < 4; i++) {
+				if (frameEffectIds_[i] < 0) continue;
+				bool isSelected = (i == currentEdgeIndexA_ || i == currentEdgeIndexB_);
+				lightningManager_->SetEffectVisibleImmediate(frameEffectIds_[i], isSelected);
 			}
-			currentEdgeIndexA_ = -1;
-			currentEdgeIndexB_ = -1;
 		}
 	}
 }
