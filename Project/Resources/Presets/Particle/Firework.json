@@ -45,12 +45,12 @@
         "useAccelerationField": false,
         "wind": [
             0.0,
-            -3.0,
+            -5.0,
             0.0
         ]
     },
     "main": {
-        "duration": 1.5,
+        "duration": 1.0,
         "gravityModifier": 0.0,
         "looping": true,
         "maxParticles": 300,
@@ -58,11 +58,11 @@
         "simulationSpace": 1,
         "startColor": [
             1.0,
-            0.19607843458652496,
-            0.19607843458652496,
+            0.031088054180145264,
+            0.0,
             1.0
         ],
-        "startColorRandomness": 0.5,
+        "startColorRandomness": 0.0,
         "startLifetime": 1.0,
         "startLifetimeRandomness": 0.0,
         "startRotation": [
@@ -72,12 +72,12 @@
         ],
         "startRotationRandomness": 0.0,
         "startSize": [
-            2.0,
-            2.0,
-            2.0
+            8.0,
+            8.0,
+            8.0
         ],
         "startSizeRandomness": 0.0,
-        "startSpeed": 8.0,
+        "startSpeed": 12.0,
         "startSpeedRandomness": 0.0
     },
     "noise": {

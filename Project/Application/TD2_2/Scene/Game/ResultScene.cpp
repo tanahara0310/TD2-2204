@@ -82,6 +82,9 @@ void ResultScene::Initialize(EngineSystem* engine) {
 
 		// 決定ボタン（キーボードスペース or ゲームパッドAボタン）
 		ActionBuilder(keyConfig_.AddAction("Confirm", ActionType::Bool)).BindKey(DIK_SPACE).BindGamepadButton(GamepadButton::A);
+
+		// 上下方向の移動入力（Vector2として取得）
+		ActionBuilder(keyConfig_.AddAction("Move", ActionType::Vector2)).BindKeyboardWASD(DIK_W, DIK_S, DIK_A, DIK_D).BindGamepadLeftStick();
 	}
 
 	// 背景の生成と初期化
@@ -142,8 +145,14 @@ void ResultScene::Update() {
 		return;
 	}
 
+	// クールダウンタイマーを減少
+	if (stickInputCooldown_ > 0.0f) {
+		stickInputCooldown_ -= GameUtils::GetDeltaTime();
+	}
+
 	// 遷移中でなければ入力を受け付ける
 	if (!isTitleTransitioning_ && !isGameTransitioning_) {
+		bool selectionChanged = false;
 		// 右キーでスタートを選択
 		if (keyConfig_.GetDown("Right")) {
 			// SE再生
@@ -151,6 +160,7 @@ void ResultScene::Update() {
 				cursorSound_->Play(false);
 			}
 
+			selectionChanged = true;
 			resultUI_->SetSelectionState(ResultUI::SelectionState::ToTitle);
 		}
 
@@ -161,6 +171,7 @@ void ResultScene::Update() {
 				cursorSound_->Play(false);
 			}
 
+			selectionChanged = true;
 			resultUI_->SetSelectionState(ResultUI::SelectionState::ReStart);
 		}
 
@@ -195,6 +206,32 @@ void ResultScene::Update() {
 				// アニメーションフラグを立てる
 				resultUI_->SetIsAnimationReStart(true);
 				break;
+			}
+		}
+
+		// スティック入力での選択（クールダウン中でなければ）
+		if (!selectionChanged && stickInputCooldown_ <= 0.0f) {
+			Vector2 moveInput = keyConfig_.Get<Vector2>("Move");
+
+			// 左方向（X軸負）
+			if (moveInput.x < -kStickThreshold) {
+				// SE再生
+				if (cursorSound_ && cursorSound_->IsValid() && resultUI_->GetSelectionState() == ResultUI::SelectionState::ToTitle) {
+					cursorSound_->Play(false);
+				}
+
+				resultUI_->SetSelectionState(ResultUI::SelectionState::ReStart);
+				stickInputCooldown_ = kStickInputDelay;
+			}
+			// 右方向（X軸正）
+			else if (moveInput.x > kStickThreshold) {
+				// SE再生
+				if (cursorSound_ && cursorSound_->IsValid() && resultUI_->GetSelectionState() == ResultUI::SelectionState::ReStart) {
+					cursorSound_->Play(false);
+				}
+
+				resultUI_->SetSelectionState(ResultUI::SelectionState::ToTitle);
+				stickInputCooldown_ = kStickInputDelay;
 			}
 		}
 	}

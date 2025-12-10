@@ -224,7 +224,7 @@ std::unique_ptr<ResultModel> ResultUI::CreateResultModel(EngineSystem* engine, b
 	// 勝敗に応じてモデル切り替え
 	auto resultModelResource = modelManager->CreateStaticModel(isWin ? "Resources/Models/Win/Win.obj" : "Resources/Models/Lose/Lose.obj");
 
-	auto resultTexture = textureManager.Load(isWin ? "Resources/Textures/red.png" : "Resources/Textures/blue.png");
+	auto resultTexture = textureManager.Load(isWin ? "Resources/Textures/red.png" : "Resources/Textures/Lose.png");
 
 	auto resultModel = std::make_unique<ResultModel>();
 	resultModel->Initialize(std::move(resultModelResource), resultTexture);

@@ -102,4 +102,9 @@ private:
 
 	// パーティクル
 	ParticleSystem* fireworkParticle_ = nullptr;
+
+	// スティック入力のクールダウン
+	float stickInputCooldown_ = 0.0f;
+	static constexpr float kStickInputDelay = 0.2f;
+	static constexpr float kStickThreshold = 0.5f;
 };
