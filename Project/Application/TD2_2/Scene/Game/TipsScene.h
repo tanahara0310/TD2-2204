@@ -34,8 +34,5 @@ private:
 	// Tipsスプライト
 	std::array<SpriteObject*, 6> tipsSprite_;
 
-	// tipsの配列番号
-	static int tipsNum;
-
 	GameTimer changeTimer_;
 };

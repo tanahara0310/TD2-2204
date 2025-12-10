@@ -9,8 +9,6 @@
 #include <string>
 #include <Application/TD2_2/Utility/GameUtils.h>
 
-int TipsScene::tipsNum = -1;
-
 void TipsScene::Initialize(EngineSystem* engine) {
 	BaseScene::Initialize(engine);
 
@@ -59,6 +57,8 @@ void TipsScene::Initialize(EngineSystem* engine) {
 			gameObjects_.push_back(std::move(sprite));
 		}
 	}
+
+	static int tipsNum = static_cast<int>(GameUtils::RandomFloat(0.f, 5.f));
 
 	tipsNum++;
 
