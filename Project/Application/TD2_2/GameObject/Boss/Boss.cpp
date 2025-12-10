@@ -86,7 +86,9 @@ void Boss::OnCollisionEnter(GameObject* other) {
 	  Vector3 toOther = p->GetWorldPosition() - GetWorldPosition();
 	  Vector2 normal = Vector2{ toOther.x, toOther.y }.Normalize();
 
-	  playerStoredEnergy_ = p->GetStoredEnergy();
+	  if (p->IsCharging() && stateMachine_->GetCurrentState() != "Stun" && stateMachine_->GetCurrentState() != "Punk") {
+		 playerStoredEnergy_ = p->GetStoredEnergy();
+	  }
 
 	  Vector2 relativeVel = velocity_ - p->GetVelocity();
 	  float speed = relativeVel.Length();
@@ -123,8 +125,10 @@ void Boss::OnCollisionEnter(GameObject* other) {
 		 }
 	  }
 
-	  // スタン状態に遷移
-	  stateMachine_->RequestState("Stun", 0);
+	  if (stateMachine_->GetCurrentState() != "Stun" && stateMachine_->GetCurrentState() != "Punk") {
+		 // スタン状態に遷移
+		 stateMachine_->RequestState("Stun", 0);
+	  }
    }
 
    UpdateEnergy();
@@ -140,7 +144,9 @@ void Boss::OnCollisionStay(GameObject* other) {
 	  Vector3 toOther = p->GetWorldPosition() - GetWorldPosition();
 	  Vector2 normal = Vector2{ toOther.x, toOther.y }.Normalize();
 
-	  playerStoredEnergy_ = p->GetStoredEnergy();
+	  if (p->IsCharging() && stateMachine_->GetCurrentState() != "Stun" && stateMachine_->GetCurrentState() != "Punk") {
+		 playerStoredEnergy_ = p->GetStoredEnergy();
+	  }
 
 	  Vector2 relativeVel = velocity_ - p->GetVelocity();
 	  float speed = relativeVel.Length();
@@ -161,8 +167,10 @@ void Boss::OnCollisionStay(GameObject* other) {
 
 	  acceleration_ -= normal * response;
 
-	  // スタン状態に遷移
-	  stateMachine_->RequestState("Stun", 0);
+	  if (stateMachine_->GetCurrentState() != "Stun" && stateMachine_->GetCurrentState() != "Punk") {
+		 // スタン状態に遷移
+		 stateMachine_->RequestState("Stun", 0);
+	  }
    }
 
    UpdateEnergy();

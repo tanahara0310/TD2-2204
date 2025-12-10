@@ -132,7 +132,9 @@ void Player::OnCollisionEnter(GameObject* other) {
 	  otherVel = p->GetVelocity();
    } else if (auto b = dynamic_cast<Boss*>(other)) {
 	  otherVel = b->GetVelocity();
-	  enemyStoredEnergy_ = b->GetStoredEnergy();
+	  if (b->IsCharging()&& stateMachine_->GetCurrentState() != "Stun" && stateMachine_->GetCurrentState() != "Punk") {
+		 enemyStoredEnergy_ = b->GetStoredEnergy();
+	  }
    }
 
    Vector2 relativeVel = velocity_ - otherVel;
@@ -161,7 +163,10 @@ void Player::OnCollisionEnter(GameObject* other) {
 
    velocity_ *= 0.1f; // 衝突時に速度を半減
 
-   stateMachine_->RequestState("Stun", 0);
+   if (stateMachine_->GetCurrentState() != "Stun" && stateMachine_->GetCurrentState() != "Punk") {
+	  // スタン状態に遷移
+	  stateMachine_->RequestState("Stun", 0);
+   }
 
    UpdateEnergy();
 }
@@ -200,7 +205,9 @@ void Player::OnCollisionStay(GameObject* other) {
 	  otherVel = p->GetVelocity();
    } else if (auto b = dynamic_cast<Boss*>(other)) {
 	  otherVel = b->GetVelocity();
-	  enemyStoredEnergy_ = b->GetStoredEnergy();
+	  if (b->IsCharging() && stateMachine_->GetCurrentState() != "Stun" && stateMachine_->GetCurrentState() != "Punk") {
+		 enemyStoredEnergy_ = b->GetStoredEnergy();
+	  }
    }
 
    Vector2 relativeVel = velocity_ - otherVel;
@@ -224,7 +231,10 @@ void Player::OnCollisionStay(GameObject* other) {
    // 反対方向に加速度を与える
    acceleration_ -= normal * response;
 
-   stateMachine_->RequestState("Stun", 0);
+   if (stateMachine_->GetCurrentState() != "Stun" && stateMachine_->GetCurrentState() != "Punk") {
+	  // スタン状態に遷移
+	  stateMachine_->RequestState("Stun", 0);
+   }
 
    UpdateEnergy();
 }
