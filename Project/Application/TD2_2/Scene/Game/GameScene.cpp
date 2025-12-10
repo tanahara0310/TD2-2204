@@ -27,6 +27,9 @@
 #include "../../Camera/CinematicPresetManager.h"
 #include "../../Camera/CinematicSequence.h"
 #include <algorithm>
+#include "PostEffect/PostEffectNames.h"
+#include "Engine/Graphics/PostEffect/PostEffectManager.h"
+#include <PostEffect/Effect/ChromaticAberration.h>
 
 void GameScene::Initialize(EngineSystem* engine) {
    // 基底クラスの初期化
@@ -59,7 +62,7 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  player->SetStartDamageFunction([this]() {
 		 if (cameraController_) {
 			// プリセット版は継続時間も事前設定されている
-			cameraController_->StartShake(CameraController::ShakeIntensity::Large);
+			cameraController_->StartShake(CameraController::ShakeIntensity::Large, true);
 		 }
 
 		 if (damageSound_) {
@@ -182,7 +185,7 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  boss->SetRebuildBehaviorTreeFunction([this]() {
 		 auto newTree = CreateBossBehaviorTree();
 		 boss_->SetBehaviorTree(std::move(newTree));
-	  });
+		 });
 
 	  boss->SetExplosionEffectFunction([this](const Vector3& position) {
 		 if (bossExplosionParticle_) {
@@ -376,6 +379,18 @@ void GameScene::Initialize(EngineSystem* engine) {
    float frameWidth = GameSceneConfig::kFrameSize.x * 0.65f;
    float frameHeight = GameSceneConfig::kFrameSize.y * 0.6f;
 
+   PostEffectManager* postEffectManager = engine_->GetComponent<PostEffectManager>();
+
+   auto* effect = postEffectManager->GetEffect<ChromaticAberration>(PostEffectNames::ChromaticAberration);
+   if (effect) {
+	  ChromaticAberration::ChromaticAberrationParams params = effect->GetParams();
+	  params.intensity = 1.5f;
+	  params.radialFactor = 1.1f;
+	  params.distortionScale = 2.5f;
+	  params.falloff = 0.0f;
+	  effect->SetParams(params);
+   }
+
    // カメラコントローラーの初期化（プレイヤーとボスを追跡）
    {
 	  cameraController_ = std::make_unique<CameraController>();
@@ -389,8 +404,11 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  cameraController_->SetHeightOffset(0.0f);
 	  cameraController_->SetPitchAngle(0.0f);
 	  cameraController_->SetSmoothSpeed(8.0f);
-	  cameraController_->SetMarginDistance(5.0f);  // 20.0f → 5.0f に変更（近づく処理を有効化）
+	  cameraController_->SetMarginDistance(5.0f);
 	  cameraController_->SetScreenPadding(0.35f);
+	  cameraController_->SetPostEffectCallback([this, postEffectManager](bool flag) {
+		 postEffectManager->SetEffectEnabled(PostEffectNames::ChromaticAberration, flag);
+		 });
 
 	  cameraController_->SetStageBounds(
 		 GameSceneConfig::kStageCenter.x - stageHalfWidth - frameWidth, GameSceneConfig::kStageCenter.x + stageHalfWidth + frameWidth,
@@ -562,16 +580,16 @@ void GameScene::CheckCollisions() { collisionManager_->CheckAllCollisions(); }
 std::unique_ptr<BehaviorTree> GameScene::CreateBossBehaviorTree() {
    // 弾生成用のコールバック
    auto createBulletCallback = [this](const Vector3& pos, const Vector3& dir, BulletType type, float speed) {
-      CreateBullet(pos, dir, type, speed);
-   };
+	  CreateBullet(pos, dir, type, speed);
+	  };
 
    // ファクトリを使ってビヘイビアツリーを生成
    return BossBehaviorTreeFactory::Create(
-      boss_,
-      player_,
-      sparkCollider_,
-      aiParams_,
-      createBulletCallback
+	  boss_,
+	  player_,
+	  sparkCollider_,
+	  aiParams_,
+	  createBulletCallback
    );
 
 }
@@ -1025,6 +1043,8 @@ void GameScene::GameOver() {
    // シーケンス終了後にリザルトシーンへ遷移
    if (!cameraController_->IsSequenceActive()) {
 	  sceneManager_->ChangeScene("ResultScene");
+	  PostEffectManager* postEffectManager = engine_->GetComponent<PostEffectManager>();
+	  postEffectManager->SetEffectEnabled(PostEffectNames::ChromaticAberration, false);
 
 	  json clearTimeData = JsonManager::GetInstance().LoadJson("Resources/Data/CurrentClearTime.json");
 	  clearTimeData["CurrentClearTime"] = time_;
@@ -1174,6 +1194,9 @@ void GameScene::GameClear() {
    // シーケンス終了後にリザルトシーンへ遷移
    if (!cameraController_->IsSequenceActive()) {
 	  sceneManager_->ChangeScene("ResultScene");
+
+	  PostEffectManager* postEffectManager = engine_->GetComponent<PostEffectManager>();
+	  postEffectManager->SetEffectEnabled(PostEffectNames::ChromaticAberration, false);
 
 	  json clearTimeData = JsonManager::GetInstance().LoadJson("Resources/Data/CurrentClearTime.json");
 	  clearTimeData["CurrentClearTime"] = time_;
