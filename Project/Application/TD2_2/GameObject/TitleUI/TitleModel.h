@@ -37,6 +37,9 @@ public:
 	/// @brief 演出中かどうかを取得
 	bool IsAnimating() const { return isAnimating_; }
 
+	/// @brief 演出をスキップして完了状態にする
+	void SkipIntroAnimation();
+
 private:
 	/// @brief イントロアニメーションの更新
 	void UpdateIntroAnimation(float deltaTime);
@@ -49,7 +52,7 @@ private:
 	// アニメーション制御
 	bool isAnimating_ = false;
 	GameTimer animationTimer_;
-	static constexpr float kAnimationDuration = 1.8f;
+	static constexpr float kAnimationDuration = 2.5f; // 1.8秒から2.5秒に変更
 	
 	Vector3 startPosition_ = { 0.0f, 50.0f, -60.9f };
 	Vector3 startScale_ = { 3.0f, 3.0f, 3.0f };

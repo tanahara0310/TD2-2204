@@ -68,6 +68,18 @@ void TitleModel::StartIntroAnimation() {
 	startRotation_ = std::numbers::pi_v<float> * 4.0f; // 2回転
 }
 
+void TitleModel::SkipIntroAnimation() {
+	if (!isAnimating_) {
+		return;
+	}
+	
+	// アニメーションを即座に終了
+	isAnimating_ = false;
+	transform_.translate = targetPosition_;
+	transform_.scale = targetScale_;
+	transform_.rotate.z = 0.0f;
+}
+
 void TitleModel::UpdateIntroAnimation(float deltaTime) {
 	animationTimer_.Update(deltaTime);
 	
@@ -82,9 +94,9 @@ void TitleModel::UpdateIntroAnimation(float deltaTime) {
 		return;
 	}
 	
-	// バウンドイージングで降下（EaseOutBounce）
-	float bounceT = EasingUtil::Apply(t, EasingUtil::Type::EaseOutBounce);
-	transform_.translate.y = EasingUtil::Lerp(startPosition_.y, targetPosition_.y, bounceT);
+	// EaseOutBackで降下（目標値を過ぎてから戻る）
+	float backT = EasingUtil::Apply(t, EasingUtil::Type::EaseOutBack);
+	transform_.translate.y = EasingUtil::Lerp(startPosition_.y, targetPosition_.y, backT);
 	transform_.translate.x = targetPosition_.x;
 	transform_.translate.z = targetPosition_.z;
 	

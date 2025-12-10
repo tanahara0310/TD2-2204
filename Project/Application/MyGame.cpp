@@ -3,7 +3,7 @@
 #include "WinApp/WinApp.h"
 #include "TD2_2/Scene/TestScene/TestScene.h"
 #include "TD2_2/Scene/Game/RecommendedScene.h"
-#include "TD2_2/Scene/Game/TitleScene.h"
+#include "TD2_2/Scene/Game/Title/TitleScene.h"
 #include "TD2_2/Scene/Game/GameScene.h"
 #include "TD2_2/Scene/Game/ResultScene.h"
 #include "TD2_2/Scene/Editor/ParticleEditorScene.h"

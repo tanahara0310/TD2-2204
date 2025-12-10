@@ -20,7 +20,7 @@
 #include <dinput.h>
 #include <cmath>
 #include <numbers>
-#include "../../Effect/Lightning/LightningEffectManager.h"
+#include "../../../Effect/Lightning/LightningEffectManager.h"
 #include "Engine/Utility/Random/RandomGenerator.h"
 #include "Engine/Math/Easing/EasingUtil.h"
 #include "Engine/Graphics/PostEffect/PostEffectManager.h"
@@ -49,19 +49,19 @@ void TitleScene::Initialize(EngineSystem* engine) {
 			titleUI_->GetTitleModel()->StartIntroAnimation();
 		}
 		
-		// ゲキトツロゴは少し遅延させて開始（0.6秒後）
+		// ゲキトツロゴは少し遅延させて開始（1.0秒後）
 		if (titleUI_->GetGekitotsuModel()) {
-			titleUI_->GetGekitotsuModel()->StartIntroAnimation(0.6f);
+			titleUI_->GetGekitotsuModel()->StartIntroAnimation(1.0f);
 		}
 		
-		// スタートモデルは1.8秒後に左から登場
+		// スタートモデルは2.8秒後に左から登場
 		if (titleUI_->GetStartModel()) {
-			titleUI_->GetStartModel()->StartIntroAnimation(1.8f);
+			titleUI_->GetStartModel()->StartIntroAnimation(2.8f);
 		}
 		
-		// やめるモデルは1.8秒後に右から登場
+		// やめるモデルは2.8秒後に右から登場
 		if (titleUI_->GetYameruModel()) {
-			titleUI_->GetYameruModel()->StartIntroAnimation(1.8f);
+			titleUI_->GetYameruModel()->StartIntroAnimation(2.8f);
 		}
 	}
 
@@ -144,7 +144,7 @@ void TitleScene::Initialize(EngineSystem* engine) {
 		demoPlayer->GetTransform().translate = playerInitPos;
 		demoPlayer->GetTransform().rotate.y = std::numbers::pi_v<float> / 2.0f; // +X方向を向く
 		demoPlayer->SetInitialPosition(playerInitPos); // initialPositionも更新
-		demoPlayer->SetMoveSpeed(23.0f); // 初期速度を設定（調整済み）
+		demoPlayer->SetMoveSpeed(23.0f); // 初期 velocidade を設定（調整済み）
 		demoPlayer->GetTransform().TransferMatrix();
 		
 		gameObjects_.push_back(std::move(demoPlayer));
@@ -208,6 +208,9 @@ void TitleScene::Initialize(EngineSystem* engine) {
 			cursorSE_ = audio->CreateSoundResource("Resources/Audio/SE/cursor.mp3");
 		}
 	}
+	
+	// ステートマシーンの初期化
+	InitializeStateMachine();
 
 }
 
@@ -253,8 +256,16 @@ void TitleScene::Update() {
 		demoManager_->Update(deltaTime);
 	}
 	
+	// ステートマシーンの更新
+	introStateMachine_.Update();
+	
 	// ロゴアニメーションの完了チェック
 	if (!isLogoAnimationComplete_) {
+		// 演出スキップの入力チェック（スペースキーまたはAボタン）
+		if (keyConfig_->GetDown("Confirm")) {
+			SkipIntroAnimation();
+		}
+		
 		bool allAnimationsComplete = true;
 		
 		// 全てのロゴアニメーションが完了しているかチェック
@@ -277,6 +288,8 @@ void TitleScene::Update() {
 			if (lightningFrameManager_) {
 				lightningFrameManager_->ShowAllEdges();
 			}
+			// ステートマシーンを"Interactive"状態に移行
+			introStateMachine_.RequestState("Interactive", 100);
 		}
 	}
 
@@ -433,6 +446,59 @@ void TitleScene::UpdateSceneTransition(float deltaTime) {
 	if (transitionTimer_ >= kTransitionDuration) {
 		sceneManager_->ChangeScene("GameScene");
 	}
+}
+
+void TitleScene::InitializeStateMachine() {
+	// IntroAnimation状態（イントロアニメーション中）
+	introStateMachine_.AddState("IntroAnimation",
+		[this]() {
+			// 入場時の処理
+		},
+		[this]() {
+			// 更新時の処理
+		}
+	);
+	
+	// Interactive状態（操作可能）
+	introStateMachine_.AddState("Interactive",
+		[this]() {
+			// 入場時の処理
+		},
+		[this]() {
+			// 更新時の処理
+		}
+	);
+	
+	// 遷移ルールの設定
+	introStateMachine_.AddTransitionRule("IntroAnimation", { "Interactive" });
+	
+	// 初期状態をIntroAnimationに設定
+	introStateMachine_.RequestState("IntroAnimation", 100);
+}
+
+void TitleScene::SkipIntroAnimation() {
+	// 全てのモデルの演出をスキップ
+	if (titleUI_->GetTitleModel()) {
+		titleUI_->GetTitleModel()->SkipIntroAnimation();
+	}
+	if (titleUI_->GetGekitotsuModel()) {
+		titleUI_->GetGekitotsuModel()->SkipIntroAnimation();
+	}
+	if (titleUI_->GetStartModel()) {
+		titleUI_->GetStartModel()->SkipIntroAnimation();
+	}
+	if (titleUI_->GetYameruModel()) {
+		titleUI_->GetYameruModel()->SkipIntroAnimation();
+	}
+	
+	// 雷エフェクトを即座に表示
+	isLogoAnimationComplete_ = true;
+	if (lightningFrameManager_) {
+		lightningFrameManager_->ShowAllEdges();
+	}
+	
+	// ステートマシーンを"Interactive"状態に移行
+	introStateMachine_.RequestState("Interactive", 100);
 }
 
 void TitleScene::UpdateFadeOut(float deltaTime) {
