@@ -40,7 +40,7 @@ private:
 
    // スパーク設定
    float startupDuration_ = 1.0f;    // スタートアップ時間（秒）
-   float activeDuration_ = 0.3f;     // アクティブ時間（秒）
+   float activeDuration_ = 0.5f;     // アクティブ時間（秒）
    float recoveryDuration_ = 0.5f;   // リカバリー時間（秒）
 
    // スパークコライダーオブジェクト（外部で管理）

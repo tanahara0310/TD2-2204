@@ -647,6 +647,10 @@ void Player::InitializeDeath() {
    idleTimer_.Start(0.8f, false);
 
    hp_ = 0;
+
+   if (startDamageFunction_) {
+	  startDamageFunction_();
+   }
 }
 
 void Player::Death() {
@@ -676,8 +680,8 @@ void Player::Death() {
 			explosionEffectFunction_(transform_.translate);
 		 }
 
-		 if (damageFunction_) {
-			damageFunction_();
+		 if (startDamageFunction_) {
+			startDamageFunction_();
 		 }
 	  }
    }
