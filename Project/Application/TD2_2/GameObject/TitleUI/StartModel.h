@@ -47,6 +47,9 @@ public:
 		return isIntroPlaying_ ? introTimer_.GetProgress() : 1.0f; 
 	}
 	
+	/// @brief イントロアニメーションをスキップ（即座に完了）
+	void SkipIntroAnimation();
+	
 	/// @brief 現在のスケール倍率を取得（ベーススケール基準）
 	/// @return スケール倍率
 	float GetCurrentScaleRatio() const {

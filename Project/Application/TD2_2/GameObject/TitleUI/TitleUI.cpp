@@ -258,6 +258,30 @@ void TitleUI::StartIntroAnimation() {
 	introDelayTimer_.Start(kIntroStartDelay, false);
 }
 
+void TitleUI::SkipIntroAnimation() {
+	// 全てのアニメーション状態をリセット
+	isIntroDelayActive_ = false;
+	isGekitotsuAnimating_ = false;
+	isTitleAnimating_ = false;
+	isButtonsAnimating_ = false;
+	introAnimationCompleted_ = true;
+	flashTriggered_ = true;
+	
+	// 各モデルのアニメーションをスキップ
+	if (gekitotsuModel_) {
+		gekitotsuModel_->SkipIntroAnimation();
+	}
+	if (titleModel_) {
+		titleModel_->SkipIntroAnimation();
+	}
+	if (startModel_) {
+		startModel_->SkipIntroAnimation();
+	}
+	if (yameruModel_) {
+		yameruModel_->SkipIntroAnimation();
+	}
+}
+
 std::unique_ptr<YameruModel> TitleUI::CreateYameruModel(EngineSystem* engine)
 {
 	auto modelManager = engine->GetComponent<ModelManager>();

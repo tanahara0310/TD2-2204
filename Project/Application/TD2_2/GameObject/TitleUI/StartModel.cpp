@@ -101,3 +101,10 @@ void StartModel::StartIntroAnimation() {
 	introTimer_.Start(kIntroDuration, false);
 	transform_.translate = startPosition_;
 }
+
+void StartModel::SkipIntroAnimation() {
+	isIntroPlaying_ = false;
+	transform_.translate = targetPosition_;
+	transform_.scale = targetScale_;
+	transform_.TransferMatrix();
+}

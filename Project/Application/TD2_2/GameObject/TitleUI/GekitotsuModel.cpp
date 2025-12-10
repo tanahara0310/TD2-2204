@@ -97,3 +97,9 @@ void GekitotsuModel::StartIntroAnimation() {
 	introTimer_.Start(kIntroDuration, false);
 	transform_.scale = { 0.0f, 0.0f, 0.0f };
 }
+
+void GekitotsuModel::SkipIntroAnimation() {
+	isIntroPlaying_ = false;
+	transform_.scale = targetScale_;
+	transform_.TransferMatrix();
+}
