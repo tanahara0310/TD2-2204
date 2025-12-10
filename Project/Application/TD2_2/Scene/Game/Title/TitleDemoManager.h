@@ -61,8 +61,8 @@ private:
 	static constexpr float kDemoZFront_ = -15.0f; // 背景の前（めり込み防止のためより手前に）
 
 	// デモのY座標管理（3段階）
-	static constexpr float kDemoYTop_ = 28.0f;    // 上段
-	static constexpr float kDemoYMiddle_ = 24.0f; // 中段（デフォルト）
+	static constexpr float kDemoYTop_ = 31.0f;    // 上段
+	static constexpr float kDemoYMiddle_ = 25.0f; // 中段（デフォルト）
 	static constexpr float kDemoYBottom_ = 20.0f; // 下段
 	int lastDemoYIndex_ = 1; // 前回選択したY座標のインデックス（0:上, 1:中, 2:下）
 };

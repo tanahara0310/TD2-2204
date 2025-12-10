@@ -44,3 +44,8 @@ float Cloud::RangeFloat(float min, float max) {
 	std::uniform_real_distribution<float> dist(min, max);
 	return dist(gen);
 }
+
+void Cloud::SetPosition(const Vector3& position) {
+	transform_.translate = position;
+	transform_.TransferMatrix();
+}

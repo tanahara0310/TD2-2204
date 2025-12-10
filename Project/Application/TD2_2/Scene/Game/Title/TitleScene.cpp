@@ -108,6 +108,28 @@ void TitleScene::Initialize(EngineSystem* engine) {
 		gameObjects_.push_back(std::move(background));
 	}
 
+	// 雲の生成と初期化
+	{
+		auto modelManager = engine_->GetComponent<ModelManager>();
+		auto& textureManager = TextureManager::GetInstance();
+
+		for (int i = 0; i < clouds_.size(); i++) {
+			auto cloudModel = modelManager->CreateStaticModel("Resources/Models/Cloud/Cloud.obj");
+			auto cloudTexture = textureManager.Load("Resources/Textures/Cloud.png");
+			auto cloud = std::make_unique<Cloud>();
+			clouds_[i] = cloud.get();
+			cloud->Initialize(std::move(cloudModel), cloudTexture);
+
+			// タイトルシーン用に座標を調整（Y座標を上に、Z座標を手前に）
+			float randomPosX = cloud->RangeFloat(-90.0f, -25.0f);
+			float randomPosY = cloud->RangeFloat(35.0f, 45.0f);  // Y座標を上に（元: -15.0f～5.0f
+			float randomPosZ = cloud->RangeFloat(25.0f, 35.0f);  // Z座標を手前に（元: 50.0f～70.0f）
+			cloud->SetPosition({randomPosX, randomPosY, randomPosZ});
+
+			gameObjects_.push_back(std::move(cloud));
+		}
+	}
+
 
 	// デモ演出用の自機と敵の初期化
 	{

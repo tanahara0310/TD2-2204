@@ -8,6 +8,7 @@
 #include "../../../GameObject/Voxel/Voxel.h"
 #include "../../../GameObject/TitleUI/TitleUI.h"
 #include "../../../GameObject/Background/Background.h"
+#include "../../../GameObject/Cloud/Cloud.h"
 #include "../../../GameObject/TitleDemo/TitlePlayerDemo.h"
 #include "../../../GameObject/TitleDemo/TitleEnemyDemo.h"
 #include "../../../Utility/KeyConfig.h"
@@ -61,6 +62,9 @@ private:
 
 	// 背景
 	Background* background_ = nullptr;
+
+	// 雲
+	std::array<Cloud*, 4> clouds_;
 
 	// デモ演出用の自機と敵
 	TitlePlayerDemo* demoPlayer_ = nullptr;
