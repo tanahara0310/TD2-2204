@@ -14,14 +14,14 @@ void TitleLightningFrameManager::Initialize(LightningEffectManager* lightningMan
 	config.segmentCount = 4;
 	config.noiseScale = 0.8f;
 	config.noiseSpeed = 60.0f;
-	config.randomOffsetRange = 0.3f;
+	config.randomOffsetRange = 0.1f;
 	config.voxelScale = { 1.0f, 1.0f, 1.0f };
 	config.initialVisible = false;
 	config.voxelSpacing = 0.2f;
 
-	// 矩形サイズ
-	float halfWidth = 1.35f;
-	float halfHeight = 0.58f;
+	// 矩形サイズ（基本サイズを使用）
+	float halfWidth = kBaseHalfWidth_;
+	float halfHeight = kBaseHalfHeight_;
 
 	// 初期中心はStartの位置
 	Vector3 startCenter = kStartCenter_;
@@ -70,17 +70,44 @@ void TitleLightningFrameManager::Update(float deltaTime, bool isConfirmAnimating
 	}
 }
 
-void TitleLightningFrameManager::UpdateFramePosition(bool isStartSelected) {
+void TitleLightningFrameManager::UpdateFramePosition(bool isStartSelected, float breathScale) {
 	if (!lightningManager_) {
 		return;
 	}
 
 	Vector3 target = isStartSelected ? kStartCenter_ : kQuitCenter_;
 
-	// 枠の位置を更新
+	// スケールに応じて枠サイズを調整（横幅は選択状態で変更）
+	float baseHalfWidth = isStartSelected ? kBaseHalfWidth_ : kQuitHalfWidth_;
+	float halfWidth = baseHalfWidth * breathScale;
+	float halfHeight = kBaseHalfHeight_ * breathScale;
+
+	// 枠の位置と各辺のオフセットを更新
 	for (int i = 0; i < 4; i++) {
 		if (frameEffectIds_[i] >= 0) {
 			lightningManager_->SetEffectPosition(frameEffectIds_[i], target);
+			
+			// 各辺のオフセットを更新
+			Vector3 startOffset, endOffset;
+			switch (i) {
+			case 0: // 上辺
+				startOffset = { -halfWidth,  halfHeight, 0.0f };
+				endOffset = { halfWidth,  halfHeight, 0.0f };
+				break;
+			case 1: // 下辺
+				startOffset = { -halfWidth, -halfHeight, 0.0f };
+				endOffset = { halfWidth, -halfHeight, 0.0f };
+				break;
+			case 2: // 左辺
+				startOffset = { -halfWidth, -halfHeight, 0.0f };
+				endOffset = { -halfWidth,  halfHeight, 0.0f };
+				break;
+			case 3: // 右辺
+				startOffset = { halfWidth, -halfHeight, 0.0f };
+				endOffset = { halfWidth,  halfHeight, 0.0f };
+				break;
+			}
+			lightningManager_->SetEffectOffsets(frameEffectIds_[i], startOffset, endOffset);
 		}
 	}
 

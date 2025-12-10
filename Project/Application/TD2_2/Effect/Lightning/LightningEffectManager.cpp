@@ -585,10 +585,18 @@ void LightningEffectManager::SetEffectOffsets(int effectId, const Vector3& start
 
    auto& effect = effects_[effectId];
    
-   // 全てのライトニングのオリジナル座標を更新
+   // オフセットのみを保存（positionは加算しない。translateで適用されるため）
    for (auto& lightningData : effect.lightnings) {
-      lightningData.originalStartPoint = effect.position + startOffset;
-      lightningData.originalEndPoint = effect.position + endOffset;
+      lightningData.originalStartPoint = startOffset;
+      lightningData.originalEndPoint = endOffset;
+      
+      // Lightningの設定を即座に更新
+      if (lightningData.lightning) {
+         auto& config = lightningData.lightning->GetConfig();
+         config.startPoint = startOffset;
+         config.endPoint = endOffset;
+         lightningData.lightning->ApplyConfigChanges();
+      }
    }
    
    // コンフィグも更新

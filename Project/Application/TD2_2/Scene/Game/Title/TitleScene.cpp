@@ -324,9 +324,18 @@ void TitleScene::Update() {
 		bool isConfirmAnimating = confirmAnimationManager_ && confirmAnimationManager_->IsAnimating();
 		lightningFrameManager_->Update(deltaTime, isConfirmAnimating);
 
-		// 現在選択中のモデル位置へ枠を移動＆色変更
+		// 現在選択中のモデル位置へ枠を移動＆色変更＆サイズ調整
 		bool isStartSelected = (titleUI_->GetSelectionState() == TitleUI::SelectionState::Start);
-		lightningFrameManager_->UpdateFramePosition(isStartSelected);
+		
+		// 選択されているモデルの現在のスケールを取得（呼吸アニメーションに対応）
+		float currentScale = 1.0f;
+		if (isStartSelected && titleUI_->GetStartModel()) {
+			currentScale = titleUI_->GetStartModel()->GetCurrentScaleRatio();
+		} else if (!isStartSelected && titleUI_->GetYameruModel()) {
+			currentScale = titleUI_->GetYameruModel()->GetCurrentScaleRatio();
+		}
+		
+		lightningFrameManager_->UpdateFramePosition(isStartSelected, currentScale);
 	}
 
 	// タイトルロゴ雷エフェクトの更新

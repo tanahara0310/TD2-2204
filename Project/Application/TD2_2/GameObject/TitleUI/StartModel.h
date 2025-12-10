@@ -46,6 +46,12 @@ public:
 	float GetIntroAnimationProgress() const { 
 		return isIntroPlaying_ ? introTimer_.GetProgress() : 1.0f; 
 	}
+	
+	/// @brief 現在のスケール倍率を取得（ベーススケール基準）
+	/// @return スケール倍率
+	float GetCurrentScaleRatio() const {
+		return transform_.scale.y / baseScale_.y;
+	}
 
 private:
 	/// @brief 呼吸アニメーションの更新

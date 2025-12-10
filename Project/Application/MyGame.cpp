@@ -31,7 +31,7 @@ void MyGame::Initialize()
 	sceneManager_->RegisterScene<ParticleEditorScene>("ParticleEditor");
 
 	// 初期シーンを設定
-	sceneManager_->SetInitialScene("TitleScene");
+	sceneManager_->SetInitialScene("RecommendedScene");
 
 	// ===== コンソールログ出力とシーンマネージャーの設定 =====
 #ifdef _DEBUG
