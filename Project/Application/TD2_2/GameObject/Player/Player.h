@@ -83,6 +83,14 @@ public:
    bool IsStunned() const {
 	  return stateMachine_->GetCurrentState() == "Stun";
    }
+
+   bool IsDamage() const {
+	  return stateMachine_->GetCurrentState() == "Damage";
+   }
+
+   bool IsDespawn() const {
+	  return stateMachine_->GetCurrentState() == "Despawn";
+   }
 private:
 
    Vector2 acceleration_ = { 0.0f, 0.0f }; // 加速度ベクトル

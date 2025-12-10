@@ -11,7 +11,7 @@ public:
    /// @param duration 移動持続時間（秒）
    /// @param stopDistance 中心からこの距離に到達したら完了
    MoveToCenterAction(Boss* boss, 
-                      float moveSpeed = 20.0f, 
+                      float moveSpeed = 30.0f, 
                       float duration = 2.0f,
                       float stopDistance = 5.0f);
 

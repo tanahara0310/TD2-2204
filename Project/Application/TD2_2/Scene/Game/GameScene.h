@@ -36,52 +36,53 @@ enum class BulletType {
 struct BossAIParameters {
    // 距離評価
    float maxCenterDistance = 30.0f;      // 中央距離の最大評価範囲
-   float closeToPlayerDistance = 15.0f;  // プレイヤーに近いと判定する距離
-   float closeRangeDistance = 20.0f;     // 近距離攻撃の判定距離
-   float mediumRangeMin = 15.0f;         // 中距離の最小値
-   float mediumRangeMax = 25.0f;         // 中距離の最大値
-   float dangerZoneDistance = 8.0f;      // 壁との危険距離
+   float veryCloseDistance = 2.0f;       // 非常に近い距離（NEW）
+   float closeToPlayerDistance = 4.0f;   // プレイヤーに近いと判定する距離（修正）
+   float closeRangeDistance = 3.0f;     // 近距離攻撃の判定距離
+   float mediumRangeMin = 5.0f;         // 中距離の最小値
+   float mediumRangeMax = 10.0f;         // 中距離の最大値
+   float dangerZoneDistance = 10.0f;     // 壁との危険距離（大きくすると早めに回避）
 
    // HP3フェーズのウェイト
    struct HP3Weights {
-      float chargeOnly = 1.2f;           // 突進のみ（近距離バイアス倍率）
-      float chargeAndFlee = 0.5f;        // 突進→逃げ
-      float doubleCharge = 0.4f;         // 突進×2
-      float shootOnly = 0.4f;            // ショット
-      float shootAndCharge = 0.35f;      // ショット→突進
-      float moveCenterAndCharge = 0.3f;  // 中央移動→突進
+      float chargeOnly = 0.7f;           // 突進のみ（減少）
+      float chargeAndFlee = 0.5f;        // 突進→逃げ（増加）
+      float doubleCharge = 0.4f;         // 突進×2（減少）
+      float shootOnly = 0.7f;            // ショット（増加）
+      float shootAndCharge = 0.5f;       // ショット→突進
+      float moveCenterAndCharge = 0.6f;  // 中央移動→突進（増加）
    } hp3;
 
    // HP2フェーズのウェイト
    struct HP2Weights {
-      float sparkCombo = 0.5f;           // スパークコンボ
-      float sparkComboClose = 1.0f;      // スパークコンボ近距離バイアス
-      float stunPursuitBias = 1.0f;      // スタン追撃バイアス
-      float chargeAndFlee = 0.25f;       // 突進→逃げ
-      float energyChargeCombo = 1.5f;    // エネルギー高時の突進コンボ
-      float fleeWhenLowEnergy = 1.2f;    // エネルギー低時の逃げ
+      float sparkCombo = 0.6f;           // スパークコンボ（減少）
+      float sparkComboClose = 1.0f;      // スパークコンボ近距離バイアス（減少）
+      float stunPursuitBias = 2.0f;      // スタン追撃バイアス
+      float chargeAndFlee = 0.5f;        // 突進→逃げ（増加）
+      float energyChargeCombo = 1.5f;    // エネルギー高時の突進コンボ（減少）
+      float fleeWhenLowEnergy = 2.0f;    // エネルギー低時の逃げ（増加）
    } hp2;
 
    // HP1フェーズのウェイト
    struct HP1Weights {
-      float centerBias = 1.5f;           // 中央確保バイアス
-      float sparkComboCloseBias = 1.0f;  // スパークコンボ近距離バイアス
-      float sparkComboNonStunBias = 0.8f;// スパークコンボ非スタンバイアス
-      float shootMediumBias = 0.7f;      // ショット中距離バイアス
-      float shootCenterBias = 0.5f;      // ショット中央バイアス
-      float tripleChargeCloseBias = 1.2f;// 3連突進近距離バイアス
-      float tripleChargeCenterBias = 0.8f;// 3連突進中央バイアス
-      float quadChargeStunBias = 2.0f;   // 4連突進スタンバイアス（スパーク前隙専用）
-      float feintShoot = 0.3f;           // フェイント→ショット
-      float sparkComboFarBias = 0.6f;    // スパークコンボ遠距離バイアス
-      float shootCharge = 0.25f;         // ショット→突進
-      float retreatDoubleShoot = 0.2f;   // 逃げ→ショット2連
-      float energyReadyCharge = 1.8f;    // エネルギー準備完了時の突進
-      float safetyCharge = 1.5f;         // ピンチ時の安全突進
+      float centerBias = 2.0f;           // 中央確保バイアス（増加）
+      float sparkComboCloseBias = 2.0f;  // スパークコンボ近距離バイアス（減少）
+      float sparkComboNonStunBias = 0.1f;// スパークコンボ非スタンバイアス（減少）
+      float shootMediumBias = 0.1f;      // ショット中距離バイアス（増加）
+      float shootCenterBias = 0.9f;      // ショット中央バイアス（増加）
+      float tripleChargeCloseBias = 1.0f;// 3連突進近距離バイアス（減少）
+      float tripleChargeCenterBias = 0.4f;// 3連突進中央バイアス（減少）
+      float quadChargeStunBias = 1.0f;   // 4連突進スタンバイアス（スパーク前隙専用）
+      float feintShoot = 0.6f;           // フェイント→ショット（増加）
+      float sparkComboFarBias = 0.5f;    // スパークコンボ遠距離バイアス（減少）
+      float shootCharge = 0.5f;          // ショット→突進（増加）
+      float retreatDoubleShoot = 0.4f;   // 逃げ→ショット2連（増加）
+      float energyReadyCharge = 2.5f;    // エネルギー準備完了時の突進（減少）
+      float safetyCharge = 0.8f;         // ピンチ時の安全突進（減少、連続を防ぐ）
    } hp1;
 
    // スタン判定
-   float stunBiasWhenStunned = 1.0f;     // スタン時の評価値
+   float stunBiasWhenStunned = 2.0f;     // スタン時の評価値
    float stunBiasWhenNotStunned = 0.1f;  // 非スタン時の評価値
 };
 

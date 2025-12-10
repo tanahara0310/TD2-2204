@@ -257,6 +257,10 @@ void Boss::InitializeStateMachine() {
 }
 
 void Boss::UpdateMovement() {
+   if (stateMachine_->GetCurrentState() == "Death") {
+	  return;
+   }
+
    // knockback bias timer update
    knockbackBiasTimer_.Update(GameUtils::GetDeltaTime());
    if (!knockbackBiasTimer_.IsFinished()) {
