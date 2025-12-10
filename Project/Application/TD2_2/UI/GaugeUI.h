@@ -100,5 +100,5 @@ private:
 
 	// セグメント追従の時間（秒）
 	float segmentIncreaseDuration_ = 0.125f;
-	float segmentDecreaseDuration_ = 1.0f;
+	float segmentDecreaseDuration_ = 0.125f;
 };
