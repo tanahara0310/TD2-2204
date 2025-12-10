@@ -16,11 +16,15 @@ void TitlePlayerDemo::Initialize(std::unique_ptr<Model> model, TextureManager::L
 	// 初期回転（-X方向 = 90度、前かがみ = Z軸に若干の回転）
 	transform_.rotate = { 0.0f, std::numbers::pi_v<float> / 2.0f, 0.15f };
 	baseRotationY_ = std::numbers::pi_v<float> / 2.0f;
-	
+
 	// 速度の初期化
 	currentSpeed_ = moveSpeed_;
 	baseSpeed_ = moveSpeed_;
-	
+
+
+	// プロペラの回転アニメーションを開始
+	StartModelSwapAnimation("Player1", "Player2", 0.02f, true);
+
 	transform_.TransferMatrix();
 }
 
@@ -35,6 +39,9 @@ void TitlePlayerDemo::Update() {
 	} else {
 		UpdateNormalMode(deltaTime);
 	}
+
+	// モデル切り替えアニメーションの更新
+	GameObject::UpdateModelSwapAnimation();
 
 	// トランスフォームを更新
 	transform_.TransferMatrix();
@@ -53,7 +60,7 @@ void TitlePlayerDemo::UpdateChaseMode(float deltaTime) {
 
 	// 目標速度を距離に応じて計算
 	float targetSpeed = baseSpeed_;
-	
+
 	// 追いつく瞬間の演出（最優先）
 	if (distance <= catchUpDistance_) {
 		targetSpeed = baseSpeed_ * catchUpSpeedBoost_;
@@ -114,10 +121,10 @@ void TitlePlayerDemo::UpdateNormalMode(float deltaTime) {
 	// 通常移動モードでは基本速度に戻す
 	currentSpeed_ = baseSpeed_;
 	isCatchingUp_ = false;
-	
+
 	// 通常移動（X軸方向）
 	transform_.translate.x += currentSpeed_ * moveDirection_ * deltaTime;
-	
+
 	// Y・Z座標は初期位置を維持
 	transform_.translate.y = initialPosition_.y;
 	transform_.translate.z = initialPosition_.z;
@@ -146,13 +153,13 @@ void TitlePlayerDemo::UpdateRotation(float directionX, float deltaTime) {
 	} else if (rotationState_ == RotationState::Waiting) {
 		ProcessWaiting(deltaTime);
 	}
-	
+
 	transform_.rotate.z = baseRotationZ;
 }
 
 void TitlePlayerDemo::ProcessRotating(float deltaTime) {
 	rotationTimer_ += deltaTime;
-	
+
 	if (rotationTimer_ >= rotationDuration_) {
 		// 回転完了、待機状態へ
 		rotationState_ = RotationState::Waiting;
@@ -162,25 +169,25 @@ void TitlePlayerDemo::ProcessRotating(float deltaTime) {
 		// イージングを適用した回転計算
 		float t = rotationTimer_ / rotationDuration_;
 		float easedT = EasingUtil::Apply(t, rotationEasing_);
-		
+
 		// 回転角度を計算
-		float totalRotation = 2.0f * std::numbers::pi_v<float> * rotationCount_;
+		float totalRotation = 2.0f * std::numbers::pi_v<float> *rotationCount_;
 		float currentRotation = totalRotation * easedT;
-		
+
 		transform_.rotate.y = baseRotationY_ + currentRotation;
 	}
 }
 
 void TitlePlayerDemo::ProcessWaiting(float deltaTime) {
 	waitTimer_ += deltaTime;
-	
+
 	if (waitTimer_ >= rotationWaitTime_) {
 		// 待機完了、回転状態へ
 		rotationState_ = RotationState::Rotating;
 		rotationTimer_ = 0.0f;
 		waitTimer_ = 0.0f;
 	}
-	
+
 	// 待機中は基本回転のみ
 	transform_.rotate.y = baseRotationY_;
 }

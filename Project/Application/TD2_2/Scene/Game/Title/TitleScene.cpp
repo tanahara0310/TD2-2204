@@ -112,13 +112,20 @@ void TitleScene::Initialize(EngineSystem* engine) {
 		auto modelManager = engine_->GetComponent<ModelManager>();
 		auto& textureManager = TextureManager::GetInstance();
 
+		// プロペラモデルをロード
+		modelManager->LoadModelResource("Resources/Models/PlayerPropeller", "PlayerPropeller.obj");
+		modelManager->LoadModelResource("Resources/Models/BossPropeller", "BossPropeller.obj");
+
+
 		// デモプレイヤーの生成
 		auto playerModel = modelManager->CreateStaticModel("Resources/Models/Player/Player.obj");
 		auto playerTexture = textureManager.Load("Resources/Textures/Player.png");
 		auto demoPlayer = std::make_unique<TitlePlayerDemo>();
 		demoPlayer_ = demoPlayer.get();
+		demoPlayer->RegisterModelResource("Player1", "Resources/Models/Player/Player.obj");
+		demoPlayer->RegisterModelResource("Player2", "Resources/Models/PlayerPropeller/PlayerPropeller.obj");
 		demoPlayer->Initialize(std::move(playerModel), playerTexture);
-		
+
 		// 初期位置を画面左端に設定（初期は背景の後ろ、中段）
 		Vector3 playerInitPos = { -35.0f, 24.0f, 10.0f };
 		demoPlayer->GetTransform().translate = playerInitPos;
@@ -126,7 +133,7 @@ void TitleScene::Initialize(EngineSystem* engine) {
 		demoPlayer->SetInitialPosition(playerInitPos); // initialPositionも更新
 		demoPlayer->SetMoveSpeed(23.0f); // 初期 velocidade を設定（調整済み）
 		demoPlayer->GetTransform().TransferMatrix();
-		
+
 		gameObjects_.push_back(std::move(demoPlayer));
 
 		// デモエネミーの生成
@@ -136,7 +143,7 @@ void TitleScene::Initialize(EngineSystem* engine) {
 		demoEnemy_ = demoEnemy.get();
 		demoEnemy->Initialize(std::move(enemyModel), enemyTexture);
 		demoEnemy->SetTarget(demoPlayer_);
-		
+
 		// 初期位置を画面左端（プレイヤーの後ろ）に設定（初期は背景の後ろ、中段）
 		Vector3 enemyInitPos = { -45.0f, 24.0f, 10.0f };
 		demoEnemy->GetTransform().translate = enemyInitPos;
@@ -144,12 +151,13 @@ void TitleScene::Initialize(EngineSystem* engine) {
 		demoEnemy->SetInitialPosition(enemyInitPos); // initialPositionも更新
 		demoEnemy->SetChaseSpeed(20.0f); // 初期速度を設定（調整済み）
 		demoEnemy->GetTransform().TransferMatrix();
-		
+
 		gameObjects_.push_back(std::move(demoEnemy));
 
 		// デモマネージャーの初期化
 		demoManager_ = std::make_unique<TitleDemoManager>();
 		demoManager_->Initialize(demoPlayer_, demoEnemy_);
+
 	}
 
 	// 雷エフェクトの初期化
@@ -159,7 +167,7 @@ void TitleScene::Initialize(EngineSystem* engine) {
 
 		lightningFrameManager_ = std::make_unique<TitleLightningFrameManager>();
 		lightningFrameManager_->Initialize(lightningManager_.get(), gameObjects_);
-		
+
 		// 初期状態は非表示（ボタンアニメーション完了後に表示）
 		// lightningFrameManager_->ShowAllEdges(); <- 削除
 	}
@@ -180,25 +188,25 @@ void TitleScene::Initialize(EngineSystem* engine) {
 				titleBGM_->Play(true);
 				titleBGM_->SetVolume(0.5f);
 			}
-			
+
 			// 選択決定SE読み込み
 			confirmSE_ = audio->CreateSoundResource("Resources/Audio/SE/decide.mp3");
-			
+
 			// カーソル移動SE読み込み
 			cursorSE_ = audio->CreateSoundResource("Resources/Audio/SE/cursor.mp3");
 		}
 	}
-	
+
 	// イントロアニメーションを開始
 	if (titleUI_) {
 		titleUI_->StartIntroAnimation();
-		
+
 		// 白フラッシュコールバックを設定
 		titleUI_->SetFlashCallback([this]() {
 			// 白フラッシュを開始
 			isWhiteFlashing_ = true;
 			whiteFlashTimer_.Start(kWhiteFlashDuration, false);
-		});
+			});
 	}
 }
 
@@ -211,6 +219,10 @@ void TitleScene::Update() {
 		if (activeCamera) {
 			auto* camera = dynamic_cast<Camera*>(activeCamera);
 			if (camera) {
+				// カメラコントローラーの更新（ターゲット移動アニメーション）
+				float deltaTime = 1.0f / 60.0f;
+				cameraController_->Update(deltaTime);
+
 				cameraController_->ApplyToCamera(camera);
 			}
 		}
@@ -243,17 +255,17 @@ void TitleScene::Update() {
 	if (demoManager_) {
 		demoManager_->Update(deltaTime);
 	}
-	
+
 	// 白フラッシュの更新
 	if (isWhiteFlashing_) {
 		whiteFlashTimer_.Update(deltaTime);
-		
+
 		// 進行度を取得（0.0～1.0）
 		float progress = whiteFlashTimer_.GetProgress();
-		
+
 		// イーズアウトで徐々に消える（1.0から0.0へ）
 		float flashAlpha = 1.0f - EasingUtil::Apply(progress, EasingUtil::Type::EaseOutQuad);
-		
+
 		// PostEffectManagerを取得して白フェードを適用
 		{
 			auto* postEffectManager = engine_->GetComponent<PostEffectManager>();
@@ -262,7 +274,7 @@ void TitleScene::Update() {
 				if (fadeEffect) {
 					// フェードエフェクトを有効化
 					postEffectManager->SetEffectEnabled(PostEffectNames::FadeEffect, true);
-					
+
 					// 白フェードを設定
 					fadeEffect->SetFadeType(FadeEffect::FadeType::WhiteFade);
 					// フラッシュアルファを設定（1.0→0.0で徐々に消える）
@@ -270,11 +282,11 @@ void TitleScene::Update() {
 				}
 			}
 		}
-		
+
 		// フラッシュが完了したら無効化
 		if (whiteFlashTimer_.IsFinished()) {
 			isWhiteFlashing_ = false;
-			
+
 			// フェードエフェクトを無効化
 			{
 				auto* postEffectManager = engine_->GetComponent<PostEffectManager>();
@@ -284,15 +296,20 @@ void TitleScene::Update() {
 			}
 		}
 	}
-	
+
 	// イントロアニメーション完了チェック（雷演出開始タイミング）
 	if (!lightningEffectShown_ && titleUI_ && titleUI_->IsIntroAnimationCompleted()) {
 		lightningEffectShown_ = true;
 		if (lightningFrameManager_) {
 			lightningFrameManager_->ShowAllEdges();
 		}
+
+		// カメラのターゲット移動アニメーションを開始
+		if (cameraController_) {
+			cameraController_->StartTargetAnimation();
+		}
 	}
-	
+
 	// 雷エフェクトフレームの更新
 	if (lightningFrameManager_) {
 		bool isConfirmAnimating = confirmAnimationManager_ && confirmAnimationManager_->IsAnimating();
@@ -328,12 +345,12 @@ void TitleScene::Update() {
 
 		// 左右キーでのプリセット選択
 		if (keyConfig_->GetDown("Left")) {
-		 titleUI_->SelectPreviousPreset();
+			titleUI_->SelectPreviousPreset();
 			stickInputCooldown_ = kStickInputDelay;
 		}
 
 		if (keyConfig_->GetDown("Right")) {
-		 titleUI_->SelectNextPreset();
+			titleUI_->SelectNextPreset();
 			stickInputCooldown_ = kStickInputDelay;
 		}
 
@@ -359,7 +376,7 @@ void TitleScene::Update() {
 			}
 			// 左方向（X軸負）
 			else if (moveInput.x < -kStickThreshold) {
-			 titleUI_->SelectPreviousPreset();
+				titleUI_->SelectPreviousPreset();
 				stickInputCooldown_ = kStickInputDelay;
 			}
 			// 右方向（X軸正）
@@ -368,7 +385,7 @@ void TitleScene::Update() {
 				stickInputCooldown_ = kStickInputDelay;
 			}
 		}
-		
+
 		// 選択状態が変わった時のみカーソルSEを再生
 		if (selectionChanged) {
 			if (cursorSE_ && cursorSE_->IsValid()) {
@@ -384,7 +401,7 @@ void TitleScene::Update() {
 				confirmSE_->Play(false);
 				confirmSE_->SetVolume(0.3f);
 			}
-			
+
 			bool isStartSelected = (titleUI_->GetSelectionState() == TitleUI::SelectionState::Start);
 			if (confirmAnimationManager_) {
 				confirmAnimationManager_->StartAnimation(isStartSelected, frameEffectIds_);
@@ -400,7 +417,7 @@ void TitleScene::Update() {
 		if (!confirmAnimationManager_->IsAnimating() && isConfirmAnimating) {
 			if (confirmAnimationManager_->WasStartSelected()) {
 				// スタート選択時はシーン遷移を開始
-			 isTransitioning_ = true;
+				isTransitioning_ = true;
 				transitionTimer_ = 0.0f;
 			} else {
 				// やめる選択時は待機時間を開始
@@ -421,7 +438,7 @@ void TitleScene::Update() {
 		if (quitWaitTimer_ >= kQuitWaitDuration) {
 			// 待機時間が経過したらフェードアウトを開始
 			isWaitingForQuit_ = false;
-		 isFadingOut_ = true;
+			isFadingOut_ = true;
 			fadeOutTimer_.Start(kFadeOutDuration, false);
 		}
 	}

@@ -22,6 +22,13 @@ void TitleEnemyDemo::Initialize(std::unique_ptr<Model> model, TextureManager::Lo
 	currentSpeed_ = chaseSpeed_;
 	baseSpeed_ = chaseSpeed_;
 	
+	// プロペラモデルを登録（BossPropellerを使用）
+	RegisterModelResource("Enemy1", "Resources/Models/Boss/Boss.obj");
+	RegisterModelResource("Enemy2", "Resources/Models/BossPropeller/BossPropeller.obj");
+	
+	// プロペラの回転アニメーションを開始
+	StartModelSwapAnimation("Enemy1", "Enemy2", 0.02f, true);
+	
 	transform_.TransferMatrix();
 }
 
@@ -36,6 +43,9 @@ void TitleEnemyDemo::Update() {
 	} else {
 		UpdateNormalMode(deltaTime);
 	}
+
+	// モデル切り替えアニメーションの更新
+	GameObject::UpdateModelSwapAnimation();
 
 	// トランスフォームを更新
 	transform_.TransferMatrix();
