@@ -16,13 +16,16 @@ void MoveToCenterAction::Reset() {
 }
 
 void MoveToCenterAction::OnEnter() {
+
+   duration_ = GameUtils::RandomFloat(0.5f, 2.0f);
+
    // タイマー開始
    moveTimer_.Start(duration_, false);
 
    if (boss_) {
       // 初期加速度をリセット
       boss_->SetAcceleration({ 0.0f, 0.0f });
-	  boss_->SetMaxSpeed(10.0f);
+	  boss_->SetMaxSpeed(15.0f);
       boss_->StartEffect();
    }
 }

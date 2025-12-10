@@ -18,7 +18,7 @@ FleeFromPlayerAction::FleeFromPlayerAction(Boss* boss, Player* player, float mov
    : BossActionNode(boss, "FleeFromPlayerAction")
    , player_(player)
    , moveSpeed_(moveSpeed)
-   , duration_(GameUtils::RandomFloat(2.0f, 4.0f))
+   , duration_(GameUtils::RandomFloat(1.0f, 3.0f))
    , avoidanceStrength_(avoidanceStrength)
    , currentDirection_({ 0.0f, 0.0f }) {}
 
@@ -29,7 +29,7 @@ void FleeFromPlayerAction::Reset() {
 }
 
 void FleeFromPlayerAction::OnEnter() {
-   duration_ = GameUtils::RandomFloat(2.0f, 4.0f);
+   duration_ = GameUtils::RandomFloat(0.5f, 2.0f);
 
    // タイマー開始
    moveTimer_.Start(duration_, false);

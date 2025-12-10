@@ -289,6 +289,10 @@ void Player::InitializeCollider() {
 }
 
 void Player::UpdateMovement() {
+   if (stateMachine_->GetCurrentState() == "Death") {
+	  return;
+   }
+
    // velocity 更新
    velocity_.x += acceleration_.x * GameUtils::GetDeltaTime();
    velocity_.y += acceleration_.y * GameUtils::GetDeltaTime();
@@ -697,8 +701,8 @@ void Player::UpdateEffect() {
    if (updateEffectFunction_) {
 	  if (stateMachine_->GetCurrentState() == "Move" || stateMachine_->GetCurrentState() == "Charge" || stateMachine_->GetCurrentState() == "Stun") {
 		 updateEffectFunction_(transform_.translate, energyRatio);
-	  } else if(stateMachine_->GetCurrentState() == "Despawn" || stateMachine_->GetCurrentState() == "Respawn" || IsInvincible()){
-		 updateEffectFunction_(Vector3(-1000.0f,-1000.0f,-1000.0f), 0.0f);
+	  } else if (stateMachine_->GetCurrentState() == "Despawn" || stateMachine_->GetCurrentState() == "Respawn" || IsInvincible()) {
+		 updateEffectFunction_(Vector3(-1000.0f, -1000.0f, -1000.0f), 0.0f);
 	  } else {
 		 updateEffectFunction_(transform_.translate, 1.0f);
 	  }

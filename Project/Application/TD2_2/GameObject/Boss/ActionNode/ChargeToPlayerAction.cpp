@@ -7,34 +7,33 @@
 #include "MoveAction.h"
 
 ChargeToPlayerAction::ChargeToPlayerAction(Boss* boss, Player* player,
-                                           float chargeSpeed, float chargeDuration)
+   float chargeSpeed, float chargeDuration)
    : BossActionNode(boss, "ChargeToPlayer"),
    player_(player),
    chargeSpeed_(chargeSpeed),
    chargeDuration_(chargeDuration),
    chargeMaxSpeed_(45.0f),
    chargeDamping_(0.02f),
-   chargeDirection_{0.0f, 0.0f, 0.0f}
-{
-}
+   chargeDirection_{ 0.0f, 0.0f, 0.0f }
+{}
 
 void ChargeToPlayerAction::Reset() {
    BossActionNode::Reset();
-   chargeDirection_ = {0.0f, 0.0f, 0.0f};
+   chargeDirection_ = { 0.0f, 0.0f, 0.0f };
    chargeTimer_.Reset();
 }
 
 void ChargeToPlayerAction::OnEnter() {
-   
+
    // プレイヤーへの方向を計算
    chargeDirection_ = CalculateDirectionToPlayer();
    // 突進タイマーを開始
    chargeTimer_.Start(chargeDuration_, false);
-   
+
    if (boss_) {
-      // 突進中の最大速度と減衰率を設定
-      boss_->SetMaxSpeed(chargeMaxSpeed_);
-      boss_->SetDampingPerSecond(chargeDamping_);
+	  // 突進中の最大速度と減衰率を設定
+	  boss_->SetMaxSpeed(chargeMaxSpeed_);
+	  boss_->SetDampingPerSecond(chargeDamping_);
 	  boss_->SetDirection({ chargeDirection_.x, chargeDirection_.y });
 	  boss_->AddAcceleration({ chargeDirection_.x * chargeSpeed_, chargeDirection_.y * chargeSpeed_ });
 	  boss_->SetVelocity({ 0.0f, 0.0f });
@@ -43,45 +42,51 @@ void ChargeToPlayerAction::OnEnter() {
 
 	  boss_->SetIsCharging(true);
 
-      boss_->StartChargeFunction();
+	  boss_->StartChargeFunction();
    }
-   
+
 }
 
 NodeState ChargeToPlayerAction::OnExecute() {
+   if (player_) {
+	  if (player_->IsDamage() || player_->IsDespawn()) {
+		 return BossActionHelper::Success();
+	  }
+   }
+
    // 突進フェーズ
    if (!chargeTimer_.IsFinished()) {
-      ExecuteCharge();
-      return BossActionHelper::Running();
+	  ExecuteCharge();
+	  return BossActionHelper::Running();
    }
-   
+
    // 突進完了
    return BossActionHelper::Success();
 }
 
 void ChargeToPlayerAction::OnExit() {
    if (boss_) {
-      boss_->SetIsCharging(false);
+	  boss_->SetIsCharging(false);
    }
 }
 
 void ChargeToPlayerAction::SetupStateMachine() {
    // 基底クラスのステートマシンをセットアップ
    BossActionNode::SetupStateMachine();
- 
+
 }
 
 Vector3 ChargeToPlayerAction::CalculateDirectionToPlayer() const {
    if (!boss_ || !player_) {
-      return {0.0f, 0.0f, 0.0f};
+	  return { 0.0f, 0.0f, 0.0f };
    }
 
    Vector3 bossPos = boss_->GetWorldPosition();
    Vector3 playerPos = player_->GetWorldPosition();
    Vector3 direction = {
-      playerPos.x - bossPos.x,
-      playerPos.y - bossPos.y,
-      0.0f // Z軸は無視
+	  playerPos.x - bossPos.x,
+	  playerPos.y - bossPos.y,
+	  0.0f // Z軸は無視
    };
 
    Vector3 normalizedDir = MathCore::Vector::Normalize(direction);

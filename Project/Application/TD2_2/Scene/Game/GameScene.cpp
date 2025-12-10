@@ -240,14 +240,14 @@ void GameScene::Initialize(EngineSystem* engine) {
 	  sparkEffectConfig.sphereRadius = kSparkRadius + 0.5f; // 当たり判定と同じ半径
 	  sparkEffectConfig.sphereStartRadiusRatio = 0.6f;
 	  sparkEffectConfig.randomOffsetRange = 0.0f;
-	  sparkEffectConfig.lightningCount = 20;
+	  sparkEffectConfig.lightningCount = 24;
 	  sparkEffectConfig.color = { 0.5f, 0.0f, 0.5f, 1.0f };
 	  sparkEffectConfig.noiseScale = 2.0f;
 	  sparkEffectConfig.noiseSpeed = 20.0f;
 	  sparkEffectConfig.segmentCount = 5;
 	  sparkEffectConfig.voxelScale = { 2.0f, 2.0f, 2.0f };
-	  sparkEffectConfig.fadeInDuration = 0.25f;
-	  sparkEffectConfig.fadeOutDuration = 0.35f;
+	  sparkEffectConfig.fadeInDuration = 0.1f;
+	  sparkEffectConfig.fadeOutDuration = 0.15f;
 
 	  sparkEffectId_ = lightningManager_->CreateEffect(
 		 boss->GetWorldPosition(),
