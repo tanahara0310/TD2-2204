@@ -1042,7 +1042,7 @@ void GameScene::GameOver() {
 
    // シーケンス終了後にリザルトシーンへ遷移
    if (!cameraController_->IsSequenceActive()) {
-	  sceneManager_->ChangeScene("ResultScene");
+	  sceneManager_->ChangeScene("TipsScene");
 	  PostEffectManager* postEffectManager = engine_->GetComponent<PostEffectManager>();
 	  postEffectManager->SetEffectEnabled(PostEffectNames::ChromaticAberration, false);
 
@@ -1193,7 +1193,7 @@ void GameScene::GameClear() {
 
    // シーケンス終了後にリザルトシーンへ遷移
    if (!cameraController_->IsSequenceActive()) {
-	  sceneManager_->ChangeScene("ResultScene");
+	  sceneManager_->ChangeScene("TipsScene");
 
 	  PostEffectManager* postEffectManager = engine_->GetComponent<PostEffectManager>();
 	  postEffectManager->SetEffectEnabled(PostEffectNames::ChromaticAberration, false);

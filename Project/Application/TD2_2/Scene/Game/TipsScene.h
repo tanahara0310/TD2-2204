@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Scene/BaseScene.h"
+#include <array>
 
 class EngineSystem;
 class Camera;
@@ -28,4 +29,10 @@ protected:
 private:
 	// 背景スプライト
 	std::unique_ptr<SpriteObject> backgroundSprite_;
+
+	// Tipsスプライト
+	std::array<SpriteObject*, 6> tipsSprite_;
+
+	// tipsの配列番号
+	static int tipsNum;
 };

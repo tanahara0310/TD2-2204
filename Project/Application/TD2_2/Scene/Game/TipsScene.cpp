@@ -6,6 +6,10 @@
 #include "Engine/Camera/Release/Camera.h"
 #include "Engine/ObjectCommon/SpriteObject.h"
 
+#include <string>
+
+int TipsScene::tipsNum = -1;
+
 void TipsScene::Initialize(EngineSystem* engine) {
 	BaseScene::Initialize(engine);
 
@@ -21,10 +25,59 @@ void TipsScene::Initialize(EngineSystem* engine) {
 		
 		gameObjects_.push_back(std::move(sprite));
 	}
+
+	// Tipsスプライトの作成
+	{
+		auto sprite = std::make_unique<SpriteObject>();
+		sprite->Initialize("Resources/Textures/Tips/Tips.png");
+
+		// 画面全体を覆うように大きくスケール
+		sprite->GetTransform().translate = {0.0f, 90.0f, 0.0f};
+		sprite->GetTransform().scale = {1.0f, 1.0f, 1.0f};
+		sprite->SetColor({1.0f, 1.0f, 1.0f, 1.0f});
+
+		gameObjects_.push_back(std::move(sprite));
+	}
+
+	// 文字列スプライトの作成
+	{
+		for (int i = 1; i <= tipsSprite_.size();i++) {
+			auto sprite = std::make_unique<SpriteObject>();
+			sprite->Initialize("Resources/Textures/Tips/Tips" + std::to_string(i) + ".png");
+
+			// 画面全体を覆うように大きくスケール
+			sprite->GetTransform().translate = {0.0f, -65.0f, 0.0f};
+			sprite->GetTransform().scale = {0.75f, 0.75f, 1.0f};
+			sprite->SetColor({1.0f, 1.0f, 1.0f, 1.0f});
+
+			tipsSprite_[i - 1] = sprite.get();
+
+			gameObjects_.push_back(std::move(sprite));
+		}
+	}
+
+	tipsNum++;
+
+	if (tipsNum > tipsSprite_.size() - 1) {
+		tipsNum = 0;
+	}
+
+	for (int i = 0; i < tipsSprite_.size();i++) {
+		if (i != tipsNum) {
+			tipsSprite_[i]->SetActive(false);
+		}
+	}
 }
 
 void TipsScene::Update() {
 	BaseScene::Update();
+
+	auto input = engine_->GetComponent<KeyboardInput>();
+	auto pad = engine_->GetComponent<GamepadInput>();
+
+	if (input->IsKeyTriggered(DIK_SPACE) || pad->IsButtonTriggered(GamepadButton::A)) {
+		sceneManager_->ChangeScene("ResultScene");
+	}
 }
 
 void TipsScene::Draw() {
