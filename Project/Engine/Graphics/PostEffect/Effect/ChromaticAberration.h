@@ -13,10 +13,6 @@ public:
         float centerX = 0.5f;       // 中心X座標 (0.0 to 1.0)
         float centerY = 0.5f;       // 中心Y座標 (0.0 to 1.0)
         
-        float redOffset[2] = { 0.0f, 0.0f };   // 未使用（互換性のため残す）
-        float greenOffset[2] = { 0.0f, 0.0f }; // 未使用
-        float blueOffset[2] = { 0.0f, 0.0f };  // 未使用
-        
         float distortionScale = 1.0f; // 歪み量のスケール (0.0 to 5.0)
         float falloff = 1.5f;         // 端に向かう強度の減衰 (0.1 to 5.0)
         float samples = 1.0f;         // 未使用（将来の拡張用）

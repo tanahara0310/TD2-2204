@@ -2,6 +2,7 @@
 #include "Engine/Camera/Release/Camera.h"
 #include "MathCore.h"
 #include <imgui.h>
+#include <cmath>
 
 void TitleCameraController::ApplyToCamera(Camera* camera) {
     if (!camera) {
@@ -16,6 +17,19 @@ void TitleCameraController::ApplyToCamera(Camera* camera) {
 
     // ビュー行列を直接設定
     camera->SetViewMatrix(viewMatrix);
+}
+
+void TitleCameraController::Update(float deltaTime) {
+    // ターゲット移動アニメーション
+    if (isTargetAnimating_) {
+        targetAnimTimer_ += deltaTime * kTargetAnimSpeed;
+        
+        // sin波で滑らかに上下移動
+        float offset = std::sin(targetAnimTimer_) * kTargetAnimAmplitude;
+        
+        // Y座標のみを変更
+        target_.y = baseTarget_.y + offset;
+    }
 }
 
 bool TitleCameraController::DrawImGui() {
