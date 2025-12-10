@@ -1,4 +1,5 @@
 #include "ReStartModel.h"
+#include "Engine/Math/Easing/EasingUtil.h"
 
 void ReStartModel::Initialize(std::unique_ptr<Model> model, TextureManager::LoadedTexture texture) {
 	// 基底クラスの初期化を呼び出す
@@ -19,7 +20,10 @@ void ReStartModel::Update() {
 	UpdateBreathingAnimation(deltaTime);
 
 	// 回転アニメーションの更新
-	UpdateRotateAnimation(deltaTime);
+	//UpdateRotateAnimation(deltaTime);
+
+	// 選択に応じたZ軸拡大アニメーションの更新
+	UpdateScaleAnimation(deltaTime);
 
 	transform_.TransferMatrix();
 }
@@ -85,5 +89,45 @@ void ReStartModel::UpdateRotateAnimation(float deltaTime) {
 		// 選択フラグが false の間は次回の発動を許可する
 		hasLaunched_ = false;
 		launchTimer_ = 0.0f;
+	}
+}
+
+void ReStartModel::UpdateScaleAnimation(float deltaTime) {
+	// 選択が立ち上がった瞬間にアニメーション開始
+	if (isSelected_ && !prevSelected_) {
+		isScaleAnimating_ = true;
+		scaleTimer_ = 0.0f;
+		scaleStartZ_ = transform_.scale.z; // 現在のZスケールを開始値にする
+	}
+
+	prevSelected_ = isSelected_;
+
+	if (!isScaleAnimating_) {
+		return;
+	}
+
+	// タイマー更新
+	scaleTimer_ += deltaTime;
+	float t = scaleTimer_ / kScaleDuration;
+	if (t > 1.0f) t = 1.0f;
+
+	// 山なりのイージング：前半はEaseOutCubicで上昇、後半はEaseInCubicで降下
+	float eased = EasingUtil::ApplyComposite(t, EasingUtil::Type::EaseOutCubic, EasingUtil::Type::EaseInCubic, 0.5f);
+
+	// bump は0->1->0 の形（山なり）
+	float bump = std::sin(3.14159265358979323846f * t);
+	float peakFactor = eased * bump;
+
+	float peakZ = baseScale_.z * kScalePeakMultiplier;
+	float newZ = scaleStartZ_ + (peakZ - scaleStartZ_) * peakFactor;
+
+	// Apply new Z scale while preserving X/Y from current scale
+	transform_.scale.z = newZ;
+
+	// 終了判定
+	if (scaleTimer_ >= kScaleDuration) {
+		isScaleAnimating_ = false;
+		// Reset scale.z to base to avoid drift (keep breathing effect if any)
+		transform_.scale.z = baseScale_.z;
 	}
 }
