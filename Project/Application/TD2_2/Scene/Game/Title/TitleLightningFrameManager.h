@@ -23,7 +23,8 @@ public:
 
 	/// @brief 選択状態に応じて枠の位置と色を更新
 	/// @param isStartSelected スタートが選択されているか
-	void UpdateFramePosition(bool isStartSelected);
+	/// @param breathScale 呼吸アニメーションによるスケール係数（デフォルト1.0）
+	void UpdateFramePosition(bool isStartSelected, float breathScale = 1.0f);
 
 	/// @brief 決定時に全辺を即座に表示
 	void ShowAllEdges();
@@ -56,13 +57,19 @@ private:
 
 	// 選択状態キャッシュ
 	bool lastIsStartSelected_ = true;
+	
+	// 枠の基本サイズ
+	static constexpr float kBaseHalfWidth_ = 1.35f;
+	static constexpr float kBaseHalfHeight_ = 0.58f;
+	
+	// やめるモデル専用の横幅（スタートより狭く）
+	static constexpr float kQuitHalfWidth_ = 1.0f;
 
 	// 色定義
 	static constexpr Vector4 kStartColor_ = { 0.6f, 0.9f, 1.0f, 1.0f };
 	static constexpr Vector4 kQuitColor_ = { 0.6f, 0.9f, 1.0f, 1.0f };
 
-	// 位置定義
-	static constexpr float kFrameYOffset_ = 0.3f;
-	static constexpr Vector3 kStartCenter_ = { 0.0f, -5.5f + kFrameYOffset_, -60.4f };
-	static constexpr Vector3 kQuitCenter_ = { 0.0f, -7.0f + kFrameYOffset_, -60.4f };
+	// 位置定義（各モデルの中心座標に合わせる）
+	static constexpr Vector3 kStartCenter_ = { 0.0f, -5.5f, -60.9f };
+	static constexpr Vector3 kQuitCenter_ = { 0.0f, -6.8f, -60.9f };
 };
