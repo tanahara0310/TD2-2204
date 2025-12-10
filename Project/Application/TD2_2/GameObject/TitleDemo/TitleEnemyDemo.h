@@ -94,7 +94,7 @@ private:
 	/// @brief 回転状態をリセット
 	void ResetRotationState();
 
-	Vector3 initialPosition_ = { 10.0f, 24.0f, 10.0f }; // 初期位置（背景より後ろ）
+	Vector3 initialPosition_ = { 10.0f, 25.0f, 10.0f }; // 初期位置（背景より後ろ）
 	float chaseSpeed_ = 23.4f; // 追跡速度（初期値23.4f、外部から設定可能）
 	float moveDirection_ = 1.0f; // 移動方向（1.0 = 右, -1.0 = 左）
 	bool isChasing_ = true; // 追跡モードかどうか

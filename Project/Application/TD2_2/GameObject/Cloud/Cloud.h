@@ -16,6 +16,10 @@ public:
 
 	const char* GetObjectName() const override { return "Cloud"; }
 
+	/// @brief 雲の位置を設定
+	/// @param position 設定する座標
+	void SetPosition(const Vector3& position);
+
 private:
 
 	// 移動速度

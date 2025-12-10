@@ -92,7 +92,7 @@ private:
 	/// @brief 回転状態をリセット
 	void ResetRotationState();
 
-	Vector3 initialPosition_ = { 20.0f, 24.0f, 10.0f }; // 初期位置（敵と同じ値に統一）
+	Vector3 initialPosition_ = { 20.0f, 25.0f, 10.0f }; // 初期位置（敵と同じ値に統一）
 	float moveSpeed_ = 23.4f; // 移動速度（初期値23.4f、外部から設定可能）
 	float moveDirection_ = -1.0f; // 移動方向（1.0 = 右, -1.0 = 左）最初は左に移動
 	bool isChasing_ = false; // 追跡モードかどうか
