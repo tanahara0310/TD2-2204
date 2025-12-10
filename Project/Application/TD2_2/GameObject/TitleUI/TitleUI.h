@@ -6,8 +6,10 @@
 #include "GekitotsuModel.h"
 #include "PlayerPresetModel.h"
 #include "../../Utility/StateMachine.h"
+#include "Engine/Utility/Timer/GameTimer.h"
 #include <memory>
 #include <vector>
+#include <functional>
 
 class EngineSystem;
 class IDrawable;
@@ -63,6 +65,17 @@ public:
 	
 	/// @brief GekitotsuModelを取得
 	GekitotsuModel* GetGekitotsuModel() const { return gekitotsuModel_; }
+	
+	/// @brief イントロアニメーションを開始
+	void StartIntroAnimation();
+	
+	/// @brief イントロアニメーションが完全に完了したか（雷演出開始タイミング）
+	/// @return 完了していればtrue
+	bool IsIntroAnimationCompleted() const { return introAnimationCompleted_; }
+	
+	/// @brief 白フラッシュコールバックを設定
+	/// @param callback フラッシュ発生時に呼ばれる関数
+	void SetFlashCallback(std::function<void()> callback) { flashCallback_ = callback; }
 
 private:
 	
@@ -89,6 +102,9 @@ private:
 	
 	/// @brief プリセット選択演出の更新
 	void UpdatePresetSelectionEffect();
+	
+	/// @brief イントロアニメーションシーケンスの更新
+	void UpdateIntroAnimationSequence();
 
 private:
 
@@ -109,4 +125,18 @@ private:
 
 	// ステートマシーン
 	StateMachine stateMachine_;
+	
+	// イントロアニメーション管理
+	GameTimer introDelayTimer_;
+	bool isIntroDelayActive_ = false;
+	bool isGekitotsuAnimating_ = false;
+	bool isTitleAnimating_ = false;
+	bool isButtonsAnimating_ = false; // StartとYameruのアニメーション
+	bool introAnimationCompleted_ = false; // 全てのイントロアニメーションが完了したか
+	bool flashTriggered_ = false; // 白フラッシュが既にトリガーされたか
+	static constexpr float kIntroStartDelay = 0.3f; // 開始遅延時間
+	static constexpr float kFlashTriggerProgress = 0.85f; // フラッシュトリガー進行度（90%）
+	
+	// 白フラッシュコールバック
+	std::function<void()> flashCallback_;
 };

@@ -34,21 +34,22 @@ public:
 	/// @brief オブジェクト名を取得
 	const char* GetObjectName() const override { return "StartModel"; }
 	
-	/// @brief ロゴ登場演出を開始（遅延時間を指定可能）
-	void StartIntroAnimation(float delayTime = 0.0f);
+	/// @brief イントロアニメーションを開始
+	void StartIntroAnimation();
 	
-	/// @brief 演出中かどうかを取得
-	bool IsAnimating() const { return isAnimating_; }
+	/// @brief イントロアニメーションが完了したかを取得
+	/// @return 完了していればtrue
+	bool IsIntroAnimationFinished() const { return !isIntroPlaying_; }
 	
-	/// @brief 演出をスキップして完了状態にする
-	void SkipIntroAnimation();
+	/// @brief イントロアニメーションの進行度を取得
+	/// @return 進行度（0.0～1.0）
+	float GetIntroAnimationProgress() const { 
+		return isIntroPlaying_ ? introTimer_.GetProgress() : 1.0f; 
+	}
 
 private:
 	/// @brief 呼吸アニメーションの更新
 	void UpdateBreathingAnimation(float deltaTime);
-	
-	/// @brief イントロアニメーションの更新
-	void UpdateIntroAnimation(float deltaTime);
 
 private:
 	Vector3 baseScale_ = { };
@@ -64,18 +65,14 @@ private:
 	// 呼吸アニメーション用
 	float breathTimer_ = 0.0f;
 	
-	// イントロアニメーション用
-	bool isAnimating_ = false;
-	bool isDelaying_ = false;
-	float delayTimer_ = 0.0f;
-	float delayDuration_ = 0.0f;
-	GameTimer animationTimer_;
-	static constexpr float kAnimationDuration = 1.2f; // 0.8秒から1.2秒に変更
-	
-	Vector3 startPosition_ = { -40.0f, -5.5f, -60.9f }; // 左から登場
-	
 	// 呼吸アニメーション定数
-	static constexpr float kBreathSpeed = 2.0f;      // 速度を遅く（よりゆっくりした呼吸）
+	static constexpr float kBreathSpeed = 5.0f;
 	static constexpr float kBreathAmplitude = 0.15f; // 振幅を大きく（より目立つ拡縮）
 	static constexpr float kBaseScale = 1.0f;
+	
+	// イントロアニメーション用
+	GameTimer introTimer_;
+	bool isIntroPlaying_ = false;
+	Vector3 startPosition_ = { -30.0f, -5.8f, -60.9f }; // 画面左端
+	static constexpr float kIntroDuration = 0.6f; // アニメーション時間
 };

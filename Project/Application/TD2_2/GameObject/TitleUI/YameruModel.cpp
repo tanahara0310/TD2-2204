@@ -1,6 +1,6 @@
 #include "YameruModel.h"
-#include "../../Utility/GameUtils.h"
 #include "Engine/Math/Easing/EasingUtil.h"
+#include "../../Utility/GameUtils.h"
 #include <cmath>
 
 void YameruModel::Initialize(std::unique_ptr<Model> model, TextureManager::LoadedTexture texture) {
@@ -11,12 +11,14 @@ void YameruModel::Initialize(std::unique_ptr<Model> model, TextureManager::Loade
 	targetPosition_ = { 0.0f, -7.0f, -60.9f };
 	targetScale_ = { 0.7f, 0.7f, 2.0f };
 	baseScale_ = { 0.7f, 0.7f, 2.0f };
+	startPosition_ = { 30.0f, -7.0f, -60.9f }; // 画面右端
 	
-	// 初期位置を画面外（右）に設定
+	// イントロアニメーション用に初期位置を画面右端に設定
 	transform_.translate = startPosition_;
 	transform_.scale = targetScale_;
 	breathTimer_ = 0.0f;
 	isSelected_ = false;
+	isIntroPlaying_ = false;
 	transform_.TransferMatrix();
 }
 
@@ -26,22 +28,27 @@ void YameruModel::Update() {
 		deltaTime = 1.0f / 60.0f;
 	}
 	
-	// 遅延中の処理
-	if (isDelaying_) {
-		delayTimer_ += deltaTime;
-		if (delayTimer_ >= delayDuration_) {
-			isDelaying_ = false;
-			animationTimer_.Start(kAnimationDuration, false);
+	// イントロアニメーションの更新
+	if (isIntroPlaying_) {
+		introTimer_.Update(deltaTime);
+		
+		// EaseOutBackで目標位置へ移動
+		float t = introTimer_.GetProgress();
+		transform_.translate = EasingUtil::LerpVector3(
+			startPosition_,
+			targetPosition_,
+			t,
+			EasingUtil::Type::EaseOutBack
+		);
+		
+		if (introTimer_.IsFinished()) {
+			isIntroPlaying_ = false;
+			transform_.translate = targetPosition_;
 		}
-		transform_.TransferMatrix();
-		return;
 	}
 	
-	// イントロアニメーション中の更新
-	if (isAnimating_) {
-		UpdateIntroAnimation(deltaTime);
-	} else {
-		// 呼吸アニメーションの更新
+	// 呼吸アニメーションの更新（イントロ完了後のみ）
+	if (!isIntroPlaying_) {
 		UpdateBreathingAnimation(deltaTime);
 	}
 	
@@ -89,91 +96,8 @@ void YameruModel::Draw(const ICamera* camera) {
 	model_->Draw(transform_, camera, texture_.gpuHandle);
 }
 
-void YameruModel::StartIntroAnimation(float delayTime) {
-	isAnimating_ = true;
-	
-	if (delayTime > 0.0f) {
-		isDelaying_ = true;
-		delayTimer_ = 0.0f;
-		delayDuration_ = delayTime;
-	} else {
-		isDelaying_ = false;
-		animationTimer_.Start(kAnimationDuration, false);
-	}
-	
-	// 開始位置を画面外右に設定
+void YameruModel::StartIntroAnimation() {
+	isIntroPlaying_ = true;
+	introTimer_.Start(kIntroDuration, false);
 	transform_.translate = startPosition_;
-	transform_.scale = targetScale_;
-}
-
-void YameruModel::SkipIntroAnimation() {
-	if (!isAnimating_ && !isDelaying_) {
-		return;
-	}
-	
-	// アニメーションを即座に終了
-	isAnimating_ = false;
-	isDelaying_ = false;
-	transform_.translate = targetPosition_;
-	baseScale_ = targetScale_;
-	
-	// 選択状態に応じたスケールを設定
-	if (isSelected_) {
-		transform_.scale = baseScale_;
-	} else {
-		static constexpr float kNonSelectedScale = 0.9f;
-		transform_.scale = {
-			baseScale_.x * kNonSelectedScale,
-			baseScale_.y * kNonSelectedScale,
-			baseScale_.z * kNonSelectedScale
-		};
-	}
-}
-
-void YameruModel::UpdateIntroAnimation(float deltaTime) {
-	animationTimer_.Update(deltaTime);
-	
-	float t = animationTimer_.GetProgress();
-	
-	if (t >= 1.0f) {
-		// アニメーション終了
-		isAnimating_ = false;
-		transform_.translate = targetPosition_;
-		baseScale_ = targetScale_; // baseScaleを更新
-		
-		// 選択状態に応じたスケールを設定
-		if (isSelected_) {
-			// 選択されている場合は呼吸アニメーションの初期値（ベーススケール）
-			transform_.scale = baseScale_;
-		} else {
-			// 非選択の場合は縮小したスケール
-			static constexpr float kNonSelectedScale = 0.9f;
-			transform_.scale = {
-				baseScale_.x * kNonSelectedScale,
-				baseScale_.y * kNonSelectedScale,
-				baseScale_.z * kNonSelectedScale
-			};
-		}
-		return;
-	}
-	
-	// 右から左にスライドイン（EaseOutBack）
-	float easedT = EasingUtil::Apply(t, EasingUtil::Type::EaseOutBack);
-	transform_.translate.x = EasingUtil::Lerp(startPosition_.x, targetPosition_.x, easedT);
-	transform_.translate.y = targetPosition_.y;
-	transform_.translate.z = targetPosition_.z;
-	
-	// スケールも選択状態に応じて設定
-	if (isSelected_) {
-		// 選択されている場合は通常スケール
-		transform_.scale = targetScale_;
-	} else {
-		// 非選択の場合は縮小したスケール
-		static constexpr float kNonSelectedScale = 0.9f;
-		transform_.scale = {
-			targetScale_.x * kNonSelectedScale,
-			targetScale_.y * kNonSelectedScale,
-			targetScale_.z * kNonSelectedScale
-		};
-	}
 }

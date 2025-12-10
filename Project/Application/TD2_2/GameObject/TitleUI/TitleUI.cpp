@@ -25,7 +25,7 @@ std::vector<std::unique_ptr<IDrawable>> TitleUI::Initialize(EngineSystem* engine
 	
 	// titleモデルを作成
 	auto titleModel = CreateTitleModel(engine);
-	titleModel_ = titleModel.get();
+titleModel_ = titleModel.get();
 	sprites.push_back(std::move(titleModel));
 	
 	// gekitotsuモデルを作成
@@ -74,6 +74,9 @@ std::vector<std::unique_ptr<IDrawable>> TitleUI::Initialize(EngineSystem* engine
 void TitleUI::Update() {
 	// ステートマシーンの更新
 	stateMachine_.Update();
+	
+	// イントロアニメーションシーケンスの更新
+	UpdateIntroAnimationSequence();
 	
 	// 選択演出の更新
 	UpdateSelectionEffect();
@@ -167,6 +170,92 @@ void TitleUI::UpdatePresetSelectionEffect() {
 			presetModels_[i]->SetSelected(i == selectedPresetIndex_);
 		}
 	}
+}
+
+void TitleUI::UpdateIntroAnimationSequence() {
+	float deltaTime = GameUtils::GetDeltaTime();
+	if (deltaTime <= 0.0f) {
+		deltaTime = 1.0f / 60.0f;
+	}
+	
+	// 開始遅延中
+	if (isIntroDelayActive_) {
+		introDelayTimer_.Update(deltaTime);
+		
+		if (introDelayTimer_.IsFinished()) {
+			// 遅延終了、ゲキトツモデルのアニメーションを開始
+			isIntroDelayActive_ = false;
+			isGekitotsuAnimating_ = true;
+			if (gekitotsuModel_) {
+				gekitotsuModel_->StartIntroAnimation();
+			}
+		}
+	}
+	
+	// ゲキトツモデルのアニメーション中
+	if (isGekitotsuAnimating_) {
+		// ゲキトツモデルのアニメーションが完了したかチェック
+		if (gekitotsuModel_ && gekitotsuModel_->IsIntroAnimationFinished()) {
+			// ゲキトツモデル完了、タイトルロゴのアニメーションを開始
+			isGekitotsuAnimating_ = false;
+			isTitleAnimating_ = true;
+			if (titleModel_) {
+				titleModel_->StartIntroAnimation();
+			}
+		}
+	}
+	
+	// タイトルロゴのアニメーション中
+	if (isTitleAnimating_) {
+		// タイトルロゴのアニメーションが完了したかチェック
+		if (titleModel_ && titleModel_->IsIntroAnimationFinished()) {
+			// タイトルロゴ完了、StartとYameruのアニメーションを開始
+			isTitleAnimating_ = false;
+			isButtonsAnimating_ = true;
+			if (startModel_) {
+				startModel_->StartIntroAnimation();
+			}
+			if (yameruModel_) {
+				yameruModel_->StartIntroAnimation();
+			}
+		}
+	}
+	
+	// ボタン（StartとYameru）のアニメーション中
+	if (isButtonsAnimating_) {
+		// 白フラッシュトリガー（90%進行時に1回だけ）
+		if (!flashTriggered_ && flashCallback_) {
+			bool startProgress = startModel_ && startModel_->GetIntroAnimationProgress() >= kFlashTriggerProgress;
+			bool yameruProgress = yameruModel_ && yameruModel_->GetIntroAnimationProgress() >= kFlashTriggerProgress;
+			
+			// 両方のモデルが90%に達したらフラッシュ
+			if (startProgress && yameruProgress) {
+				flashTriggered_ = true;
+				flashCallback_();
+			}
+		}
+		
+		// 両方のアニメーションが完了したかチェック
+		bool startFinished = !startModel_ || startModel_->IsIntroAnimationFinished();
+		bool yameruFinished = !yameruModel_ || yameruModel_->IsIntroAnimationFinished();
+		
+		if (startFinished && yameruFinished) {
+			// 全てのアニメーション完了
+			isButtonsAnimating_ = false;
+			introAnimationCompleted_ = true; // イントロアニメーション完了フラグを立てる
+		}
+	}
+}
+
+void TitleUI::StartIntroAnimation() {
+	// 0.3秒の遅延タイマーを開始
+	isIntroDelayActive_ = true;
+	isGekitotsuAnimating_ = false;
+	isTitleAnimating_ = false;
+	isButtonsAnimating_ = false;
+	introAnimationCompleted_ = false;
+	flashTriggered_ = false;
+	introDelayTimer_.Start(kIntroStartDelay, false);
 }
 
 std::unique_ptr<YameruModel> TitleUI::CreateYameruModel(EngineSystem* engine)

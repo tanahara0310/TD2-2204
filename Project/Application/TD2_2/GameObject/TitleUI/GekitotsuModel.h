@@ -31,32 +31,20 @@ public:
 	/// @return 色（RGBA）
 	Vector4 GetColor() const;
 	
-	/// @brief ロゴ登場演出を開始（遅延時間を指定可能）
-	void StartIntroAnimation(float delayTime = 0.0f);
+	/// @brief イントロアニメーションを開始
+	void StartIntroAnimation();
 	
-	/// @brief 演出中かどうかを取得
-	bool IsAnimating() const { return isAnimating_; }
-	
-	/// @brief 演出をスキップして完了状態にする
-	void SkipIntroAnimation();
-
-private:
-	/// @brief イントロアニメーションの更新
-	void UpdateIntroAnimation(float deltaTime);
+	/// @brief イントロアニメーションが完了したかを取得
+	/// @return 完了していればtrue
+	bool IsIntroAnimationFinished() const { return !isIntroPlaying_; }
 
 private:
 	Vector3 baseScale_ = { 1.0f, 1.0f, 1.0f };
 	Vector3 targetPosition_ = { 0.0f, -1.9f, -59.9f };
 	Vector3 targetScale_ = { 1.0f, 1.0f, 2.0f };
 	
-	// アニメーション制御
-	bool isAnimating_ = false;
-	bool isDelaying_ = false;
-	float delayTimer_ = 0.0f;
-	float delayDuration_ = 0.0f;
-	GameTimer animationTimer_;
-	static constexpr float kAnimationDuration = 1.8f; // 1.2秒から1.8秒に変更
-	
-	// スケール演出用（位置は固定）
-	Vector3 startScale_ = { 0.0f, 0.0f, 0.0f }; // スケール0から開始
+	// イントロアニメーション用
+	GameTimer introTimer_;
+	bool isIntroPlaying_ = false;
+	static constexpr float kIntroDuration = 0.3f; // 短時間で急に出現
 };

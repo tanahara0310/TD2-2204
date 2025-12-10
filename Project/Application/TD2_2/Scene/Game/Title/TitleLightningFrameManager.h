@@ -50,6 +50,9 @@ private:
 	float flickerTimer_ = 0.0f;
 	static constexpr float kPulseDuration_ = 0.25f;
 	static constexpr float kFlickerInterval_ = 0.03f;
+	
+	// 演出の有効/無効フラグ
+	bool isEffectEnabled_ = false; // 初期は無効
 
 	// 選択状態キャッシュ
 	bool lastIsStartSelected_ = true;
